@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Star, BookOpen } from "lucide-react";
+import { Star, BookOpen, Image } from "lucide-react";
 import { Book } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -12,6 +12,20 @@ export const BookCard = ({ book }: BookCardProps) => {
   return (
     <Link to={`/book/${book.id}`}>
       <Card className="group h-full overflow-hidden transition-all duration-300 hover:shadow-gold hover:-translate-y-1 bg-card border-border">
+        {/* Cover Image */}
+        {book.coverImage ? (
+          <div className="h-40 overflow-hidden">
+            <img
+              src={book.coverImage}
+              alt={book.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+        ) : (
+          <div className="h-40 bg-muted flex items-center justify-center">
+            <Image className="h-12 w-12 text-muted-foreground" />
+          </div>
+        )}
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
@@ -31,7 +45,7 @@ export const BookCard = ({ book }: BookCardProps) => {
           </div>
         </CardHeader>
         <CardContent className="pb-3">
-          <p className="text-sm text-muted-foreground line-clamp-3">
+          <p className="text-sm text-muted-foreground line-clamp-2">
             {book.description || "No description available."}
           </p>
           <div className="flex items-center gap-4 mt-4">
