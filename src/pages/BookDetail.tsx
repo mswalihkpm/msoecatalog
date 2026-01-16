@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Star, Calendar, User, BookOpen } from "lucide-react";
+import { ArrowLeft, Star, Calendar, User, BookOpen, Image } from "lucide-react";
 import { Header } from "@/components/Header";
 import { StarRating } from "@/components/StarRating";
 import { ReviewCard } from "@/components/ReviewCard";
@@ -63,6 +63,21 @@ const BookDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Book Info */}
           <div className="lg:col-span-2 space-y-6 animate-fade-in">
+            {/* Cover Image */}
+            {book.coverImage ? (
+              <div className="w-full max-w-xs">
+                <img
+                  src={book.coverImage}
+                  alt={book.title}
+                  className="w-full h-auto rounded-lg shadow-card"
+                />
+              </div>
+            ) : (
+              <div className="w-full max-w-xs h-64 bg-muted rounded-lg flex items-center justify-center">
+                <Image className="h-16 w-16 text-muted-foreground" />
+              </div>
+            )}
+
             <div>
               <div className="flex flex-wrap items-start gap-3 mb-4">
                 <Badge variant="outline">{book.category}</Badge>

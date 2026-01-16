@@ -149,7 +149,7 @@ export const initializeData = () => {
     localStorage.setItem(BORROW_RECORDS_KEY, JSON.stringify(initialBorrowRecords));
   }
   if (!localStorage.getItem(ADMIN_SETTINGS_KEY)) {
-    localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify({ username: "swalih", password: "alif" }));
+    localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify({ username: "msoelib", password: "alif" }));
   }
 };
 

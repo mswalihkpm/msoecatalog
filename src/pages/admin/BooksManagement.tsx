@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Upload, Trash2, Edit, Search, X } from "lucide-react";
+import { Plus, Upload, Trash2, Edit, Search, Image, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,7 @@ const BooksManagement = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -74,7 +75,10 @@ const BooksManagement = () => {
     category: "Fiction" as Category,
     numberCode: "",
     description: "",
+    coverImage: "",
   });
+
+  const [coverPreview, setCoverPreview] = useState<string>("");
 
   useEffect(() => {
     loadBooks();
@@ -92,8 +96,36 @@ const BooksManagement = () => {
       category: "Fiction",
       numberCode: "",
       description: "",
+      coverImage: "",
     });
+    setCoverPreview("");
     setEditingBook(null);
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size should be less than 2MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setFormData({ ...formData, coverImage: base64 });
+      setCoverPreview(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeCover = () => {
+    setFormData({ ...formData, coverImage: "" });
+    setCoverPreview("");
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
   };
 
   const handleAddBook = () => {
@@ -124,7 +156,9 @@ const BooksManagement = () => {
       category: book.category as Category,
       numberCode: book.numberCode,
       description: book.description || "",
+      coverImage: book.coverImage || "",
     });
+    setCoverPreview(book.coverImage || "");
     setIsAddDialogOpen(true);
   };
 
@@ -218,7 +252,7 @@ const BooksManagement = () => {
                 Add Book
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="font-serif">
                   {editingBook ? "Edit Book" : "Add New Book"}
@@ -228,6 +262,49 @@ const BooksManagement = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
+                {/* Cover Image Upload */}
+                <div className="space-y-2">
+                  <Label>Book Cover</Label>
+                  <div className="flex items-start gap-4">
+                    {coverPreview ? (
+                      <div className="relative">
+                        <img
+                          src={coverPreview}
+                          alt="Cover preview"
+                          className="w-24 h-32 object-cover rounded-lg border border-border"
+                        />
+                        <button
+                          type="button"
+                          onClick={removeCover}
+                          className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => coverInputRef.current?.click()}
+                        className="w-24 h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                      >
+                        <Image className="h-6 w-6 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Upload</span>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      ref={coverInputRef}
+                      accept="image/*"
+                      onChange={handleCoverUpload}
+                      className="hidden"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      <p>Upload a cover image</p>
+                      <p>Max size: 2MB</p>
+                      <p>Formats: JPG, PNG, WebP</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="siNumber">SI Number *</Label>
@@ -330,6 +407,7 @@ const BooksManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-16">Cover</TableHead>
                 <TableHead>SI No.</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Author</TableHead>
@@ -343,6 +421,19 @@ const BooksManagement = () => {
               {filteredBooks.length > 0 ? (
                 filteredBooks.map((book) => (
                   <TableRow key={book.id}>
+                    <TableCell>
+                      {book.coverImage ? (
+                        <img
+                          src={book.coverImage}
+                          alt={book.title}
+                          className="w-10 h-14 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-10 h-14 bg-muted rounded flex items-center justify-center">
+                          <Image className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>{book.siNumber}</TableCell>
                     <TableCell className="font-medium">{book.title}</TableCell>
                     <TableCell>{book.author}</TableCell>
@@ -397,7 +488,7 @@ const BooksManagement = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No books found
                   </TableCell>
                 </TableRow>
