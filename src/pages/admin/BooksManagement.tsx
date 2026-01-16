@@ -1,0 +1,413 @@
+import { useState, useEffect, useRef } from "react";
+import { Plus, Upload, Trash2, Edit, Search, X } from "lucide-react";
+import * as XLSX from "xlsx";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getBooks, addBook, updateBook, deleteBook, bulkAddBooks } from "@/lib/store";
+import { Book, Category } from "@/lib/types";
+import { toast } from "sonner";
+
+const categories: Category[] = [
+  "Fiction",
+  "Non-Fiction",
+  "Science",
+  "History",
+  "Biography",
+  "Technology",
+  "Religion",
+  "Philosophy",
+  "Children",
+  "Other",
+];
+
+const BooksManagement = () => {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    siNumber: "",
+    title: "",
+    author: "",
+    category: "Fiction" as Category,
+    numberCode: "",
+    description: "",
+  });
+
+  useEffect(() => {
+    loadBooks();
+  }, []);
+
+  const loadBooks = () => {
+    setBooks(getBooks());
+  };
+
+  const resetForm = () => {
+    setFormData({
+      siNumber: "",
+      title: "",
+      author: "",
+      category: "Fiction",
+      numberCode: "",
+      description: "",
+    });
+    setEditingBook(null);
+  };
+
+  const handleAddBook = () => {
+    if (!formData.siNumber || !formData.title || !formData.author || !formData.numberCode) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (editingBook) {
+      updateBook(editingBook.id, formData);
+      toast.success("Book updated successfully");
+    } else {
+      addBook({ ...formData, isBorrowed: false });
+      toast.success("Book added successfully");
+    }
+
+    loadBooks();
+    setIsAddDialogOpen(false);
+    resetForm();
+  };
+
+  const handleEditClick = (book: Book) => {
+    setEditingBook(book);
+    setFormData({
+      siNumber: book.siNumber,
+      title: book.title,
+      author: book.author,
+      category: book.category as Category,
+      numberCode: book.numberCode,
+      description: book.description || "",
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const handleDeleteBook = (id: string) => {
+    deleteBook(id);
+    toast.success("Book deleted successfully");
+    loadBooks();
+  };
+
+  const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        const newBooks = jsonData.map((row: any) => ({
+          siNumber: String(row["SI Number"] || row["siNumber"] || ""),
+          title: String(row["Title"] || row["Book Name"] || row["title"] || ""),
+          author: String(row["Author"] || row["author"] || ""),
+          category: String(row["Category"] || row["category"] || "Other") as Category,
+          numberCode: String(row["Number Code"] || row["Code"] || row["numberCode"] || ""),
+          description: String(row["Description"] || row["description"] || ""),
+          isBorrowed: false,
+        }));
+
+        const validBooks = newBooks.filter((b) => b.title && b.author);
+        if (validBooks.length === 0) {
+          toast.error("No valid books found in the file");
+          return;
+        }
+
+        bulkAddBooks(validBooks);
+        toast.success(`${validBooks.length} books added successfully`);
+        loadBooks();
+      } catch (error) {
+        toast.error("Error parsing Excel file. Please check the format.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const filteredBooks = books.filter(
+    (book) =>
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.numberCode.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Books</h1>
+          <p className="text-muted-foreground">Manage your library catalog</p>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".xlsx,.xls,.csv"
+            onChange={handleBulkUpload}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            className="gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Bulk Upload
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-gold text-primary-foreground hover:opacity-90 gap-2">
+                <Plus className="h-4 w-4" />
+                Add Book
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="font-serif">
+                  {editingBook ? "Edit Book" : "Add New Book"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingBook ? "Update the book details" : "Fill in the book details to add it to the catalog"}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="siNumber">SI Number *</Label>
+                    <Input
+                      id="siNumber"
+                      value={formData.siNumber}
+                      onChange={(e) => setFormData({ ...formData, siNumber: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="numberCode">Number Code *</Label>
+                    <Input
+                      id="numberCode"
+                      value={formData.numberCode}
+                      onChange={(e) => setFormData({ ...formData, numberCode: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="author">Author *</Label>
+                  <Input
+                    id="author"
+                    value={formData.author}
+                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value as Category })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddBook} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+                  {editingBook ? "Update" : "Add"} Book
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {/* Bulk Upload Instructions */}
+      <Card className="bg-muted/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Bulk Upload Format</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          Excel columns: SI Number, Title (or Book Name), Author, Category, Number Code (or Code), Description
+        </CardContent>
+      </Card>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search books..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Books Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>SI No.</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Author</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredBooks.length > 0 ? (
+                filteredBooks.map((book) => (
+                  <TableRow key={book.id}>
+                    <TableCell>{book.siNumber}</TableCell>
+                    <TableCell className="font-medium">{book.title}</TableCell>
+                    <TableCell>{book.author}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{book.category}</Badge>
+                    </TableCell>
+                    <TableCell>{book.numberCode}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={book.isBorrowed ? "destructive" : "secondary"}
+                        className={book.isBorrowed ? "" : "bg-secondary text-secondary-foreground"}
+                      >
+                        {book.isBorrowed ? "Borrowed" : "Available"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(book)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Book</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{book.title}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteBook(book.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No books found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default BooksManagement;
