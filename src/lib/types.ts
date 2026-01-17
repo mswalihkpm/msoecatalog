@@ -7,6 +7,9 @@ export interface Book {
   numberCode: string;
   description?: string;
   coverImage?: string;
+  volume?: string;
+  pages?: string;
+  publication?: string;
   isBorrowed: boolean;
   borrowedBy?: string;
   borrowedDate?: string;
@@ -28,10 +31,23 @@ export interface BorrowRecord {
   id: string;
   bookId: string;
   bookTitle: string;
+  bookVolume?: string;
   borrowerName: string;
+  borrowerClass?: string;
   borrowedDate: string;
   returnDate: string;
   isReturned: boolean;
+}
+
+export interface BookRequest {
+  id: string;
+  bookId: string;
+  bookTitle: string;
+  bookVolume?: string;
+  requesterName: string;
+  requesterClass: string;
+  requestDate: string;
+  status: "pending" | "approved" | "rejected";
 }
 
 export interface AdminSettings {
@@ -40,13 +56,13 @@ export interface AdminSettings {
 }
 
 export type Category = 
-  | "Fiction"
-  | "Non-Fiction"
-  | "Science"
-  | "History"
+  | "Islamic"
+  | "Novel"
   | "Biography"
-  | "Technology"
-  | "Religion"
-  | "Philosophy"
-  | "Children"
-  | "Other";
+  | "Science"
+  | "English"
+  | "Arabic"
+  | "History"
+  | "General"
+  | "Poem"
+  | "Others";

@@ -42,40 +42,45 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getBooks, addBook, updateBook, deleteBook, bulkAddBooks } from "@/lib/store";
+import { getBooks, addBook, updateBook, deleteBook, bulkAddBooks, bulkDeleteBooks } from "@/lib/store";
 import { Book, Category } from "@/lib/types";
 import { toast } from "sonner";
 
 const categories: Category[] = [
-  "Fiction",
-  "Non-Fiction",
-  "Science",
-  "History",
+  "Islamic",
+  "Novel",
   "Biography",
-  "Technology",
-  "Religion",
-  "Philosophy",
-  "Children",
-  "Other",
+  "Science",
+  "English",
+  "Arabic",
+  "History",
+  "General",
+  "Poem",
+  "Others",
 ];
 
 const BooksManagement = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [bulkDeleteFrom, setBulkDeleteFrom] = useState("");
+  const [bulkDeleteTo, setBulkDeleteTo] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  // Form state
   const [formData, setFormData] = useState({
     siNumber: "",
     title: "",
     author: "",
-    category: "Fiction" as Category,
+    category: "Islamic" as Category,
     numberCode: "",
     description: "",
     coverImage: "",
+    volume: "",
+    pages: "",
+    publication: "",
   });
 
   const [coverPreview, setCoverPreview] = useState<string>("");
@@ -93,10 +98,13 @@ const BooksManagement = () => {
       siNumber: "",
       title: "",
       author: "",
-      category: "Fiction",
+      category: "Islamic",
       numberCode: "",
       description: "",
       coverImage: "",
+      volume: "",
+      pages: "",
+      publication: "",
     });
     setCoverPreview("");
     setEditingBook(null);
@@ -157,6 +165,9 @@ const BooksManagement = () => {
       numberCode: book.numberCode,
       description: book.description || "",
       coverImage: book.coverImage || "",
+      volume: book.volume || "",
+      pages: book.pages || "",
+      publication: book.publication || "",
     });
     setCoverPreview(book.coverImage || "");
     setIsAddDialogOpen(true);
@@ -165,6 +176,33 @@ const BooksManagement = () => {
   const handleDeleteBook = (id: string) => {
     deleteBook(id);
     toast.success("Book deleted successfully");
+    loadBooks();
+  };
+
+  const handleBulkDelete = () => {
+    if (!bulkDeleteFrom || !bulkDeleteTo) {
+      toast.error("Please enter both SI numbers");
+      return;
+    }
+
+    const fromNum = parseInt(bulkDeleteFrom, 10);
+    const toNum = parseInt(bulkDeleteTo, 10);
+
+    if (isNaN(fromNum) || isNaN(toNum)) {
+      toast.error("Please enter valid numbers");
+      return;
+    }
+
+    if (fromNum > toNum) {
+      toast.error("'From' number should be less than or equal to 'To' number");
+      return;
+    }
+
+    const deletedCount = bulkDeleteBooks(bulkDeleteFrom, bulkDeleteTo);
+    toast.success(`${deletedCount} books deleted successfully`);
+    setBulkDeleteFrom("");
+    setBulkDeleteTo("");
+    setIsBulkDeleteDialogOpen(false);
     loadBooks();
   };
 
@@ -185,9 +223,12 @@ const BooksManagement = () => {
           siNumber: String(row["SI Number"] || row["siNumber"] || ""),
           title: String(row["Title"] || row["Book Name"] || row["title"] || ""),
           author: String(row["Author"] || row["author"] || ""),
-          category: String(row["Category"] || row["category"] || "Other") as Category,
+          category: String(row["Category"] || row["category"] || "Others") as Category,
           numberCode: String(row["Number Code"] || row["Code"] || row["numberCode"] || ""),
           description: String(row["Description"] || row["description"] || ""),
+          volume: String(row["Volume"] || row["volume"] || ""),
+          pages: String(row["Pages"] || row["pages"] || ""),
+          publication: String(row["Publication"] || row["publication"] || ""),
           isBorrowed: false,
         }));
 
@@ -206,7 +247,6 @@ const BooksManagement = () => {
     };
     reader.readAsArrayBuffer(file);
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -226,7 +266,7 @@ const BooksManagement = () => {
           <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Books</h1>
           <p className="text-muted-foreground">Manage your library catalog</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="file"
             ref={fileInputRef}
@@ -242,6 +282,53 @@ const BooksManagement = () => {
             <Upload className="h-4 w-4" />
             Bulk Upload
           </Button>
+          <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2 text-destructive border-destructive">
+                <Trash2 className="h-4 w-4" />
+                Bulk Delete
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-serif">Bulk Delete Books</DialogTitle>
+                <DialogDescription>
+                  Delete books by SI Number range. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fromSi">From SI Number</Label>
+                  <Input
+                    id="fromSi"
+                    value={bulkDeleteFrom}
+                    onChange={(e) => setBulkDeleteFrom(e.target.value)}
+                    placeholder="e.g., 001"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="toSi">To SI Number</Label>
+                  <Input
+                    id="toSi"
+                    value={bulkDeleteTo}
+                    onChange={(e) => setBulkDeleteTo(e.target.value)}
+                    placeholder="e.g., 050"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsBulkDeleteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleBulkDelete}
+                >
+                  Delete Books
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
             setIsAddDialogOpen(open);
             if (!open) resetForm();
@@ -300,7 +387,6 @@ const BooksManagement = () => {
                     <div className="text-xs text-muted-foreground">
                       <p>Upload a cover image</p>
                       <p>Max size: 2MB</p>
-                      <p>Formats: JPG, PNG, WebP</p>
                     </div>
                   </div>
                 </div>
@@ -339,23 +425,54 @@ const BooksManagement = () => {
                     onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value as Category })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => setFormData({ ...formData, category: value as Category })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="volume">Volume</Label>
+                    <Input
+                      id="volume"
+                      value={formData.volume}
+                      onChange={(e) => setFormData({ ...formData, volume: e.target.value })}
+                      placeholder="e.g., 1, 2"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pages">Pages</Label>
+                    <Input
+                      id="pages"
+                      value={formData.pages}
+                      onChange={(e) => setFormData({ ...formData, pages: e.target.value })}
+                      placeholder="e.g., 256"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="publication">Publication</Label>
+                    <Input
+                      id="publication"
+                      value={formData.publication}
+                      onChange={(e) => setFormData({ ...formData, publication: e.target.value })}
+                      placeholder="Publisher name"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
@@ -386,7 +503,7 @@ const BooksManagement = () => {
           <CardTitle className="text-sm font-medium">Bulk Upload Format</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          Excel columns: SI Number, Title (or Book Name), Author, Category, Number Code (or Code), Description
+          Excel columns: SI Number, Title, Author, Category, Number Code, Description, Volume, Pages, Publication
         </CardContent>
       </Card>
 
@@ -412,7 +529,7 @@ const BooksManagement = () => {
                 <TableHead>Title</TableHead>
                 <TableHead>Author</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Code</TableHead>
+                <TableHead>Vol.</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -440,7 +557,7 @@ const BooksManagement = () => {
                     <TableCell>
                       <Badge variant="outline">{book.category}</Badge>
                     </TableCell>
-                    <TableCell>{book.numberCode}</TableCell>
+                    <TableCell>{book.volume || "-"}</TableCell>
                     <TableCell>
                       <Badge
                         variant={book.isBorrowed ? "destructive" : "secondary"}
