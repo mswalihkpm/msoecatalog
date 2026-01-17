@@ -1,27 +1,46 @@
-import { Book, Review, BorrowRecord, AdminSettings } from "./types";
+import { Book, Review, BorrowRecord, BookRequest, AdminSettings } from "./types";
 
 // Mock data for initial state
 const initialBooks: Book[] = [
   {
     id: "1",
     siNumber: "001",
+    title: "Stories of the Prophets",
+    author: "Ibn Kathir",
+    category: "Islamic",
+    numberCode: "ISL-001",
+    description: "A collection of stories about the prophets in Islamic tradition.",
+    volume: "1",
+    pages: "450",
+    publication: "Dar us-Salam Publications",
+    isBorrowed: false,
+    averageRating: 4.9,
+    totalReviews: 56,
+  },
+  {
+    id: "2",
+    siNumber: "002",
     title: "The Alchemist",
     author: "Paulo Coelho",
-    category: "Fiction",
-    numberCode: "FIC-001",
+    category: "Novel",
+    numberCode: "NOV-001",
     description: "A magical fable about following your dreams and listening to your heart.",
+    pages: "208",
+    publication: "HarperOne",
     isBorrowed: false,
     averageRating: 4.5,
     totalReviews: 24,
   },
   {
-    id: "2",
-    siNumber: "002",
-    title: "Sapiens: A Brief History of Humankind",
-    author: "Yuval Noah Harari",
-    category: "History",
-    numberCode: "HIS-001",
-    description: "A groundbreaking narrative of humanity's creation and evolution.",
+    id: "3",
+    siNumber: "003",
+    title: "Steve Jobs",
+    author: "Walter Isaacson",
+    category: "Biography",
+    numberCode: "BIO-001",
+    description: "The exclusive biography of Steve Jobs based on exclusive interviews.",
+    pages: "656",
+    publication: "Simon & Schuster",
     isBorrowed: true,
     borrowedBy: "Ahmed Hassan",
     borrowedDate: "2026-01-10",
@@ -30,25 +49,29 @@ const initialBooks: Book[] = [
     totalReviews: 42,
   },
   {
-    id: "3",
-    siNumber: "003",
-    title: "The Art of Computer Programming",
-    author: "Donald Knuth",
-    category: "Technology",
-    numberCode: "TEC-001",
-    description: "The bible of all fundamental algorithms and data structures.",
-    isBorrowed: false,
-    averageRating: 4.9,
-    totalReviews: 18,
-  },
-  {
     id: "4",
     siNumber: "004",
-    title: "Meditations",
-    author: "Marcus Aurelius",
-    category: "Philosophy",
-    numberCode: "PHI-001",
-    description: "Personal writings of the Roman Emperor on Stoic philosophy.",
+    title: "A Brief History of Time",
+    author: "Stephen Hawking",
+    category: "Science",
+    numberCode: "SCI-001",
+    description: "A landmark volume in science writing exploring the universe.",
+    pages: "256",
+    publication: "Bantam",
+    isBorrowed: false,
+    averageRating: 4.6,
+    totalReviews: 38,
+  },
+  {
+    id: "5",
+    siNumber: "005",
+    title: "Sapiens: A Brief History of Humankind",
+    author: "Yuval Noah Harari",
+    category: "History",
+    numberCode: "HIS-001",
+    description: "A groundbreaking narrative of humanity's creation and evolution.",
+    pages: "443",
+    publication: "Harper",
     isBorrowed: true,
     borrowedBy: "Fatima Ali",
     borrowedDate: "2026-01-08",
@@ -57,28 +80,18 @@ const initialBooks: Book[] = [
     totalReviews: 31,
   },
   {
-    id: "5",
-    siNumber: "005",
-    title: "Stories of the Prophets",
-    author: "Ibn Kathir",
-    category: "Religion",
-    numberCode: "REL-001",
-    description: "A collection of stories about the prophets in Islamic tradition.",
-    isBorrowed: false,
-    averageRating: 4.9,
-    totalReviews: 56,
-  },
-  {
     id: "6",
     siNumber: "006",
-    title: "A Brief History of Time",
-    author: "Stephen Hawking",
-    category: "Science",
-    numberCode: "SCI-001",
-    description: "A landmark volume in science writing exploring the universe.",
+    title: "Arabic Through the Quran",
+    author: "Alan Jones",
+    category: "Arabic",
+    numberCode: "ARB-001",
+    description: "An educational text for learning Arabic through Quranic study.",
+    pages: "256",
+    publication: "Islamic Texts Society",
     isBorrowed: false,
-    averageRating: 4.6,
-    totalReviews: 38,
+    averageRating: 4.4,
+    totalReviews: 18,
   },
 ];
 
@@ -96,7 +109,7 @@ const initialReviews: Review[] = [
     bookId: "1",
     userName: "BookLover",
     rating: 4,
-    comment: "Inspiring story with deep philosophical undertones.",
+    comment: "Inspiring stories with deep spiritual undertones.",
     createdAt: "2026-01-03",
   },
   {
@@ -112,30 +125,34 @@ const initialReviews: Review[] = [
 const initialBorrowRecords: BorrowRecord[] = [
   {
     id: "1",
-    bookId: "2",
-    bookTitle: "Sapiens: A Brief History of Humankind",
+    bookId: "3",
+    bookTitle: "Steve Jobs",
     borrowerName: "Ahmed Hassan",
+    borrowerClass: "10A",
     borrowedDate: "2026-01-10",
     returnDate: "2026-01-24",
     isReturned: false,
   },
   {
     id: "2",
-    bookId: "4",
-    bookTitle: "Meditations",
+    bookId: "5",
+    bookTitle: "Sapiens: A Brief History of Humankind",
     borrowerName: "Fatima Ali",
+    borrowerClass: "9B",
     borrowedDate: "2026-01-08",
     returnDate: "2026-01-22",
     isReturned: false,
   },
 ];
 
+const initialBookRequests: BookRequest[] = [];
+
 // Local storage keys
 const BOOKS_KEY = "library_books";
 const REVIEWS_KEY = "library_reviews";
 const BORROW_RECORDS_KEY = "library_borrow_records";
+const BOOK_REQUESTS_KEY = "library_book_requests";
 const ADMIN_SETTINGS_KEY = "library_admin_settings";
-const THEME_KEY = "library_theme";
 
 // Initialize data
 export const initializeData = () => {
@@ -148,9 +165,14 @@ export const initializeData = () => {
   if (!localStorage.getItem(BORROW_RECORDS_KEY)) {
     localStorage.setItem(BORROW_RECORDS_KEY, JSON.stringify(initialBorrowRecords));
   }
+  if (!localStorage.getItem(BOOK_REQUESTS_KEY)) {
+    localStorage.setItem(BOOK_REQUESTS_KEY, JSON.stringify(initialBookRequests));
+  }
   if (!localStorage.getItem(ADMIN_SETTINGS_KEY)) {
     localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify({ username: "msoelib", password: "alif" }));
   }
+  // Always set dark mode
+  document.documentElement.classList.add("dark");
 };
 
 // Books
@@ -188,6 +210,22 @@ export const updateBook = (id: string, updates: Partial<Book>) => {
 export const deleteBook = (id: string) => {
   const books = getBooks().filter(book => book.id !== id);
   localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
+};
+
+export const bulkDeleteBooks = (fromSi: string, toSi: string) => {
+  const books = getBooks();
+  const fromNum = parseInt(fromSi, 10);
+  const toNum = parseInt(toSi, 10);
+  
+  const filteredBooks = books.filter(book => {
+    const siNum = parseInt(book.siNumber, 10);
+    if (isNaN(siNum)) return true;
+    return siNum < fromNum || siNum > toNum;
+  });
+  
+  const deletedCount = books.length - filteredBooks.length;
+  localStorage.setItem(BOOKS_KEY, JSON.stringify(filteredBooks));
+  return deletedCount;
 };
 
 export const bulkAddBooks = (books: Omit<Book, "id" | "averageRating" | "totalReviews">[]) => {
@@ -285,10 +323,43 @@ export const deleteBorrowRecord = (id: string) => {
   localStorage.setItem(BORROW_RECORDS_KEY, JSON.stringify(filteredRecords));
 };
 
+// Book Requests
+export const getBookRequests = (): BookRequest[] => {
+  const data = localStorage.getItem(BOOK_REQUESTS_KEY);
+  return data ? JSON.parse(data) : [];
+};
+
+export const addBookRequest = (request: Omit<BookRequest, "id" | "requestDate" | "status">) => {
+  const requests = getBookRequests();
+  const newRequest: BookRequest = {
+    ...request,
+    id: Date.now().toString(),
+    requestDate: new Date().toISOString().split("T")[0],
+    status: "pending",
+  };
+  requests.push(newRequest);
+  localStorage.setItem(BOOK_REQUESTS_KEY, JSON.stringify(requests));
+  return newRequest;
+};
+
+export const updateBookRequest = (id: string, updates: Partial<BookRequest>) => {
+  const requests = getBookRequests();
+  const index = requests.findIndex(r => r.id === id);
+  if (index !== -1) {
+    requests[index] = { ...requests[index], ...updates };
+    localStorage.setItem(BOOK_REQUESTS_KEY, JSON.stringify(requests));
+  }
+};
+
+export const deleteBookRequest = (id: string) => {
+  const requests = getBookRequests().filter(r => r.id !== id);
+  localStorage.setItem(BOOK_REQUESTS_KEY, JSON.stringify(requests));
+};
+
 // Admin Settings
 export const getAdminSettings = (): AdminSettings => {
   const data = localStorage.getItem(ADMIN_SETTINGS_KEY);
-  return data ? JSON.parse(data) : { username: "swalih", password: "alif" };
+  return data ? JSON.parse(data) : { username: "msoelib", password: "alif" };
 };
 
 export const updateAdminPassword = (newPassword: string) => {
@@ -300,14 +371,4 @@ export const updateAdminPassword = (newPassword: string) => {
 export const validateAdmin = (username: string, password: string): boolean => {
   const settings = getAdminSettings();
   return settings.username === username && settings.password === password;
-};
-
-// Theme
-export const getTheme = (): "light" | "dark" => {
-  return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light";
-};
-
-export const setTheme = (theme: "light" | "dark") => {
-  localStorage.setItem(THEME_KEY, theme);
-  document.documentElement.classList.toggle("dark", theme === "dark");
 };

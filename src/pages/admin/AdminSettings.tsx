@@ -1,30 +1,18 @@
-import { useState, useEffect } from "react";
-import { Moon, Sun, Lock, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getTheme, setTheme, updateAdminPassword, getAdminSettings } from "@/lib/store";
+import { updateAdminPassword, getAdminSettings } from "@/lib/store";
 import { toast } from "sonner";
 
 const AdminSettings = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-
-  useEffect(() => {
-    const currentTheme = getTheme();
-    setIsDarkMode(currentTheme === "dark");
-  }, []);
-
-  const handleThemeChange = (checked: boolean) => {
-    setIsDarkMode(checked);
-    setTheme(checked ? "dark" : "light");
-  };
 
   const handlePasswordChange = () => {
     const settings = getAdminSettings();
@@ -62,33 +50,6 @@ const AdminSettings = () => {
         <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Settings</h1>
         <p className="text-muted-foreground">Manage your admin preferences</p>
       </div>
-
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="font-serif flex items-center gap-2">
-            {isDarkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            Appearance
-          </CardTitle>
-          <CardDescription>
-            Customize how the admin panel looks
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="dark-mode" className="font-medium">Dark Mode</Label>
-              <p className="text-sm text-muted-foreground">
-                Switch between light and dark themes
-              </p>
-            </div>
-            <Switch
-              id="dark-mode"
-              checked={isDarkMode}
-              onCheckedChange={handleThemeChange}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       <Card className="bg-card border-border">
         <CardHeader>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Settings, BookOpen } from "lucide-react";
+import { Menu, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/logo.png";
@@ -13,7 +13,7 @@ export const Header = () => {
 
   const navLinks = [
     { path: "/", label: "Catalog" },
-    { path: "/settings", label: "Settings" },
+    { path: "/categories", label: "Categories" },
   ];
 
   return (
@@ -22,7 +22,7 @@ export const Header = () => {
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Library Logo" className="h-10 w-10 object-contain" />
           <span className="font-serif text-xl font-semibold text-foreground">
-            Library Catalog
+            Imthiyaaz Library
           </span>
         </Link>
 

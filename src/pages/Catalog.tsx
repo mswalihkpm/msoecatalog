@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { BookCard } from "@/components/BookCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { Header } from "@/components/Header";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { getBooks, initializeData } from "@/lib/store";
 import { Book } from "@/lib/types";
 import { Library } from "lucide-react";
@@ -18,7 +19,7 @@ const Catalog = () => {
   }, []);
 
   const filteredBooks = useMemo(() => {
-    return books.filter((book) => {
+    const filtered = books.filter((book) => {
       const matchesSearch =
         !searchQuery ||
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,6 +36,9 @@ const Catalog = () => {
 
       return matchesSearch && matchesCategory && matchesAvailability;
     });
+
+    // Sort by rating in descending order
+    return filtered.sort((a, b) => b.averageRating - a.averageRating);
   }, [books, searchQuery, selectedCategory, availabilityFilter]);
 
   const clearFilters = () => {
@@ -44,21 +48,22 @@ const Catalog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <AnimatedBackground />
       <Header />
-      <main className="container px-4 py-8">
+      <main className="container px-4 py-8 relative z-10">
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
             <Library className="h-4 w-4" />
-            <span className="text-sm font-medium">Welcome to Our Library</span>
+            <span className="text-sm font-medium">Welcome to Imthiyaaz Library</span>
           </div>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
             Explore Our <span className="text-gradient-gold">Collection</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Discover thousands of books across various categories. Browse, read reviews, 
-            and find your next great read.
+            and request your next great read.
           </p>
         </div>
 
@@ -78,7 +83,7 @@ const Catalog = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredBooks.length} of {books.length} books
+            Showing {filteredBooks.length} of {books.length} books (sorted by rating)
           </p>
         </div>
 

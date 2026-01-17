@@ -6,59 +6,6 @@
 
 @layer base {
   :root {
-    --background: 45 30% 97%;
-    --foreground: 30 10% 15%;
-
-    --card: 45 40% 99%;
-    --card-foreground: 30 10% 15%;
-
-    --popover: 45 40% 99%;
-    --popover-foreground: 30 10% 15%;
-
-    --primary: 43 65% 55%;
-    --primary-foreground: 30 10% 10%;
-
-    --secondary: 145 32% 28%;
-    --secondary-foreground: 45 40% 97%;
-
-    --muted: 45 20% 92%;
-    --muted-foreground: 30 10% 45%;
-
-    --accent: 145 32% 28%;
-    --accent-foreground: 45 40% 97%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 45 20% 85%;
-    --input: 45 20% 85%;
-    --ring: 43 65% 55%;
-
-    --radius: 0.75rem;
-
-    --gold-light: 43 80% 70%;
-    --gold-dark: 43 70% 40%;
-    --green-light: 145 35% 40%;
-    --green-dark: 145 40% 20%;
-    --cream: 45 40% 96%;
-    --ivory: 45 50% 98%;
-
-    --sidebar-background: 145 32% 28%;
-    --sidebar-foreground: 45 40% 97%;
-    --sidebar-primary: 43 65% 55%;
-    --sidebar-primary-foreground: 30 10% 10%;
-    --sidebar-accent: 145 25% 35%;
-    --sidebar-accent-foreground: 45 40% 97%;
-    --sidebar-border: 145 25% 35%;
-    --sidebar-ring: 43 65% 55%;
-
-    --gradient-gold: linear-gradient(135deg, hsl(43 80% 70%), hsl(43 65% 55%), hsl(43 70% 40%));
-    --gradient-green: linear-gradient(135deg, hsl(145 35% 40%), hsl(145 32% 28%));
-    --shadow-gold: 0 4px 20px -4px hsl(43 65% 55% / 0.4);
-    --shadow-card: 0 4px 12px -2px hsl(30 10% 15% / 0.08);
-  }
-
-  .dark {
     --background: 30 15% 10%;
     --foreground: 45 30% 92%;
 
@@ -86,6 +33,8 @@
     --border: 30 12% 22%;
     --input: 30 12% 22%;
     --ring: 43 65% 55%;
+
+    --radius: 0.75rem;
 
     --gold-light: 43 70% 60%;
     --gold-dark: 43 65% 45%;
@@ -146,5 +95,106 @@
 
   .shadow-card {
     box-shadow: var(--shadow-card);
+  }
+}
+
+/* Animated Background */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 80%, hsl(43 65% 55% / 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, hsl(145 30% 35% / 0.06) 0%, transparent 50%),
+              radial-gradient(circle at 40% 40%, hsl(43 70% 60% / 0.04) 0%, transparent 40%);
+  animation: float 20s ease-in-out infinite;
+}
+
+.animated-bg::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 60% 60%, hsl(145 25% 25% / 0.05) 0%, transparent 45%),
+              radial-gradient(circle at 30% 70%, hsl(43 65% 55% / 0.06) 0%, transparent 50%);
+  animation: float 25s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(2%, 2%) rotate(1deg);
+  }
+  50% {
+    transform: translate(0, 4%) rotate(0deg);
+  }
+  75% {
+    transform: translate(-2%, 2%) rotate(-1deg);
+  }
+}
+
+/* Floating Particles */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: hsl(43 65% 55% / 0.3);
+  border-radius: 50%;
+  animation: rise 15s ease-in infinite;
+}
+
+.particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 18s; }
+.particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 20s; }
+.particle:nth-child(3) { left: 30%; animation-delay: 4s; animation-duration: 16s; }
+.particle:nth-child(4) { left: 40%; animation-delay: 1s; animation-duration: 22s; }
+.particle:nth-child(5) { left: 50%; animation-delay: 3s; animation-duration: 19s; }
+.particle:nth-child(6) { left: 60%; animation-delay: 5s; animation-duration: 17s; }
+.particle:nth-child(7) { left: 70%; animation-delay: 2s; animation-duration: 21s; }
+.particle:nth-child(8) { left: 80%; animation-delay: 4s; animation-duration: 18s; }
+.particle:nth-child(9) { left: 90%; animation-delay: 1s; animation-duration: 20s; }
+.particle:nth-child(10) { left: 95%; animation-delay: 3s; animation-duration: 16s; }
+
+@keyframes rise {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1);
+    opacity: 0;
   }
 }

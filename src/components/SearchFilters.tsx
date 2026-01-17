@@ -1,4 +1,4 @@
-import { Search, Filter, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,16 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { Category } from "@/lib/types";
 
 const categories: Category[] = [
-  "Fiction",
-  "Non-Fiction",
-  "Science",
-  "History",
+  "Islamic",
+  "Novel",
   "Biography",
-  "Technology",
-  "Religion",
-  "Philosophy",
-  "Children",
-  "Other",
+  "Science",
+  "English",
+  "Arabic",
+  "History",
+  "General",
+  "Poem",
+  "Others",
 ];
 
 interface SearchFiltersProps {
@@ -43,7 +43,7 @@ export const SearchFilters = ({
   onAvailabilityChange,
   onClearFilters,
 }: SearchFiltersProps) => {
-  const hasActiveFilters = searchQuery || selectedCategory || availabilityFilter;
+  const hasActiveFilters = searchQuery || selectedCategory !== "all" || availabilityFilter !== "all";
 
   return (
     <div className="space-y-4">
@@ -127,3 +127,5 @@ export const SearchFilters = ({
     </div>
   );
 };
+
+export { categories };
