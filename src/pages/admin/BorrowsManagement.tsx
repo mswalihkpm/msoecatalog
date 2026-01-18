@@ -82,10 +82,15 @@ const BorrowsManagement = () => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    setRecords(getBorrowRecords());
-    setBooks(getBooks());
-    setRequests(getBookRequests());
+  const loadData = async () => {
+    const [recordsData, booksData, requestsData] = await Promise.all([
+      getBorrowRecords(),
+      getBooks(),
+      getBookRequests(),
+    ]);
+    setRecords(recordsData);
+    setBooks(booksData);
+    setRequests(requestsData);
   };
 
   const availableBooks = books.filter((b) => !b.isBorrowed);
@@ -101,14 +106,14 @@ const BorrowsManagement = () => {
     setEditingRecord(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.borrowerName || !formData.borrowedDate || !formData.returnDate) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     if (editingRecord) {
-      updateBorrowRecord(editingRecord.id, {
+      await updateBorrowRecord(editingRecord.id, {
         borrowerName: formData.borrowerName,
         borrowerClass: formData.borrowerClass,
         borrowedDate: formData.borrowedDate,
@@ -123,7 +128,7 @@ const BorrowsManagement = () => {
       const book = books.find((b) => b.id === formData.bookId);
       if (!book) return;
 
-      addBorrowRecord({
+      await addBorrowRecord({
         bookId: formData.bookId,
         bookTitle: book.title,
         bookVolume: book.volume,
@@ -136,7 +141,7 @@ const BorrowsManagement = () => {
       toast.success("Borrow record added successfully");
     }
 
-    loadData();
+    await loadData();
     setIsDialogOpen(false);
     resetForm();
   };
@@ -153,16 +158,16 @@ const BorrowsManagement = () => {
     setIsDialogOpen(true);
   };
 
-  const handleMarkReturned = (id: string) => {
-    updateBorrowRecord(id, { isReturned: true });
+  const handleMarkReturned = async (id: string) => {
+    await updateBorrowRecord(id, { isReturned: true });
     toast.success("Book marked as returned");
-    loadData();
+    await loadData();
   };
 
-  const handleDelete = (id: string) => {
-    deleteBorrowRecord(id);
+  const handleDelete = async (id: string) => {
+    await deleteBorrowRecord(id);
     toast.success("Borrow record deleted");
-    loadData();
+    await loadData();
   };
 
   const handleApproveClick = (request: BookRequest) => {
@@ -174,7 +179,7 @@ const BorrowsManagement = () => {
     setIsApproveDialogOpen(true);
   };
 
-  const handleApproveRequest = () => {
+  const handleApproveRequest = async () => {
     if (!approveRequest || !approveFormData.borrowedDate || !approveFormData.returnDate) {
       toast.error("Please fill in all required fields");
       return;
@@ -186,7 +191,7 @@ const BorrowsManagement = () => {
       return;
     }
 
-    addBorrowRecord({
+    await addBorrowRecord({
       bookId: approveRequest.bookId,
       bookTitle: approveRequest.bookTitle,
       bookVolume: approveRequest.bookVolume,
@@ -197,23 +202,23 @@ const BorrowsManagement = () => {
       isReturned: false,
     });
 
-    updateBookRequest(approveRequest.id, { status: "approved" });
+    await updateBookRequest(approveRequest.id, { status: "approved" });
     toast.success("Request approved and borrow record created");
     setIsApproveDialogOpen(false);
     setApproveRequest(null);
-    loadData();
+    await loadData();
   };
 
-  const handleRejectRequest = (id: string) => {
-    updateBookRequest(id, { status: "rejected" });
+  const handleRejectRequest = async (id: string) => {
+    await updateBookRequest(id, { status: "rejected" });
     toast.success("Request rejected");
-    loadData();
+    await loadData();
   };
 
-  const handleDeleteRequest = (id: string) => {
-    deleteBookRequest(id);
+  const handleDeleteRequest = async (id: string) => {
+    await deleteBookRequest(id);
     toast.success("Request deleted");
-    loadData();
+    await loadData();
   };
 
   const filteredRecords = records.filter(

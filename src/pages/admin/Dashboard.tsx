@@ -12,25 +12,33 @@ const Dashboard = () => {
     totalReviews: 0,
     avgRating: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const books = getBooks();
-    const borrows = getBorrowRecords();
-    const reviews = getReviews();
+    const loadStats = async () => {
+      const [books, borrows, reviews] = await Promise.all([
+        getBooks(),
+        getBorrowRecords(),
+        getReviews(),
+      ]);
 
-    const avgRating =
-      books.length > 0
-        ? books.reduce((sum, b) => sum + b.averageRating, 0) / books.length
-        : 0;
+      const avgRating =
+        books.length > 0
+          ? books.reduce((sum, b) => sum + b.averageRating, 0) / books.length
+          : 0;
 
-    setStats({
-      totalBooks: books.length,
-      availableBooks: books.filter((b) => !b.isBorrowed).length,
-      borrowedBooks: books.filter((b) => b.isBorrowed).length,
-      totalBorrows: borrows.length,
-      totalReviews: reviews.length,
-      avgRating,
-    });
+      setStats({
+        totalBooks: books.length,
+        availableBooks: books.filter((b) => !b.isBorrowed).length,
+        borrowedBooks: books.filter((b) => b.isBorrowed).length,
+        totalBorrows: borrows.length,
+        totalReviews: reviews.length,
+        avgRating,
+      });
+      setIsLoading(false);
+    };
+
+    loadStats();
   }, []);
 
   const statCards = [
@@ -63,6 +71,17 @@ const Dashboard = () => {
       bg: "bg-primary/10",
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-16">
+        <div className="animate-pulse">
+          <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">

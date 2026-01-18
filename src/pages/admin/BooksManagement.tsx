@@ -89,8 +89,9 @@ const BooksManagement = () => {
     loadBooks();
   }, []);
 
-  const loadBooks = () => {
-    setBooks(getBooks());
+  const loadBooks = async () => {
+    const booksData = await getBooks();
+    setBooks(booksData);
   };
 
   const resetForm = () => {
@@ -136,21 +137,21 @@ const BooksManagement = () => {
     }
   };
 
-  const handleAddBook = () => {
+  const handleAddBook = async () => {
     if (!formData.siNumber || !formData.title || !formData.author || !formData.numberCode) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     if (editingBook) {
-      updateBook(editingBook.id, formData);
+      await updateBook(editingBook.id, formData);
       toast.success("Book updated successfully");
     } else {
-      addBook({ ...formData, isBorrowed: false });
+      await addBook({ ...formData, isBorrowed: false });
       toast.success("Book added successfully");
     }
 
-    loadBooks();
+    await loadBooks();
     setIsAddDialogOpen(false);
     resetForm();
   };
@@ -173,13 +174,13 @@ const BooksManagement = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleDeleteBook = (id: string) => {
-    deleteBook(id);
+  const handleDeleteBook = async (id: string) => {
+    await deleteBook(id);
     toast.success("Book deleted successfully");
-    loadBooks();
+    await loadBooks();
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (!bulkDeleteFrom || !bulkDeleteTo) {
       toast.error("Please enter both SI numbers");
       return;
@@ -198,12 +199,12 @@ const BooksManagement = () => {
       return;
     }
 
-    const deletedCount = bulkDeleteBooks(bulkDeleteFrom, bulkDeleteTo);
+    const deletedCount = await bulkDeleteBooks(bulkDeleteFrom, bulkDeleteTo);
     toast.success(`${deletedCount} books deleted successfully`);
     setBulkDeleteFrom("");
     setBulkDeleteTo("");
     setIsBulkDeleteDialogOpen(false);
-    loadBooks();
+    await loadBooks();
   };
 
   const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,7 +212,7 @@ const BooksManagement = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = new Uint8Array(event.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
@@ -238,9 +239,9 @@ const BooksManagement = () => {
           return;
         }
 
-        bulkAddBooks(validBooks);
+        await bulkAddBooks(validBooks);
         toast.success(`${validBooks.length} books added successfully`);
-        loadBooks();
+        await loadBooks();
       } catch (error) {
         toast.error("Error parsing Excel file. Please check the format.");
       }

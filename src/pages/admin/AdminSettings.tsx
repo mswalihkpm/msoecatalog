@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,16 +13,23 @@ const AdminSettings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [storedPassword, setStoredPassword] = useState("");
 
-  const handlePasswordChange = () => {
-    const settings = getAdminSettings();
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await getAdminSettings();
+      setStoredPassword(settings.password);
+    };
+    loadSettings();
+  }, []);
 
+  const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast.error("Please fill in all password fields");
       return;
     }
 
-    if (currentPassword !== settings.password) {
+    if (currentPassword !== storedPassword) {
       toast.error("Current password is incorrect");
       return;
     }
@@ -37,7 +44,8 @@ const AdminSettings = () => {
       return;
     }
 
-    updateAdminPassword(newPassword);
+    await updateAdminPassword(newPassword);
+    setStoredPassword(newPassword);
     toast.success("Password updated successfully");
     setCurrentPassword("");
     setNewPassword("");
@@ -111,7 +119,7 @@ const AdminSettings = () => {
           </div>
           <Button
             onClick={handlePasswordChange}
-            className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             Update Password
           </Button>
