@@ -484,6 +484,7 @@ const BorrowsManagement = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Book</TableHead>
+                    <TableHead>Code</TableHead>
                     <TableHead>Requester</TableHead>
                     <TableHead>Class</TableHead>
                     <TableHead>Request Date</TableHead>
@@ -498,6 +499,9 @@ const BorrowsManagement = () => {
                         <TableCell className="font-medium">
                           {request.bookTitle}
                           {request.bookVolume && <span className="text-muted-foreground text-sm ml-1">(Vol. {request.bookVolume})</span>}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm text-primary">
+                          {request.bookNumberCode}
                         </TableCell>
                         <TableCell>{request.requesterName}</TableCell>
                         <TableCell>{request.requesterClass}</TableCell>
@@ -569,7 +573,7 @@ const BorrowsManagement = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No book requests
                       </TableCell>
                     </TableRow>

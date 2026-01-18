@@ -43,6 +43,7 @@ export interface BookRequest {
   id: string;
   bookId: string;
   bookTitle: string;
+  bookNumberCode: string;
   bookVolume?: string;
   requesterName: string;
   requesterClass: string;
