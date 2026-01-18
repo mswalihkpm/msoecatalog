@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Star, Calendar, User, BookOpen, Image, Send } from "lucide-react";
+import { ArrowLeft, Star, Calendar, User, BookOpen, Image, Send, Hash, FileText, Building } from "lucide-react";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { StarRating } from "@/components/StarRating";
@@ -57,6 +57,7 @@ const BookDetail = () => {
     addBookRequest({
       bookId: book.id,
       bookTitle: book.title,
+      bookNumberCode: book.numberCode,
       bookVolume: book.volume,
       requesterName: requesterName.trim(),
       requesterClass: requesterClass.trim(),
@@ -93,97 +94,129 @@ const BookDetail = () => {
       <AnimatedBackground />
       <Header />
       <main className="container px-4 py-8 relative z-10">
-        <Link to="/">
-          <Button variant="ghost" className="mb-6 gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Catalog
-          </Button>
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6">
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Browse</span>
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Book Info */}
-          <div className="lg:col-span-2 space-y-6 animate-fade-in">
-            {/* Cover Image */}
-            {book.coverImage ? (
-              <div className="w-full max-w-xs">
+          {/* Left Column - Cover Image */}
+          <div className="animate-fade-in">
+            <div className="relative rounded-xl overflow-hidden border-2 border-primary/20 shadow-teal">
+              {book.coverImage ? (
                 <img
                   src={book.coverImage}
                   alt={book.title}
-                  className="w-full h-auto rounded-lg shadow-card"
+                  className="w-full h-auto object-cover"
                 />
-              </div>
-            ) : (
-              <div className="w-full max-w-xs h-64 bg-muted rounded-lg flex items-center justify-center">
-                <Image className="h-16 w-16 text-muted-foreground" />
-              </div>
-            )}
+              ) : (
+                <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+                  <BookOpen className="h-24 w-24 text-muted-foreground/50" />
+                </div>
+              )}
+            </div>
+          </div>
 
-            <div>
-              <div className="flex flex-wrap items-start gap-3 mb-4">
-                <Badge variant="outline">{book.category}</Badge>
-                {book.volume && (
-                  <Badge variant="outline">Volume {book.volume}</Badge>
-                )}
-                <Badge 
-                  variant={book.isBorrowed ? "destructive" : "secondary"}
-                  className={book.isBorrowed ? "" : "bg-secondary text-secondary-foreground"}
-                >
-                  {book.isBorrowed ? "Currently Borrowed" : "Available"}
+          {/* Middle Column - Book Info */}
+          <div className="lg:col-span-2 space-y-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            {/* Badges */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge className="bg-primary text-primary-foreground font-semibold uppercase text-xs px-4 py-1.5">
+                {book.category}
+              </Badge>
+              {book.volume && (
+                <Badge variant="outline" className="border-primary/30 text-foreground">
+                  Volume {book.volume}
                 </Badge>
-              </div>
+              )}
+              <Badge 
+                className={`font-semibold text-xs px-4 py-1.5 ${
+                  book.isBorrowed 
+                    ? "bg-destructive text-destructive-foreground" 
+                    : "bg-secondary text-secondary-foreground"
+                }`}
+              >
+                {book.isBorrowed ? "BORROWED" : "AVAILABLE"}
+              </Badge>
+            </div>
+
+            {/* Title & Author */}
+            <div>
               <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-2">
                 {book.title}
               </h1>
               <p className="text-lg text-muted-foreground">by {book.author}</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-center gap-2">
-                <StarRating rating={book.averageRating} readonly />
-                <span className="font-medium">{book.averageRating.toFixed(1)}</span>
-                <span className="text-sm text-muted-foreground">
-                  ({book.totalReviews} reviews)
-                </span>
-              </div>
-              <span className="text-sm text-muted-foreground">
-                Code: {book.numberCode}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                SI: {book.siNumber}
-              </span>
-            </div>
-
-            {/* Additional Details */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {book.pages && (
-                <div className="bg-muted/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Pages</p>
-                  <p className="font-semibold">{book.pages}</p>
-                </div>
-              )}
-              {book.volume && (
-                <div className="bg-muted/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Volume</p>
-                  <p className="font-semibold">{book.volume}</p>
-                </div>
-              )}
-              {book.publication && (
-                <div className="bg-muted/50 rounded-lg p-3 text-center col-span-2">
-                  <p className="text-xs text-muted-foreground">Publication</p>
-                  <p className="font-semibold text-sm">{book.publication}</p>
-                </div>
-              )}
-            </div>
-
-            <Separator />
-
+            {/* Description */}
             <div>
-              <h2 className="font-serif text-xl font-semibold mb-3">Description</h2>
+              <h2 className="font-serif text-lg font-semibold mb-2 text-foreground">Description</h2>
               <p className="text-muted-foreground leading-relaxed">
                 {book.description || "No description available for this book."}
               </p>
             </div>
 
+            {/* Details Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {book.publication && (
+                <Card className="bg-muted/30 border-primary/10">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <Building className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Publisher</p>
+                      <p className="font-semibold text-foreground">{book.publication}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              <Card className="bg-muted/30 border-primary/10">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Hash className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">ISBN</p>
+                    <p className="font-semibold text-foreground">{book.numberCode}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              {book.pages && (
+                <Card className="bg-muted/30 border-primary/10">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Pages</p>
+                      <p className="font-semibold text-foreground">{book.pages}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              <Card className="bg-muted/30 border-primary/10">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Copies</p>
+                    <p className="font-semibold text-foreground">1</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/30 border-primary/10">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Added</p>
+                    <p className="font-semibold text-foreground">{format(new Date(), "M/d/yyyy")}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Tags */}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Tags:</span>
+              <Badge variant="outline" className="text-xs">#{book.category.toLowerCase()}</Badge>
+              <Badge variant="outline" className="text-xs">#{book.title.split(' ')[0].toLowerCase()}</Badge>
+            </div>
+
+            {/* Request Button */}
             {book.isBorrowed ? (
               <Card className="bg-destructive/10 border-destructive/20">
                 <CardContent className="pt-4">
@@ -205,9 +238,9 @@ const BookDetail = () => {
             ) : (
               <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-gold text-primary-foreground hover:opacity-90 gap-2">
-                    <Send className="h-4 w-4" />
-                    Request This Book
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold">
+                    <BookOpen className="h-5 w-5" />
+                    Request Book
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -244,7 +277,7 @@ const BookDetail = () => {
                     </Button>
                     <Button
                       onClick={handleRequestBook}
-                      className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       Submit Request
                     </Button>
@@ -252,31 +285,53 @@ const BookDetail = () => {
                 </DialogContent>
               </Dialog>
             )}
+          </div>
+        </div>
 
-            <Separator />
+        <Separator className="my-12" />
 
-            {/* Reviews Section */}
-            <div>
-              <h2 className="font-serif text-xl font-semibold mb-4">
-                Reviews ({reviews.length})
-              </h2>
-              {reviews.length > 0 ? (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
-              )}
-            </div>
+        {/* Reviews Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6 animate-fade-in">
+            <h2 className="font-serif text-2xl font-bold text-foreground">
+              Reviews & Ratings
+            </h2>
+            
+            {/* Review Form */}
+            <Card className="bg-card border-primary/10">
+              <CardContent className="p-6">
+                <h3 className="font-serif text-lg font-semibold mb-4">Leave a Review</h3>
+                <ReviewForm bookId={book.id} onReviewAdded={loadData} />
+              </CardContent>
+            </Card>
+
+            {/* Existing Reviews */}
+            {reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <ReviewCard key={review.id} review={review} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">
+                No reviews yet. Be the first to review this book!
+              </p>
+            )}
           </div>
 
-          {/* Review Form Sidebar */}
-          <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className="sticky top-24">
-              <ReviewForm bookId={book.id} onReviewAdded={loadData} />
-            </div>
+          {/* Rating Summary */}
+          <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <Card className="bg-card border-primary/10 sticky top-24">
+              <CardContent className="p-6 text-center">
+                <div className="text-5xl font-bold text-foreground mb-2">
+                  {book.averageRating.toFixed(1)}
+                </div>
+                <StarRating rating={book.averageRating} readonly size="lg" />
+                <p className="text-muted-foreground mt-2">
+                  Based on {book.totalReviews} review{book.totalReviews !== 1 ? 's' : ''}
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
