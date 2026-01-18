@@ -18,7 +18,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!userName.trim()) {
@@ -34,7 +34,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
       return;
     }
 
-    addReview({
+    await addReview({
       bookId,
       userName: userName.trim(),
       rating,

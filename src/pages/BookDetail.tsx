@@ -34,11 +34,12 @@ const BookDetail = () => {
   const [requesterName, setRequesterName] = useState("");
   const [requesterClass, setRequesterClass] = useState("");
 
-  const loadData = () => {
+  const loadData = async () => {
     if (id) {
-      const bookData = getBookById(id);
+      const bookData = await getBookById(id);
       setBook(bookData || null);
-      setReviews(getReviews(id));
+      const reviewsData = await getReviews(id);
+      setReviews(reviewsData);
     }
   };
 

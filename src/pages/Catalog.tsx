@@ -12,10 +12,16 @@ const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     initializeData();
-    setBooks(getBooks());
+    const loadBooks = async () => {
+      const booksData = await getBooks();
+      setBooks(booksData);
+      setIsLoading(false);
+    };
+    loadBooks();
   }, []);
 
   const filteredBooks = useMemo(() => {
@@ -59,7 +65,7 @@ const Catalog = () => {
             <span className="text-sm font-medium">Welcome to Imthiyaaz Library</span>
           </div>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Explore Our <span className="text-gradient-gold">Collection</span>
+            Explore Our <span className="text-gradient-teal">Collection</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Discover thousands of books across various categories. Browse, read reviews, 
@@ -83,12 +89,19 @@ const Catalog = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredBooks.length} of {books.length} books (sorted by rating)
+            {isLoading ? "Loading..." : `Showing ${filteredBooks.length} of ${books.length} books (sorted by rating)`}
           </p>
         </div>
 
         {/* Book Grid */}
-        {filteredBooks.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-16">
+            <div className="animate-pulse">
+              <Library className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading books...</p>
+            </div>
+          </div>
+        ) : filteredBooks.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredBooks.map((book, index) => (
               <div

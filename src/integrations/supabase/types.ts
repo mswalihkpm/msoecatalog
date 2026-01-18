@@ -14,7 +14,225 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_settings: {
+        Row: {
+          created_at: string
+          id: string
+          password: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password?: string
+          updated_at?: string
+          username?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      book_requests: {
+        Row: {
+          book_id: string
+          book_number_code: string
+          book_title: string
+          book_volume: string | null
+          created_at: string
+          id: string
+          request_date: string
+          requester_class: string
+          requester_name: string
+          status: string
+        }
+        Insert: {
+          book_id: string
+          book_number_code: string
+          book_title: string
+          book_volume?: string | null
+          created_at?: string
+          id?: string
+          request_date?: string
+          requester_class: string
+          requester_name: string
+          status?: string
+        }
+        Update: {
+          book_id?: string
+          book_number_code?: string
+          book_title?: string
+          book_volume?: string | null
+          created_at?: string
+          id?: string
+          request_date?: string
+          requester_class?: string
+          requester_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_requests_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      books: {
+        Row: {
+          author: string
+          average_rating: number
+          borrowed_by: string | null
+          borrowed_date: string | null
+          category: string
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_borrowed: boolean
+          number_code: string
+          pages: string | null
+          publication: string | null
+          return_date: string | null
+          si_number: string
+          title: string
+          total_reviews: number
+          updated_at: string
+          volume: string | null
+        }
+        Insert: {
+          author: string
+          average_rating?: number
+          borrowed_by?: string | null
+          borrowed_date?: string | null
+          category: string
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_borrowed?: boolean
+          number_code: string
+          pages?: string | null
+          publication?: string | null
+          return_date?: string | null
+          si_number: string
+          title: string
+          total_reviews?: number
+          updated_at?: string
+          volume?: string | null
+        }
+        Update: {
+          author?: string
+          average_rating?: number
+          borrowed_by?: string | null
+          borrowed_date?: string | null
+          category?: string
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_borrowed?: boolean
+          number_code?: string
+          pages?: string | null
+          publication?: string | null
+          return_date?: string | null
+          si_number?: string
+          title?: string
+          total_reviews?: number
+          updated_at?: string
+          volume?: string | null
+        }
+        Relationships: []
+      }
+      borrow_records: {
+        Row: {
+          book_id: string
+          book_title: string
+          book_volume: string | null
+          borrowed_date: string
+          borrower_class: string | null
+          borrower_name: string
+          created_at: string
+          id: string
+          is_returned: boolean
+          return_date: string
+        }
+        Insert: {
+          book_id: string
+          book_title: string
+          book_volume?: string | null
+          borrowed_date: string
+          borrower_class?: string | null
+          borrower_name: string
+          created_at?: string
+          id?: string
+          is_returned?: boolean
+          return_date: string
+        }
+        Update: {
+          book_id?: string
+          book_title?: string
+          book_volume?: string | null
+          borrowed_date?: string
+          borrower_class?: string | null
+          borrower_name?: string
+          created_at?: string
+          id?: string
+          is_returned?: boolean
+          return_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "borrow_records_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          book_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          user_name: string
+        }
+        Insert: {
+          book_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          user_name: string
+        }
+        Update: {
+          book_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
