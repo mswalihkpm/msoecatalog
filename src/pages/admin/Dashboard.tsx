@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Users, Star, Library } from "lucide-react";
+import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getBooks, getBorrowRecords, getReviews } from "@/lib/store";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getBooks, getBorrowRecords, getReviews, getBookRequests } from "@/lib/store";
+import { Book, BookRequest } from "@/lib/types";
+import { format } from "date-fns";
+import * as XLSX from "xlsx";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -11,35 +17,82 @@ const Dashboard = () => {
     totalBorrows: 0,
     totalReviews: 0,
     avgRating: 0,
+    pendingRequests: 0,
   });
+  const [books, setBooks] = useState<Book[]>([]);
+  const [requests, setRequests] = useState<BookRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadStats = async () => {
-      const [books, borrows, reviews] = await Promise.all([
+      const [booksData, borrows, reviews, requestsData] = await Promise.all([
         getBooks(),
         getBorrowRecords(),
         getReviews(),
+        getBookRequests(),
       ]);
 
       const avgRating =
-        books.length > 0
-          ? books.reduce((sum, b) => sum + b.averageRating, 0) / books.length
+        booksData.length > 0
+          ? booksData.reduce((sum, b) => sum + b.averageRating, 0) / booksData.length
           : 0;
 
+      setBooks(booksData);
+      setRequests(requestsData);
       setStats({
-        totalBooks: books.length,
-        availableBooks: books.filter((b) => !b.isBorrowed).length,
-        borrowedBooks: books.filter((b) => b.isBorrowed).length,
+        totalBooks: booksData.length,
+        availableBooks: booksData.filter((b) => !b.isBorrowed).length,
+        borrowedBooks: booksData.filter((b) => b.isBorrowed).length,
         totalBorrows: borrows.length,
         totalReviews: reviews.length,
         avgRating,
+        pendingRequests: requestsData.filter((r) => r.status === "pending").length,
       });
       setIsLoading(false);
     };
 
     loadStats();
   }, []);
+
+  const exportToExcel = () => {
+    if (books.length === 0) {
+      toast.error("No books to export");
+      return;
+    }
+
+    const exportData = books.map((book, index) => ({
+      "SI No": book.siNumber || index + 1,
+      "Title": book.title,
+      "Author": book.author,
+      "Category": book.category,
+      "Number Code": book.numberCode,
+      "Volume": book.volume || "-",
+      "Pages": book.pages || "-",
+      "Publication": book.publication || "-",
+      "Status": book.isBorrowed ? "Borrowed" : "Available",
+      "Borrowed By": book.borrowedBy || "-",
+      "Average Rating": book.averageRating.toFixed(1),
+      "Total Reviews": book.totalReviews,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Catalog");
+
+    // Auto-fit column widths
+    const maxWidths = exportData.reduce((acc, row) => {
+      Object.keys(row).forEach((key, i) => {
+        const value = String(row[key as keyof typeof row]);
+        acc[i] = Math.max(acc[i] || key.length, value.length);
+      });
+      return acc;
+    }, {} as Record<number, number>);
+
+    worksheet["!cols"] = Object.values(maxWidths).map((w) => ({ wch: Math.min(w + 2, 50) }));
+
+    XLSX.writeFile(workbook, `library_catalog_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    toast.success("Catalog exported to Excel successfully!");
+  };
 
   const statCards = [
     {
@@ -64,13 +117,26 @@ const Dashboard = () => {
       bg: "bg-destructive/10",
     },
     {
-      title: "Avg Rating",
-      value: stats.avgRating.toFixed(1),
-      icon: Star,
+      title: "Pending Requests",
+      value: stats.pendingRequests,
+      icon: Clock,
       color: "text-primary",
       bg: "bg-primary/10",
     },
   ];
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
+      case "approved":
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30"><CheckCircle className="h-3 w-3 mr-1" /> Approved</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30"><XCircle className="h-3 w-3 mr-1" /> Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -85,9 +151,15 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's an overview of your library.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back! Here's an overview of your library.</p>
+        </div>
+        <Button onClick={exportToExcel} className="gap-2 bg-secondary hover:bg-secondary/90">
+          <FileSpreadsheet className="h-4 w-4" />
+          Export Catalog to Excel
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -135,21 +207,59 @@ const Dashboard = () => {
                 %
               </span>
             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Average Rating</span>
+              <span className="font-semibold flex items-center gap-1">
+                <Star className="h-4 w-4 text-primary fill-primary" />
+                {stats.avgRating.toFixed(1)}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif">Tips</CardTitle>
+            <CardTitle className="font-serif">Recent Book Requests</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>• Use the Books section to add, edit, or delete books</p>
-            <p>• Bulk upload books using an Excel file for faster data entry</p>
-            <p>• Track all borrow records in the Borrows section</p>
-            <p>• Change your admin password in Settings</p>
+          <CardContent>
+            {requests.length > 0 ? (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {requests.slice(0, 5).map((request) => (
+                  <div key={request.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{request.bookTitle}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Code: {request.bookNumberCode} | By: {request.requesterName} ({request.requesterClass})
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(request.requestDate), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <div className="ml-3">
+                      {getStatusBadge(request.status)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No requests yet</p>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-serif">Tips</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <p>• Use the Books section to add, edit, or delete books</p>
+          <p>• Bulk upload books using an Excel file for faster data entry</p>
+          <p>• Track all borrow records and requests in the Borrows section</p>
+          <p>• Export your entire catalog to Excel using the button above</p>
+          <p>• Change your admin password in Settings</p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

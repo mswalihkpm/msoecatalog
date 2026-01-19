@@ -254,6 +254,13 @@ export const addReview = async (review: Omit<Review, "id" | "createdAt">): Promi
   };
 };
 
+export const deleteReview = async (id: string) => {
+  const { error } = await supabase.from("reviews").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting review:", error);
+  }
+};
+
 // Borrow Records
 export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
   const { data, error } = await supabase

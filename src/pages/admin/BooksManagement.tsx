@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Upload, Trash2, Edit, Search, Image, X } from "lucide-react";
+import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBooks, addBook, updateBook, deleteBook, bulkAddBooks, bulkDeleteBooks } from "@/lib/store";
 import { Book, Category } from "@/lib/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const categories: Category[] = [
   "Islamic",
@@ -84,7 +85,8 @@ const BooksManagement = () => {
   });
 
   const [coverPreview, setCoverPreview] = useState<string>("");
-
+  const [isUploading, setIsUploading] = useState(false);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   useEffect(() => {
     loadBooks();
   }, []);
@@ -108,6 +110,7 @@ const BooksManagement = () => {
       publication: "",
     });
     setCoverPreview("");
+    setCoverFile(null);
     setEditingBook(null);
   };
 
@@ -115,23 +118,49 @@ const BooksManagement = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image size should be less than 2MB");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setFormData({ ...formData, coverImage: base64 });
-      setCoverPreview(base64);
-    };
-    reader.readAsDataURL(file);
+    setCoverFile(file);
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setCoverPreview(previewUrl);
+  };
+
+  const uploadCoverToStorage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `covers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('book-covers')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Failed to upload image');
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('book-covers')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+      return null;
+    }
   };
 
   const removeCover = () => {
     setFormData({ ...formData, coverImage: "" });
     setCoverPreview("");
+    setCoverFile(null);
     if (coverInputRef.current) {
       coverInputRef.current.value = "";
     }
@@ -143,17 +172,35 @@ const BooksManagement = () => {
       return;
     }
 
-    if (editingBook) {
-      await updateBook(editingBook.id, formData);
-      toast.success("Book updated successfully");
-    } else {
-      await addBook({ ...formData, isBorrowed: false });
-      toast.success("Book added successfully");
-    }
+    setIsUploading(true);
+    
+    try {
+      let coverImageUrl = formData.coverImage;
+      
+      // Upload new cover if file is selected
+      if (coverFile) {
+        const uploadedUrl = await uploadCoverToStorage(coverFile);
+        if (uploadedUrl) {
+          coverImageUrl = uploadedUrl;
+        }
+      }
 
-    await loadBooks();
-    setIsAddDialogOpen(false);
-    resetForm();
+      if (editingBook) {
+        await updateBook(editingBook.id, { ...formData, coverImage: coverImageUrl });
+        toast.success("Book updated successfully");
+      } else {
+        await addBook({ ...formData, coverImage: coverImageUrl, isBorrowed: false });
+        toast.success("Book added successfully");
+      }
+
+      await loadBooks();
+      setIsAddDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleEditClick = (book: Book) => {
@@ -486,11 +533,18 @@ const BooksManagement = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isUploading}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddBook} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
-                  {editingBook ? "Update" : "Add"} Book
+                <Button onClick={handleAddBook} className="bg-gradient-gold text-primary-foreground hover:opacity-90" disabled={isUploading}>
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>{editingBook ? "Update" : "Add"} Book</>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
