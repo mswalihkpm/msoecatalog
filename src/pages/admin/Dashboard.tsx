@@ -1,8 +1,16 @@
-import { useEffect, useState } from "react";
-import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getBooks, getBorrowRecords, getReviews, getBookRequests } from "@/lib/store";
 import { Book, BookRequest } from "@/lib/types";
 import { format } from "date-fns";
@@ -22,6 +30,8 @@ const Dashboard = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [requests, setRequests] = useState<BookRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [requestSearch, setRequestSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     const loadStats = async () => {
@@ -54,6 +64,21 @@ const Dashboard = () => {
     loadStats();
   }, []);
 
+  const filteredRequests = useMemo(() => {
+    return requests.filter((request) => {
+      const matchesSearch =
+        !requestSearch ||
+        request.bookTitle.toLowerCase().includes(requestSearch.toLowerCase()) ||
+        request.requesterName.toLowerCase().includes(requestSearch.toLowerCase()) ||
+        request.bookNumberCode.toLowerCase().includes(requestSearch.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "all" || request.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [requests, requestSearch, statusFilter]);
+
   const exportToExcel = () => {
     if (books.length === 0) {
       toast.error("No books to export");
@@ -79,7 +104,6 @@ const Dashboard = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Catalog");
 
-    // Auto-fit column widths
     const maxWidths = exportData.reduce((acc, row) => {
       Object.keys(row).forEach((key, i) => {
         const value = String(row[key as keyof typeof row]);
@@ -219,45 +243,71 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif">Recent Book Requests</CardTitle>
+            <CardTitle className="font-serif">Tips</CardTitle>
           </CardHeader>
-          <CardContent>
-            {requests.length > 0 ? (
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {requests.slice(0, 5).map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{request.bookTitle}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Code: {request.bookNumberCode} | By: {request.requesterName} ({request.requesterClass})
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(request.requestDate), "MMM d, yyyy")}
-                      </p>
-                    </div>
-                    <div className="ml-3">
-                      {getStatusBadge(request.status)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">No requests yet</p>
-            )}
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>• Use the Books section to add, edit, or delete books</p>
+            <p>• Bulk upload books using an Excel file for faster data entry</p>
+            <p>• Track all borrow records and requests in the Borrows section</p>
+            <p>• Export your entire catalog to Excel using the button above</p>
+            <p>• Change your admin password in Settings</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-serif">Tips</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="font-serif">Book Requests</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or title..."
+                  value={requestSearch}
+                  onChange={(e) => setRequestSearch(e.target.value)}
+                  className="pl-9 w-full sm:w-[200px]"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[130px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>• Use the Books section to add, edit, or delete books</p>
-          <p>• Bulk upload books using an Excel file for faster data entry</p>
-          <p>• Track all borrow records and requests in the Borrows section</p>
-          <p>• Export your entire catalog to Excel using the button above</p>
-          <p>• Change your admin password in Settings</p>
+        <CardContent>
+          {filteredRequests.length > 0 ? (
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {filteredRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground truncate">{request.bookTitle}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Code: {request.bookNumberCode} | By: {request.requesterName} ({request.requesterClass})
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(request.requestDate), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                  <div className="ml-3">
+                    {getStatusBadge(request.status)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              {requests.length === 0 ? "No requests yet" : "No requests match your search"}
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
