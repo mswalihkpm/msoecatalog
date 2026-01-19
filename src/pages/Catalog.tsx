@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { BookCard } from "@/components/BookCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { Header } from "@/components/Header";
@@ -8,9 +9,12 @@ import { Book } from "@/lib/types";
 import { Library } from "lucide-react";
 
 const Catalog = () => {
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
+  
   const [books, setBooks] = useState<Book[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,6 +27,13 @@ const Catalog = () => {
     };
     loadBooks();
   }, []);
+
+  // Update category when URL changes
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
 
   const filteredBooks = useMemo(() => {
     const filtered = books.filter((book) => {
@@ -102,7 +113,7 @@ const Catalog = () => {
             </div>
           </div>
         ) : filteredBooks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredBooks.map((book, index) => (
               <div
                 key={book.id}
