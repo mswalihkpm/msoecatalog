@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Book, Review, BorrowRecord, BookRequest, AdminSettings } from "./types";
+import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student } from "./types";
 
 // Initialize data - now just ensures dark mode
 export const initializeData = () => {
@@ -491,4 +491,104 @@ export const updateAdminPassword = async (newPassword: string) => {
 export const validateAdmin = async (username: string, password: string): Promise<boolean> => {
   const settings = await getAdminSettings();
   return settings.username === username && settings.password === password;
+};
+
+// Students
+export const getStudents = async (): Promise<Student[]> => {
+  const { data, error } = await supabase
+    .from("students")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching students:", error);
+    return [];
+  }
+
+  return data.map((student) => ({
+    id: student.id,
+    name: student.name,
+    class: student.class,
+    createdAt: student.created_at,
+    updatedAt: student.updated_at,
+  }));
+};
+
+export const addStudent = async (student: Omit<Student, "id" | "createdAt" | "updatedAt">): Promise<Student | null> => {
+  const { data, error } = await supabase
+    .from("students")
+    .insert({
+      name: student.name,
+      class: student.class,
+    })
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error("Error adding student:", error);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    class: data.class,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+};
+
+export const bulkAddStudents = async (students: Omit<Student, "id" | "createdAt" | "updatedAt">[]) => {
+  const dbStudents = students.map((student) => ({
+    name: student.name,
+    class: student.class,
+  }));
+
+  const { error } = await supabase.from("students").insert(dbStudents);
+
+  if (error) {
+    console.error("Error bulk adding students:", error);
+  }
+};
+
+export const deleteStudent = async (id: string) => {
+  const { error } = await supabase.from("students").delete().eq("id", id);
+  if (error) {
+    console.error("Error deleting student:", error);
+  }
+};
+
+export const bulkDeleteStudents = async (ids: string[]): Promise<number> => {
+  if (ids.length === 0) return 0;
+
+  const { error } = await supabase.from("students").delete().in("id", ids);
+
+  if (error) {
+    console.error("Error bulk deleting students:", error);
+    return 0;
+  }
+
+  return ids.length;
+};
+
+export const searchStudents = async (query: string): Promise<Student[]> => {
+  const { data, error } = await supabase
+    .from("students")
+    .select("*")
+    .or(`name.ilike.%${query}%,class.ilike.%${query}%`)
+    .order("name", { ascending: true })
+    .limit(20);
+
+  if (error) {
+    console.error("Error searching students:", error);
+    return [];
+  }
+
+  return data.map((student) => ({
+    id: student.id,
+    name: student.name,
+    class: student.class,
+    createdAt: student.created_at,
+    updatedAt: student.updated_at,
+  }));
 };

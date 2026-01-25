@@ -62,8 +62,16 @@ export type Category =
   | "Biography"
   | "Science"
   | "English"
-  | "Arabic"
+  | "Language"
   | "History"
   | "General"
   | "Poem"
   | "Others";
+
+export interface Student {
+  id: string;
+  name: string;
+  class: string;
+  createdAt: string;
+  updatedAt: string;
+}

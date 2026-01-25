@@ -15,6 +15,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import BooksManagement from "./pages/admin/BooksManagement";
 import BorrowsManagement from "./pages/admin/BorrowsManagement";
+import StudentsManagement from "./pages/admin/StudentsManagement";
+import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +43,8 @@ const AppContent = () => {
       <Route path="/admin" element={<AdminLayout />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="books" element={<BooksManagement />} />
+        <Route path="students" element={<StudentsManagement />} />
+        <Route path="reviews" element={<ReviewsManagement />} />
         <Route path="borrows" element={<BorrowsManagement />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>

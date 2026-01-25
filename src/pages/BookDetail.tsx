@@ -6,11 +6,11 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { StarRating } from "@/components/StarRating";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ReviewForm } from "@/components/ReviewForm";
+import { StudentSearch } from "@/components/StudentSearch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getBookById, getReviews, addBookRequest } from "@/lib/store";
-import { Book, Review } from "@/lib/types";
+import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -31,8 +31,7 @@ const BookDetail = () => {
   const [book, setBook] = useState<Book | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [requesterName, setRequesterName] = useState("");
-  const [requesterClass, setRequesterClass] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const loadData = async () => {
     if (id) {
@@ -48,8 +47,8 @@ const BookDetail = () => {
   }, [id]);
 
   const handleRequestBook = () => {
-    if (!requesterName.trim() || !requesterClass.trim()) {
-      toast.error("Please fill in all fields");
+    if (!selectedStudent) {
+      toast.error("Please select a student");
       return;
     }
 
@@ -60,14 +59,13 @@ const BookDetail = () => {
       bookTitle: book.title,
       bookNumberCode: book.numberCode,
       bookVolume: book.volume,
-      requesterName: requesterName.trim(),
-      requesterClass: requesterClass.trim(),
+      requesterName: selectedStudent.name,
+      requesterClass: selectedStudent.class,
     });
 
     toast.success("Book request submitted successfully!");
     setIsRequestDialogOpen(false);
-    setRequesterName("");
-    setRequesterClass("");
+    setSelectedStudent(null);
   };
 
   if (!book) {
@@ -254,21 +252,11 @@ const BookDetail = () => {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="requesterName">Your Name *</Label>
-                      <Input
-                        id="requesterName"
-                        value={requesterName}
-                        onChange={(e) => setRequesterName(e.target.value)}
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="requesterClass">Your Class *</Label>
-                      <Input
-                        id="requesterClass"
-                        value={requesterClass}
-                        onChange={(e) => setRequesterClass(e.target.value)}
-                        placeholder="e.g., 10A, 9B, Staff"
+                      <Label>Select Your Name *</Label>
+                      <StudentSearch
+                        onSelect={setSelectedStudent}
+                        selectedStudent={selectedStudent}
+                        placeholder="Search your name..."
                       />
                     </div>
                   </div>
