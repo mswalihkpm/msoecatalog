@@ -17,7 +17,7 @@ const categories: Category[] = [
   "Biography",
   "Science",
   "English",
-  "Arabic",
+  "Language",
   "History",
   "General",
   "Poem",

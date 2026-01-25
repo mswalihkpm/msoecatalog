@@ -10,9 +10,10 @@ import { toast } from "sonner";
 interface ReviewCardProps {
   review: Review;
   onDelete?: () => void;
+  showDeleteButton?: boolean;
 }
 
-export const ReviewCard = ({ review, onDelete }: ReviewCardProps) => {
+export const ReviewCard = ({ review, onDelete, showDeleteButton = false }: ReviewCardProps) => {
   const handleDelete = async () => {
     await deleteReview(review.id);
     toast.success("Review deleted successfully");
@@ -28,20 +29,24 @@ export const ReviewCard = ({ review, onDelete }: ReviewCardProps) => {
               <span className="font-medium text-foreground">{review.userName}</span>
               <StarRating rating={review.rating} readonly size="sm" />
             </div>
-            <p className="text-sm text-muted-foreground">{review.comment}</p>
+            {review.comment && (
+              <p className="text-sm text-muted-foreground">{review.comment}</p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground whitespace-nowrap">
               {format(new Date(review.createdAt), "MMM d, yyyy")}
             </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {showDeleteButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={handleDelete}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

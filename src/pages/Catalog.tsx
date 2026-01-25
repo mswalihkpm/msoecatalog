@@ -113,7 +113,7 @@ const Catalog = () => {
             </div>
           </div>
         ) : filteredBooks.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredBooks.map((book, index) => (
               <div
                 key={book.id}
