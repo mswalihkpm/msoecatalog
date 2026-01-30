@@ -286,9 +286,24 @@ const BooksManagement = () => {
           return;
         }
 
-        await bulkAddBooks(validBooks);
-        toast.success(`${validBooks.length} books added successfully`);
-        await loadBooks();
+        // Show uploading state and call bulkAddBooks which returns inserted count
+        setIsUploading(true);
+        try {
+          const inserted = await bulkAddBooks(validBooks);
+          if (inserted === validBooks.length) {
+            toast.success(`${inserted} books added successfully`);
+          } else if (inserted > 0) {
+            toast.warning(`${inserted}/${validBooks.length} books added. Check logs or retry remaining rows.`);
+          } else {
+            toast.error("No books were added. Check server logs for details.");
+          }
+          await loadBooks();
+        } catch (err) {
+          console.error("Bulk upload error:", err);
+          toast.error("Bulk upload failed. See console for details.");
+        } finally {
+          setIsUploading(false);
+        }
       } catch (error) {
         toast.error("Error parsing Excel file. Please check the format.");
       }
@@ -326,9 +341,19 @@ const BooksManagement = () => {
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
             className="gap-2"
+            disabled={isUploading}
           >
-            <Upload className="h-4 w-4" />
-            Bulk Upload
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                Bulk Upload
+              </>
+            )}
           </Button>
           <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
             <DialogTrigger asChild>
