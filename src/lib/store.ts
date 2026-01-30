@@ -180,26 +180,52 @@ export const bulkDeleteBooks = async (fromSi: string, toSi: string): Promise<num
   return booksToDelete.length;
 };
 
-export const bulkAddBooks = async (books: Omit<Book, "id" | "averageRating" | "totalReviews">[]) => {
-  const dbBooks = books.map((book) => ({
-    si_number: book.siNumber,
-    title: book.title,
-    author: book.author,
-    category: book.category,
-    number_code: book.numberCode,
-    description: book.description,
-    cover_image: book.coverImage,
-    volume: book.volume,
-    pages: book.pages,
-    publication: book.publication,
-    is_borrowed: book.isBorrowed,
-  }));
+export const bulkAddBooks = async (books: Omit<Book, "id" | "averageRating" | "totalReviews">[]): Promise<number> => {
+  if (!books || books.length === 0) return 0;
 
-  const { error } = await supabase.from("books").insert(dbBooks);
+  // Keep each chunk safely below the 1000-row per-request limit. 500 is conservative.
+  const CHUNK_SIZE = 500;
+  let insertedCount = 0;
 
-  if (error) {
-    console.error("Error bulk adding books:", error);
+  try {
+    for (let i = 0; i < books.length; i += CHUNK_SIZE) {
+      const chunk = books.slice(i, i + CHUNK_SIZE);
+
+      const dbBooks = chunk.map((book) => ({
+        si_number: book.siNumber,
+        title: book.title,
+        author: book.author,
+        category: book.category,
+        number_code: book.numberCode,
+        description: book.description,
+        cover_image: book.coverImage,
+        volume: book.volume,
+        pages: book.pages,
+        publication: book.publication,
+        is_borrowed: book.isBorrowed,
+      }));
+
+      // Use .select() so Supabase returns inserted rows (when available)
+      const { data, error } = await supabase.from("books").insert(dbBooks).select();
+
+      if (error) {
+        console.error("Error bulk adding books (chunk):", error);
+        // Stop on first error and return what was inserted so far.
+        break;
+      }
+
+      if (Array.isArray(data)) {
+        insertedCount += data.length;
+      } else {
+        // If the server doesn't return rows, assume the chunk was inserted
+        insertedCount += dbBooks.length;
+      }
+    }
+  } catch (err) {
+    console.error("Unexpected error in bulkAddBooks:", err);
   }
+
+  return insertedCount;
 };
 
 // Reviews
@@ -538,17 +564,39 @@ export const addStudent = async (student: Omit<Student, "id" | "createdAt" | "up
   };
 };
 
-export const bulkAddStudents = async (students: Omit<Student, "id" | "createdAt" | "updatedAt">[]) => {
-  const dbStudents = students.map((student) => ({
-    name: student.name,
-    class: student.class,
-  }));
+export const bulkAddStudents = async (students: Omit<Student, "id" | "createdAt" | "updatedAt">[]): Promise<number> => {
+  if (!students || students.length === 0) return 0;
 
-  const { error } = await supabase.from("students").insert(dbStudents);
+  const CHUNK_SIZE = 500;
+  let insertedCount = 0;
 
-  if (error) {
-    console.error("Error bulk adding students:", error);
+  try {
+    for (let i = 0; i < students.length; i += CHUNK_SIZE) {
+      const chunk = students.slice(i, i + CHUNK_SIZE);
+
+      const dbStudents = chunk.map((student) => ({
+        name: student.name,
+        class: student.class,
+      }));
+
+      const { data, error } = await supabase.from("students").insert(dbStudents).select();
+
+      if (error) {
+        console.error("Error bulk adding students (chunk):", error);
+        break;
+      }
+
+      if (Array.isArray(data)) {
+        insertedCount += data.length;
+      } else {
+        insertedCount += dbStudents.length;
+      }
+    }
+  } catch (err) {
+    console.error("Unexpected error in bulkAddStudents:", err);
   }
+
+  return insertedCount;
 };
 
 export const deleteStudent = async (id: string) => {
