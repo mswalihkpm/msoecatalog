@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { BookCard } from "@/components/BookCard";
 import { SearchFilters } from "@/components/SearchFilters";
@@ -6,10 +6,12 @@ import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { getBooks, initializeData } from "@/lib/store";
 import { Book } from "@/lib/types";
-import { Library, BookOpen, TrendingUp, Star, ArrowRight } from "lucide-react";
+import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+
+const BOOKS_PER_PAGE = 40;
 
 const Catalog = () => {
   const [searchParams] = useSearchParams();
@@ -19,6 +21,7 @@ const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -59,11 +62,37 @@ const Catalog = () => {
     return filtered.sort((a, b) => b.averageRating - a.averageRating);
   }, [books, searchQuery, selectedCategory, availabilityFilter]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, availabilityFilter]);
+
+  const totalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
+  const paginatedBooks = useMemo(
+    () => filteredBooks.slice((currentPage - 1) * BOOKS_PER_PAGE, currentPage * BOOKS_PER_PAGE),
+    [filteredBooks, currentPage]
+  );
+
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
     setAvailabilityFilter("all");
+    setCurrentPage(1);
   };
+
+  const getPageNumbers = useCallback(() => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  }, [totalPages, currentPage]);
 
   const topRated = useMemo(() => books.sort((a, b) => b.averageRating - a.averageRating).slice(0, 5), [books]);
   const totalAvailable = useMemo(() => books.filter(b => !b.isBorrowed).length, [books]);
@@ -152,7 +181,7 @@ const Catalog = () => {
           {/* Results Count */}
           <div className="mb-6 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {isLoading ? "Loading..." : `Showing ${filteredBooks.length} of ${books.length} books`}
+              {isLoading ? "Loading..." : `Showing ${(currentPage - 1) * BOOKS_PER_PAGE + 1}–${Math.min(currentPage * BOOKS_PER_PAGE, filteredBooks.length)} of ${filteredBooks.length} books`}
             </p>
             <p className="text-xs text-muted-foreground hidden sm:block">Sorted by rating</p>
           </div>
@@ -165,19 +194,57 @@ const Catalog = () => {
                 <p className="text-muted-foreground">Loading books...</p>
               </div>
             </div>
-          ) : filteredBooks.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {filteredBooks.map((book, index) => (
-                <motion.div
-                  key={book.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.03 }}
-                >
-                  <BookCard book={book} />
-                </motion.div>
-              ))}
-            </div>
+          ) : paginatedBooks.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {paginatedBooks.map((book, index) => (
+                  <motion.div
+                    key={book.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.02 }}
+                  >
+                    <BookCard book={book} />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-10">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={currentPage === 1}
+                    onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  {getPageNumbers().map((page, i) =>
+                    page === "..." ? (
+                      <span key={`e${i}`} className="px-2 text-muted-foreground">…</span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => { setCurrentPage(page as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      >
+                        {page}
+                      </Button>
+                    )
+                  )}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={currentPage === totalPages}
+                    onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-16">
               <Library className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
