@@ -88,11 +88,11 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
               className="relative"
             >
               <motion.div
-                animate={{
+              animate={{
                   boxShadow: [
-                    "0 0 20px hsl(174 72% 50% / 0.3)",
-                    "0 0 40px hsl(174 72% 50% / 0.5)",
-                    "0 0 20px hsl(174 72% 50% / 0.3)",
+                    "0 0 20px hsl(350 75% 55% / 0.3)",
+                    "0 0 40px hsl(350 75% 55% / 0.5)",
+                    "0 0 20px hsl(350 75% 55% / 0.3)",
                   ],
                 }}
                 transition={{ duration: 1.5, repeat: Infinity }}
