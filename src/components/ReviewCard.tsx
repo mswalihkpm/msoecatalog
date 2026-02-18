@@ -26,7 +26,9 @@ export const ReviewCard = ({ review, onDelete, showDeleteButton = false }: Revie
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <span className="font-medium text-foreground">{review.userName}</span>
+              {review.userName && review.userName !== "Anonymous" && (
+                <span className="font-medium text-foreground">{review.userName}</span>
+              )}
               <StarRating rating={review.rating} readonly size="sm" />
             </div>
             {review.comment && (
