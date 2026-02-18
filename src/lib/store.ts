@@ -8,35 +8,54 @@ export const initializeData = () => {
 
 // Books - Database operations
 export const getBooks = async (): Promise<Book[]> => {
-  const { data, error } = await supabase
-    .from("books")
-    .select("*")
-    .order("average_rating", { ascending: false });
+  // Fetch all books in batches to overcome the 1000-row default limit
+  const PAGE_SIZE = 1000;
+  let allData: any[] = [];
+  let from = 0;
+  let hasMore = true;
 
-  if (error) {
-    console.error("Error fetching books:", error);
-    return [];
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .order("average_rating", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.error("Error fetching books:", error);
+      return allData.length > 0 ? allData.map(mapBook) : [];
+    }
+
+    allData = allData.concat(data);
+    hasMore = data.length === PAGE_SIZE;
+    from += PAGE_SIZE;
   }
 
-  return data.map((book) => ({
-    id: book.id,
-    siNumber: book.si_number,
-    title: book.title,
-    author: book.author,
-    category: book.category,
-    numberCode: book.number_code,
-    description: book.description || undefined,
-    coverImage: book.cover_image || undefined,
-    volume: book.volume || undefined,
-    pages: book.pages || undefined,
-    publication: book.publication || undefined,
-    isBorrowed: book.is_borrowed,
-    borrowedBy: book.borrowed_by || undefined,
-    borrowedDate: book.borrowed_date || undefined,
-    returnDate: book.return_date || undefined,
-    averageRating: Number(book.average_rating),
-    totalReviews: book.total_reviews,
-  }));
+  const data = allData;
+
+  function mapBook(book: any) {
+    return {
+      id: book.id,
+      siNumber: book.si_number,
+      title: book.title,
+      author: book.author,
+      category: book.category,
+      numberCode: book.number_code,
+      description: book.description || undefined,
+      coverImage: book.cover_image || undefined,
+      volume: book.volume || undefined,
+      pages: book.pages || undefined,
+      publication: book.publication || undefined,
+      isBorrowed: book.is_borrowed,
+      borrowedBy: book.borrowed_by || undefined,
+      borrowedDate: book.borrowed_date || undefined,
+      returnDate: book.return_date || undefined,
+      averageRating: book.average_rating,
+      totalReviews: book.total_reviews,
+    };
+  }
+
+  return data.map(mapBook);
 };
 
 export const getBookById = async (id: string): Promise<Book | undefined> => {
