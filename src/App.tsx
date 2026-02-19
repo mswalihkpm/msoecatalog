@@ -18,6 +18,7 @@ import BorrowsManagement from "./pages/admin/BorrowsManagement";
 import StudentsManagement from "./pages/admin/StudentsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
+import PostersManagement from "./pages/admin/PostersManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const AppContent = () => {
         <Route path="reviews" element={<ReviewsManagement />} />
         <Route path="borrows" element={<BorrowsManagement />} />
         <Route path="settings" element={<AdminSettings />} />
+        <Route path="posters" element={<PostersManagement />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

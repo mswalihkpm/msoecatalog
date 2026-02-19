@@ -4,6 +4,7 @@ import { BookCard } from "@/components/BookCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { PromoBanner } from "@/components/PromoBanner";
 import { getBooks, initializeData } from "@/lib/store";
 import { Book } from "@/lib/types";
 import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
@@ -116,7 +117,7 @@ const Catalog = () => {
                 <Library className="h-3.5 w-3.5 mr-2" />
                 {books.length} Books Available
               </Badge>
-              <h1 className="font-serif text-5xl md:text-7xl font-bold text-foreground mb-6 leading-[1.1]">
+              <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-[1.1]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Imthiyaaz
                 <br />
                 <span className="text-gradient-teal">Library</span>
@@ -161,6 +162,10 @@ const Catalog = () => {
               </div>
             </motion.div>
           </div>
+        </section>
+        {/* Promo Banner */}
+        <section className="container px-4 pt-6">
+          <PromoBanner />
         </section>
 
         {/* Catalog Section */}
