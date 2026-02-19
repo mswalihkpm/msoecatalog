@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Megaphone, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Megaphone, GripVertical, Upload, X } from "lucide-react";
 
 interface Poster {
   id: string;
@@ -27,6 +27,7 @@ const PostersManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPoster, setEditingPoster] = useState<Poster | null>(null);
   const [form, setForm] = useState({ title: "", description: "", image_url: "", book_id: "", is_active: true });
+  const [uploading, setUploading] = useState(false);
 
   const fetchPosters = async () => {
     const { data } = await supabase
@@ -143,7 +144,54 @@ const PostersManagement = () => {
           <div className="space-y-4">
             <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
-            <div><Label>Image URL</Label><Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." /></div>
+            <div>
+              <Label>Poster Image</Label>
+              <div className="space-y-2">
+                {form.image_url && (
+                  <div className="relative inline-block">
+                    <img src={form.image_url} alt="Preview" className="h-24 w-40 rounded-lg object-cover border" />
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, image_url: "" }))}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <label className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        const ext = file.name.split(".").pop();
+                        const path = `${Date.now()}.${ext}`;
+                        const { error } = await supabase.storage.from("promotional-posters").upload(path, file);
+                        if (error) { toast.error("Upload failed"); setUploading(false); return; }
+                        const { data: urlData } = supabase.storage.from("promotional-posters").getPublicUrl(path);
+                        setForm(f => ({ ...f, image_url: urlData.publicUrl }));
+                        setUploading(false);
+                        toast.success("Image uploaded");
+                      }}
+                    />
+                    <Button type="button" variant="outline" className="w-full gap-2" disabled={uploading} asChild>
+                      <span><Upload className="h-4 w-4" />{uploading ? "Uploading..." : "Upload from PC"}</span>
+                    </Button>
+                  </label>
+                </div>
+                <Input
+                  value={form.image_url}
+                  onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+                  placeholder="Or paste image URL..."
+                  className="text-xs"
+                />
+              </div>
+            </div>
             <div><Label>Book ID (optional, links poster to a book)</Label><Input value={form.book_id} onChange={e => setForm(f => ({ ...f, book_id: e.target.value }))} placeholder="UUID of the book" /></div>
             <div className="flex items-center gap-2">
               <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
