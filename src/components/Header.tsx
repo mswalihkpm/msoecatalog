@@ -21,7 +21,7 @@ export const Header = () => {
       <div className="container flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Library Logo" className="h-10 w-10 object-contain" />
-          <span className="font-serif text-xl font-semibold text-foreground">
+         <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Imthiyaaz Library
           </span>
         </Link>
@@ -42,9 +42,8 @@ export const Header = () => {
             </Link>
           ))}
           <Link to="/admin">
-            <Button variant="outline" size="sm" className="gap-2">
-              <BookOpen className="h-4 w-4" />
-              Admin Panel
+            <Button variant="ghost" size="icon" title="Admin Panel">
+              <BookOpen className="h-5 w-5" />
             </Button>
           </Link>
         </nav>
@@ -73,9 +72,8 @@ export const Header = () => {
                 </Link>
               ))}
               <Link to="/admin" onClick={() => setIsOpen(false)}>
-                <Button variant="outline" className="w-full gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Admin Panel
+                <Button variant="ghost" size="icon" title="Admin Panel">
+                  <BookOpen className="h-5 w-5" />
                 </Button>
               </Link>
             </nav>
