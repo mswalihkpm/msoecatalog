@@ -31,7 +31,7 @@ const BookDetail = () => {
   const [book, setBook] = useState<Book | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [selectedStudents, setSelectedStudents] = useState<(Student | null)[]>([null]);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const loadData = async () => {
     if (id) {
@@ -46,44 +46,25 @@ const BookDetail = () => {
     loadData();
   }, [id]);
 
-  const addRequestSlot = () => {
-    if (selectedStudents.length < 3) {
-      setSelectedStudents([...selectedStudents, null]);
-    }
-  };
-
-  const removeRequestSlot = (index: number) => {
-    setSelectedStudents(selectedStudents.filter((_, i) => i !== index));
-  };
-
-  const updateStudent = (index: number, student: Student | null) => {
-    const updated = [...selectedStudents];
-    updated[index] = student;
-    setSelectedStudents(updated);
-  };
-
   const handleRequestBook = async () => {
-    const validStudents = selectedStudents.filter((s): s is Student => s !== null);
-    if (validStudents.length === 0) {
-      toast.error("Please select at least one student");
+    if (!selectedStudent) {
+      toast.error("Please select a student");
       return;
     }
     if (!book) return;
 
-    for (const student of validStudents) {
-      await addBookRequest({
-        bookId: book.id,
-        bookTitle: book.title,
-        bookNumberCode: book.numberCode,
-        bookVolume: book.volume,
-        requesterName: student.name,
-        requesterClass: student.class,
-      });
-    }
+    await addBookRequest({
+      bookId: book.id,
+      bookTitle: book.title,
+      bookNumberCode: book.numberCode,
+      bookVolume: book.volume,
+      requesterName: selectedStudent.name,
+      requesterClass: selectedStudent.class,
+    });
 
-    toast.success(`${validStudents.length} request(s) submitted successfully!`);
+    toast.success("Request submitted successfully!");
     setIsRequestDialogOpen(false);
-    setSelectedStudents([null]);
+    setSelectedStudent(null);
   };
 
   if (!book) {
@@ -269,28 +250,14 @@ const BookDetail = () => {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
-                    {selectedStudents.map((student, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label>Requester {index + 1} *</Label>
-                          {index > 0 && (
-                            <Button variant="ghost" size="sm" onClick={() => removeRequestSlot(index)} className="text-destructive text-xs h-6 px-2">
-                              Remove
-                            </Button>
-                          )}
-                        </div>
-                        <StudentSearch
-                          onSelect={(s) => updateStudent(index, s)}
-                          selectedStudent={student}
-                          placeholder="Search student name..."
-                        />
-                      </div>
-                    ))}
-                    {selectedStudents.length < 3 && (
-                      <Button variant="outline" size="sm" onClick={addRequestSlot} className="w-full gap-1 text-xs">
-                        + Add another requester (up to 3)
-                      </Button>
-                    )}
+                    <div className="space-y-2">
+                      <Label>Requester *</Label>
+                      <StudentSearch
+                        onSelect={setSelectedStudent}
+                        selectedStudent={selectedStudent}
+                        placeholder="Search student name..."
+                      />
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>

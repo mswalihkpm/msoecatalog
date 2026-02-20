@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Megaphone } from "lucide-react";
+import { Megaphone, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Poster {
   id: string;
@@ -32,7 +32,7 @@ export const PromoBanner = () => {
     if (posters.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % posters.length);
-    }, 3000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [posters.length]);
 
@@ -40,45 +40,72 @@ export const PromoBanner = () => {
 
   const current = posters[currentIndex];
 
-  const content = (
-    <div className="relative w-full overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r from-primary/20 via-card to-primary/20">
+  const goTo = (i: number) => setCurrentIndex((i + posters.length) % posters.length);
+
+  const slide = (
+    <div className="relative w-full overflow-hidden rounded-xl bg-card border border-border shadow-md group" style={{ aspectRatio: "16/5" }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={current.id}
-          initial={{ opacity: 0, x: 60 }}
+          initial={{ opacity: 0, x: 80 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }}
-          transition={{ duration: 0.4 }}
-          className="flex items-center gap-4 p-4"
+          exit={{ opacity: 0, x: -80 }}
+          transition={{ duration: 0.45, ease: "easeInOut" }}
+          className="absolute inset-0"
         >
           {current.image_url ? (
             <img
               src={current.image_url}
               alt={current.title}
-              className="h-16 w-24 rounded-lg object-cover border border-border flex-shrink-0"
+              className="w-full h-full object-cover"
             />
           ) : (
-            <div className="h-16 w-24 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <Megaphone className="h-6 w-6 text-primary" />
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-card to-primary/10 flex flex-col items-center justify-center gap-3 p-8">
+              <Megaphone className="h-12 w-12 text-primary" />
+              <h3 className="text-xl font-bold text-foreground text-center">{current.title}</h3>
+              {current.description && (
+                <p className="text-sm text-muted-foreground text-center max-w-md">{current.description}</p>
+              )}
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/15 px-2 py-0.5 rounded">New</span>
-              <h3 className="text-sm font-bold text-foreground truncate">{current.title}</h3>
+          {/* Overlay text for image posters */}
+          {current.image_url && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6">
+              <h3 className="text-white font-bold text-lg md:text-xl leading-tight">{current.title}</h3>
+              {current.description && (
+                <p className="text-white/80 text-sm mt-1">{current.description}</p>
+              )}
             </div>
-            {current.description && (
-              <p className="text-xs text-muted-foreground truncate">{current.description}</p>
-            )}
-          </div>
+          )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Arrow buttons */}
       {posters.length > 1 && (
-        <div className="absolute bottom-1.5 right-3 flex gap-1">
+        <>
+          <button
+            onClick={(e) => { e.preventDefault(); goTo(currentIndex - 1); }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); goTo(currentIndex + 1); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </>
+      )}
+
+      {/* Dots */}
+      {posters.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
           {posters.map((_, i) => (
-            <div
+            <button
               key={i}
-              className={`h-1.5 w-1.5 rounded-full transition-colors ${i === currentIndex ? "bg-primary" : "bg-muted-foreground/30"}`}
+              onClick={(e) => { e.preventDefault(); goTo(i); }}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === currentIndex ? "bg-white w-5" : "bg-white/50 w-1.5"}`}
             />
           ))}
         </div>
@@ -87,8 +114,9 @@ export const PromoBanner = () => {
   );
 
   return current.book_id ? (
-    <Link to={`/book/${current.book_id}`}>{content}</Link>
+    <Link to={`/book/${current.book_id}`} className="block w-full">{slide}</Link>
   ) : (
-    content
+    slide
   );
 };
+
