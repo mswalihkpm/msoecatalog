@@ -42,7 +42,7 @@ const StudentsManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [newStudent, setNewStudent] = useState({ name: "", class: "" });
+  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -59,10 +59,14 @@ const StudentsManagement = () => {
       toast.error("Please fill in all fields");
       return;
     }
+    if (!newStudent.code.trim() || !/^\d{3}$/.test(newStudent.code)) {
+      toast.error("Please enter a valid 3-digit code");
+      return;
+    }
 
-    await addStudent(newStudent);
+    await addStudent({ name: newStudent.name, class: newStudent.class, code: newStudent.code });
     toast.success("Student added successfully");
-    setNewStudent({ name: "", class: "" });
+    setNewStudent({ name: "", class: "", code: "" });
     setIsAddDialogOpen(false);
     loadStudents();
   };
@@ -91,14 +95,15 @@ const StudentsManagement = () => {
         for (const row of jsonData as Record<string, unknown>[]) {
           const name = String(row["Name"] || row["name"] || row["Student Name"] || row["student_name"] || "").trim();
           const studentClass = String(row["Class"] || row["class"] || row["Student Class"] || row["student_class"] || "").trim();
+          const code = String(row["Code"] || row["code"] || row["Secret Code"] || row["secret_code"] || "000").trim();
 
           if (name && studentClass) {
-            studentsToAdd.push({ name, class: studentClass });
+            studentsToAdd.push({ name, class: studentClass, code: /^\d{3}$/.test(code) ? code : "000" });
           }
         }
 
         if (studentsToAdd.length === 0) {
-          toast.error("No valid students found. Ensure columns: Name, Class");
+          toast.error("No valid students found. Ensure columns: Name, Class, Code");
           return;
         }
 
@@ -218,15 +223,28 @@ const StudentsManagement = () => {
                     onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="class">Class</Label>
-                  <Input
-                    id="class"
-                    placeholder="Enter class"
-                    value={newStudent.class}
-                    onChange={(e) => setNewStudent({ ...newStudent, class: e.target.value })}
-                  />
-                </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="class">Class</Label>
+                   <Input
+                     id="class"
+                     placeholder="Enter class"
+                     value={newStudent.class}
+                     onChange={(e) => setNewStudent({ ...newStudent, class: e.target.value })}
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="code">Secret Code (3 digits)</Label>
+                   <Input
+                     id="code"
+                     placeholder="e.g. 123"
+                     value={newStudent.code}
+                     onChange={(e) => {
+                       const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                       setNewStudent({ ...newStudent, code: val });
+                     }}
+                     maxLength={3}
+                   />
+                 </div>
                 <Button onClick={handleAddStudent} className="w-full">
                   Add Student
                 </Button>
@@ -262,9 +280,9 @@ const StudentsManagement = () => {
         <CardContent>
           <Card className="mb-4 bg-muted/50">
             <CardContent className="py-3">
-              <p className="text-sm text-muted-foreground">
-                <strong>Bulk Upload Format:</strong> Excel file with columns: <Badge variant="secondary">Name</Badge> and <Badge variant="secondary">Class</Badge>
-              </p>
+               <p className="text-sm text-muted-foreground">
+                 <strong>Bulk Upload Format:</strong> Excel file with columns: <Badge variant="secondary">Name</Badge>, <Badge variant="secondary">Class</Badge> and <Badge variant="secondary">Code</Badge>
+               </p>
             </CardContent>
           </Card>
 
@@ -278,15 +296,16 @@ const StudentsManagement = () => {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                   <TableHead>Name</TableHead>
+                   <TableHead>Class</TableHead>
+                   <TableHead>Code</TableHead>
+                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       No students found
                     </TableCell>
                   </TableRow>
@@ -299,10 +318,13 @@ const StudentsManagement = () => {
                           onCheckedChange={() => toggleSelectStudent(student.id)}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{student.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{student.class}</Badge>
-                      </TableCell>
+                     <TableCell className="font-medium">{student.name}</TableCell>
+                     <TableCell>
+                       <Badge variant="secondary">{student.class}</Badge>
+                     </TableCell>
+                     <TableCell>
+                       <Badge variant="outline" className="font-mono">{student.code}</Badge>
+                     </TableCell>
                       <TableCell className="text-right">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>

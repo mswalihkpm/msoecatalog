@@ -107,64 +107,77 @@ const Catalog = () => {
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
           <div className="container px-4 py-16 md:py-24 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
-            >
-              <Badge className="bg-primary/15 text-primary border-primary/30 mb-6 text-sm px-4 py-1.5">
-                <Library className="h-3.5 w-3.5 mr-2" />
-                {books.length} Books Available
-              </Badge>
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-[1.1]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                Imthiyaaz
-                <br />
-                <span className="text-gradient-teal">Library</span>
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-8 leading-relaxed">
-                Discover your next great read. Browse our curated collection, 
-                leave reviews, and request books with ease.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link to="/categories">
-                  <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-base px-6">
-                    Browse Categories
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Stats row */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="grid grid-cols-3 gap-4 mt-12 max-w-lg"
-            >
-              <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
-                <BookOpen className="h-5 w-5 text-primary mx-auto mb-1" />
-                <p className="text-2xl font-bold text-foreground">{books.length}</p>
-                <p className="text-xs text-muted-foreground">Total Books</p>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
-                <TrendingUp className="h-5 w-5 text-primary mx-auto mb-1" />
-                <p className="text-2xl font-bold text-foreground">{totalAvailable}</p>
-                <p className="text-xs text-muted-foreground">Available</p>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
-                <Star className="h-5 w-5 text-primary mx-auto mb-1" />
-                <p className="text-2xl font-bold text-foreground">
-                  {topRated[0]?.averageRating.toFixed(1) || "0.0"}
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+              {/* Left: Hero text */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="flex-1 max-w-xl"
+              >
+                <Badge className="bg-primary/15 text-primary border-primary/30 mb-6 text-sm px-4 py-1.5">
+                  <Library className="h-3.5 w-3.5 mr-2" />
+                  {books.length} Books Available
+                </Badge>
+                <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-[1.1]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Imthiyaaz
+                  <br />
+                  <span className="text-gradient-teal">Library</span>
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-8 leading-relaxed">
+                  Discover your next great read. Browse our curated collection, 
+                  leave reviews, and request books with ease.
                 </p>
-                <p className="text-xs text-muted-foreground">Top Rated</p>
-              </div>
-            </motion.div>
+                <div className="flex flex-wrap gap-4">
+                  <Link to="/categories">
+                    <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-base px-6">
+                      Browse Categories
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Stats row */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="grid grid-cols-3 gap-4 mt-12 max-w-lg"
+                >
+                  <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
+                    <BookOpen className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-2xl font-bold text-foreground">{books.length}</p>
+                    <p className="text-xs text-muted-foreground">Total Books</p>
+                  </div>
+                  <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
+                    <TrendingUp className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-2xl font-bold text-foreground">{totalAvailable}</p>
+                    <p className="text-xs text-muted-foreground">Available</p>
+                  </div>
+                  <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
+                    <Star className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-2xl font-bold text-foreground">
+                      {topRated[0]?.averageRating.toFixed(1) || "0.0"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Top Rated</p>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Right: Promo Banner (desktop only) */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="hidden lg:block flex-1 w-full max-w-xl"
+              >
+                <PromoBanner />
+              </motion.div>
+            </div>
           </div>
         </section>
-        {/* Promo Banner */}
-        <section className="container px-4 pt-6">
+        {/* Promo Banner - mobile only */}
+        <section className="container px-4 pt-6 lg:hidden">
           <PromoBanner />
         </section>
 

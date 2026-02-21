@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, User } from "lucide-react";
+import { Search, User, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { searchStudents } from "@/lib/store";
+import { searchStudents, verifyStudentCode } from "@/lib/store";
 import { Student } from "@/lib/types";
+import { toast } from "sonner";
 
 interface StudentSearchProps {
   onSelect: (student: Student) => void;
@@ -17,6 +18,9 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
   const [results, setResults] = useState<Student[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingStudent, setPendingStudent] = useState<Student | null>(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,17 +52,38 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
   }, [query]);
 
   const handleSelect = (student: Student) => {
-    onSelect(student);
+    setPendingStudent(student);
+    setCodeInput("");
     setQuery("");
     setResults([]);
     setIsOpen(false);
+  };
+
+  const handleVerifyCode = async () => {
+    if (!pendingStudent) return;
+    if (!/^\d{3}$/.test(codeInput)) {
+      toast.error("Please enter a valid 3-digit code");
+      return;
+    }
+
+    setIsVerifying(true);
+    const valid = await verifyStudentCode(pendingStudent.id, codeInput);
+    setIsVerifying(false);
+
+    if (valid) {
+      onSelect(pendingStudent);
+      setPendingStudent(null);
+      setCodeInput("");
+    } else {
+      toast.error("Invalid secret code. Please try again.");
+    }
   };
 
   return (
     <div className="relative" ref={containerRef}>
       {selectedStudent ? (
         <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/50">
-          <User className="h-4 w-4 text-muted-foreground" />
+          <ShieldCheck className="h-4 w-4 text-primary" />
           <span className="font-medium">{selectedStudent.name}</span>
           <Badge variant="secondary" className="ml-auto">{selectedStudent.class}</Badge>
           <button
@@ -68,6 +93,39 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
           >
             Change
           </button>
+        </div>
+      ) : pendingStudent ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/50">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">{pendingStudent.name}</span>
+            <Badge variant="secondary" className="ml-auto">{pendingStudent.class}</Badge>
+            <button
+              type="button"
+              onClick={() => setPendingStudent(null)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Change
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Enter 3-digit code"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 3))}
+              maxLength={3}
+              className="flex-1 font-mono text-center text-lg tracking-widest"
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleVerifyCode(); } }}
+            />
+            <button
+              type="button"
+              onClick={handleVerifyCode}
+              disabled={isVerifying || codeInput.length !== 3}
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isVerifying ? "..." : "Verify"}
+            </button>
+          </div>
         </div>
       ) : (
         <>
