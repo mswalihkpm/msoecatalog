@@ -43,7 +43,7 @@ export const PromoBanner = () => {
   const goTo = (i: number) => setCurrentIndex((i + posters.length) % posters.length);
 
   const slide = (
-    <div className="relative w-full overflow-hidden rounded-xl bg-card border border-border shadow-md group" style={{ aspectRatio: "16/5" }}>
+    <div className="relative w-full h-full min-h-[200px] overflow-hidden rounded-xl bg-card border border-border shadow-md group">
       <AnimatePresence mode="wait">
         <motion.div
           key={current.id}
