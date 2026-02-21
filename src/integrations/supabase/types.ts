@@ -280,6 +280,7 @@ export type Database = {
       students: {
         Row: {
           class: string
+          code: string
           created_at: string
           id: string
           name: string
@@ -287,6 +288,7 @@ export type Database = {
         }
         Insert: {
           class: string
+          code?: string
           created_at?: string
           id?: string
           name: string
@@ -294,6 +296,7 @@ export type Database = {
         }
         Update: {
           class?: string
+          code?: string
           created_at?: string
           id?: string
           name?: string

@@ -72,6 +72,7 @@ export interface Student {
   id: string;
   name: string;
   class: string;
+  code: string;
   createdAt: string;
   updatedAt: string;
 }

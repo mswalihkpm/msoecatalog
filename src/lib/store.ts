@@ -550,10 +550,11 @@ export const getStudents = async (): Promise<Student[]> => {
     return [];
   }
 
-  return data.map((student) => ({
+  return data.map((student: any) => ({
     id: student.id,
     name: student.name,
     class: student.class,
+    code: student.code || '000',
     createdAt: student.created_at,
     updatedAt: student.updated_at,
   }));
@@ -565,6 +566,7 @@ export const addStudent = async (student: Omit<Student, "id" | "createdAt" | "up
     .insert({
       name: student.name,
       class: student.class,
+      code: (student as any).code || '000',
     })
     .select()
     .single();
@@ -578,6 +580,7 @@ export const addStudent = async (student: Omit<Student, "id" | "createdAt" | "up
     id: data.id,
     name: data.name,
     class: data.class,
+    code: (data as any).code || '000',
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };
@@ -596,6 +599,7 @@ export const bulkAddStudents = async (students: Omit<Student, "id" | "createdAt"
       const dbStudents = chunk.map((student) => ({
         name: student.name,
         class: student.class,
+        code: (student as any).code || '000',
       }));
 
       const { data, error } = await supabase.from("students").insert(dbStudents).select();
@@ -651,11 +655,23 @@ export const searchStudents = async (query: string): Promise<Student[]> => {
     return [];
   }
 
-  return data.map((student) => ({
+  return data.map((student: any) => ({
     id: student.id,
     name: student.name,
     class: student.class,
+    code: student.code || '000',
     createdAt: student.created_at,
     updatedAt: student.updated_at,
   }));
+};
+
+export const verifyStudentCode = async (studentId: string, code: string): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from("students")
+    .select("code")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return (data as any).code === code;
 };
