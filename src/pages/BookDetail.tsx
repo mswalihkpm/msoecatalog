@@ -293,12 +293,14 @@ const BookDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Existing Reviews */}
-            {reviews.length > 0 ? (
+            {/* Existing Reviews - only show reviews with comments */}
+            {reviews.filter(r => r.comment && r.comment.trim()).length > 0 ? (
               <div className="space-y-4">
-                {reviews.map((review) => (
-                  <ReviewCard key={review.id} review={review} onDelete={loadData} />
-                ))}
+                {reviews
+                  .filter(r => r.comment && r.comment.trim())
+                  .map((review) => (
+                    <ReviewCard key={review.id} review={review} onDelete={loadData} />
+                  ))}
               </div>
             ) : (
               <p className="text-muted-foreground text-center py-8">
@@ -316,7 +318,7 @@ const BookDetail = () => {
                 </div>
                 <StarRating rating={book.averageRating} readonly size="lg" />
                 <p className="text-muted-foreground mt-2">
-                  Based on {book.totalReviews} review{book.totalReviews !== 1 ? 's' : ''}
+                  Based on {book.totalReviews} rating{book.totalReviews !== 1 ? 's' : ''}
                 </p>
               </CardContent>
             </Card>

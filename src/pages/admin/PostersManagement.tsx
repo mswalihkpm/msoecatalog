@@ -91,12 +91,12 @@ const PostersManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl font-bold text-foreground">Promotional Posters</h1>
           <p className="text-muted-foreground text-sm">Manage homepage banner advertisements</p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
+        <Button onClick={openCreate} className="gap-2 w-full sm:w-auto">
           <Plus className="h-4 w-4" /> Add Poster
         </Button>
       </div>
@@ -110,26 +110,32 @@ const PostersManagement = () => {
         <div className="space-y-3">
           {posters.map((poster) => (
             <Card key={poster.id} className={`border ${poster.is_active ? "border-primary/30" : "border-border opacity-60"}`}>
-              <CardContent className="p-4 flex items-center gap-4">
-                <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                {poster.image_url ? (
-                  <img src={poster.image_url} alt={poster.title} className="h-14 w-20 rounded object-cover flex-shrink-0" />
-                ) : (
-                  <div className="h-14 w-20 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Megaphone className="h-5 w-5 text-primary" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0 hidden sm:block" />
+                    {poster.image_url ? (
+                      <img src={poster.image_url} alt={poster.title} className="h-14 w-20 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="h-14 w-20 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Megaphone className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground truncate">{poster.title}</h3>
+                      {poster.description && <p className="text-xs text-muted-foreground truncate">{poster.description}</p>}
+                    </div>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground truncate">{poster.title}</h3>
-                  {poster.description && <p className="text-xs text-muted-foreground truncate">{poster.description}</p>}
+                  <div className="flex items-center gap-2 justify-end">
+                    <Switch checked={poster.is_active} onCheckedChange={() => toggleActive(poster.id, poster.is_active)} />
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(poster)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(poster.id)} className="text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <Switch checked={poster.is_active} onCheckedChange={() => toggleActive(poster.id, poster.is_active)} />
-                <Button variant="ghost" size="icon" onClick={() => openEdit(poster)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(poster.id)} className="text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </CardContent>
             </Card>
           ))}

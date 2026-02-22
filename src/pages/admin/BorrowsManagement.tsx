@@ -381,8 +381,8 @@ const BorrowsManagement = () => {
 
           {/* Records Table */}
           <Card>
-            <CardContent className="p-0">
-              <Table>
+            <CardContent className="p-0 overflow-x-auto">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Book</TableHead>
@@ -484,8 +484,8 @@ const BorrowsManagement = () => {
             <CardHeader>
               <CardTitle className="font-serif text-lg">Book Requests</CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <Table>
+            <CardContent className="p-0 overflow-x-auto">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Book</TableHead>
