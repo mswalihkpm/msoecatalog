@@ -175,14 +175,14 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's an overview of your library.</p>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Welcome back! Here's an overview of your library.</p>
         </div>
-        <Button onClick={exportToExcel} className="gap-2 bg-secondary hover:bg-secondary/90">
+        <Button onClick={exportToExcel} className="gap-2 bg-secondary hover:bg-secondary/90 w-full sm:w-auto">
           <FileSpreadsheet className="h-4 w-4" />
-          Export Catalog to Excel
+          Export Catalog
         </Button>
       </div>
 

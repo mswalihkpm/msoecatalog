@@ -114,9 +114,9 @@ const ReviewsManagement = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <div className="rounded-md border">
-            <Table>
+            <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Book</TableHead>
