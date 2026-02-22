@@ -23,7 +23,7 @@ const AdminLogin = () => {
     // Simulate loading
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    if (validateAdmin(username, password)) {
+    if (await validateAdmin(username, password)) {
       sessionStorage.setItem("isAdminLoggedIn", "true");
       toast.success("Welcome, Admin!");
       navigate("/admin/dashboard");
