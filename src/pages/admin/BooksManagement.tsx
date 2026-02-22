@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2 } from "lucide-react";
+import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2, Lock } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBooks, addBook, updateBook, deleteBook, bulkAddBooks, bulkDeleteBooks } from "@/lib/store";
 import { Book, Category } from "@/lib/types";
@@ -68,6 +69,9 @@ const BooksManagement = () => {
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [bulkDeleteFrom, setBulkDeleteFrom] = useState("");
   const [bulkDeleteTo, setBulkDeleteTo] = useState("");
+  const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
+  const [isPasscodeDialogOpen, setIsPasscodeDialogOpen] = useState(false);
+  const [passcodeInput, setPasscodeInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -322,6 +326,37 @@ const BooksManagement = () => {
       book.numberCode.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const toggleSelectAll = () => {
+    if (selectedBooks.length === filteredBooks.length) {
+      setSelectedBooks([]);
+    } else {
+      setSelectedBooks(filteredBooks.map((b) => b.id));
+    }
+  };
+
+  const toggleSelectBook = (id: string) => {
+    setSelectedBooks((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectedBulkDelete = async () => {
+    if (passcodeInput !== "786") {
+      toast.error("Incorrect passcode");
+      return;
+    }
+    let deletedCount = 0;
+    for (const id of selectedBooks) {
+      await deleteBook(id);
+      deletedCount++;
+    }
+    toast.success(`${deletedCount} books deleted successfully`);
+    setSelectedBooks([]);
+    setPasscodeInput("");
+    setIsPasscodeDialogOpen(false);
+    await loadBooks();
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -330,6 +365,50 @@ const BooksManagement = () => {
           <p className="text-muted-foreground">Manage your library catalog</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {selectedBooks.length > 0 && (
+            <>
+              <Button
+                variant="destructive"
+                onClick={() => setIsPasscodeDialogOpen(true)}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Selected ({selectedBooks.length})
+              </Button>
+              <Dialog open={isPasscodeDialogOpen} onOpenChange={(open) => {
+                setIsPasscodeDialogOpen(open);
+                if (!open) setPasscodeInput("");
+              }}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="font-serif flex items-center gap-2">
+                      <Lock className="h-5 w-5" />
+                      Enter Passcode to Confirm
+                    </DialogTitle>
+                    <DialogDescription>
+                      Enter the admin passcode to delete {selectedBooks.length} selected books. This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="passcode">Passcode</Label>
+                      <Input
+                        id="passcode"
+                        type="password"
+                        value={passcodeInput}
+                        onChange={(e) => setPasscodeInput(e.target.value)}
+                        placeholder="Enter passcode"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsPasscodeDialogOpen(false)}>Cancel</Button>
+                    <Button variant="destructive" onClick={handleSelectedBulkDelete}>Confirm Delete</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
           <input
             type="file"
             ref={fileInputRef}
@@ -604,6 +683,12 @@ const BooksManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedBooks.length === filteredBooks.length && filteredBooks.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead className="w-16">Cover</TableHead>
                 <TableHead>SI No.</TableHead>
                 <TableHead>Title</TableHead>
@@ -618,6 +703,12 @@ const BooksManagement = () => {
               {filteredBooks.length > 0 ? (
                 filteredBooks.map((book) => (
                   <TableRow key={book.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedBooks.includes(book.id)}
+                        onCheckedChange={() => toggleSelectBook(book.id)}
+                      />
+                    </TableCell>
                     <TableCell>
                       {book.coverImage ? (
                         <img
@@ -685,7 +776,7 @@ const BooksManagement = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No books found
                   </TableCell>
                 </TableRow>
