@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, BookOpen } from "lucide-react";
+import { Menu, BookOpen, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/logo.png";
@@ -41,6 +41,11 @@ export const Header = () => {
               {link.label}
             </Link>
           ))}
+          <Link to="/settings">
+            <Button variant="ghost" size="icon" title="Settings">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
           <Link to="/admin">
             <Button variant="ghost" size="icon" title="Admin Panel">
               <BookOpen className="h-5 w-5" />
@@ -71,6 +76,11 @@ export const Header = () => {
                   {link.label}
                 </Link>
               ))}
+              <Link to="/settings" onClick={() => setIsOpen(false)}>
+                <Button variant="ghost" size="icon" title="Settings">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </Link>
               <Link to="/admin" onClick={() => setIsOpen(false)}>
                 <Button variant="ghost" size="icon" title="Admin Panel">
                   <BookOpen className="h-5 w-5" />
