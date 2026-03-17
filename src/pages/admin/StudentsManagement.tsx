@@ -44,6 +44,7 @@ const StudentsManagement = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "" });
+  const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
