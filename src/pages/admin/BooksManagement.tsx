@@ -725,7 +725,14 @@ const BooksManagement = () => {
                       )}
                     </TableCell>
                     <TableCell>{book.siNumber}</TableCell>
-                    <TableCell className="font-medium">{book.title}</TableCell>
+                    <TableCell className="font-medium">
+                      <button
+                        onClick={() => setHistoryBook(book)}
+                        className="text-left hover:text-primary hover:underline transition-colors cursor-pointer"
+                      >
+                        {book.title}
+                      </button>
+                    </TableCell>
                     <TableCell>{book.author}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{book.category}</Badge>
