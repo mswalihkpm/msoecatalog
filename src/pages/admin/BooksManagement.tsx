@@ -73,6 +73,7 @@ const BooksManagement = () => {
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [isPasscodeDialogOpen, setIsPasscodeDialogOpen] = useState(false);
   const [passcodeInput, setPasscodeInput] = useState("");
+  const [historyBook, setHistoryBook] = useState<Book | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
