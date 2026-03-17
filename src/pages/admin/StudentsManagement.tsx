@@ -320,7 +320,14 @@ const StudentsManagement = () => {
                           onCheckedChange={() => toggleSelectStudent(student.id)}
                         />
                       </TableCell>
-                     <TableCell className="font-medium">{student.name}</TableCell>
+                     <TableCell className="font-medium">
+                       <button
+                         onClick={() => setHistoryStudent(student.name)}
+                         className="text-left hover:text-primary hover:underline transition-colors cursor-pointer"
+                       >
+                         {student.name}
+                       </button>
+                     </TableCell>
                      <TableCell>
                        <Badge variant="secondary">{student.class}</Badge>
                      </TableCell>
