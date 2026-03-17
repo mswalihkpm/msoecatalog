@@ -795,6 +795,14 @@ const BooksManagement = () => {
         </CardContent>
       </Card>
     </div>
+      <BookHistoryDialog
+        bookId={historyBook?.id || ""}
+        bookTitle={historyBook?.title || ""}
+        bookCode={historyBook?.numberCode || ""}
+        open={!!historyBook}
+        onOpenChange={(open) => { if (!open) setHistoryBook(null); }}
+      />
+    </div>
   );
 };
 
