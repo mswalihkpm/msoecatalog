@@ -196,15 +196,6 @@ const BookDetail = () => {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-muted/30 border-primary/10">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Added</p>
-                    <p className="font-semibold text-foreground">{format(new Date(), "M/d/yyyy")}</p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Tags */}
