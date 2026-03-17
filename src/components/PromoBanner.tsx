@@ -12,6 +12,25 @@ interface Poster {
   book_id: string | null;
 }
 
+const TruncatedDescription = ({ text, className }: { text: string; className?: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > 80;
+
+  return (
+    <p className={className}>
+      {expanded || !isLong ? text : text.slice(0, 80) + "..."}
+      {isLong && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded(!expanded); }}
+          className="ml-1 underline font-medium opacity-90 hover:opacity-100"
+        >
+          {expanded ? "Show less" : "Read more"}
+        </button>
+      )}
+    </p>
+  );
+};
+
 export const PromoBanner = () => {
   const [posters, setPosters] = useState<Poster[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -64,7 +83,7 @@ export const PromoBanner = () => {
               <Megaphone className="h-12 w-12 text-primary" />
               <h3 className="text-xl font-bold text-foreground text-center">{current.title}</h3>
               {current.description && (
-                <p className="text-sm text-muted-foreground text-center max-w-md">{current.description}</p>
+                <TruncatedDescription text={current.description} className="text-sm text-muted-foreground text-center max-w-md" />
               )}
             </div>
           )}
@@ -73,7 +92,7 @@ export const PromoBanner = () => {
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6">
               <h3 className="text-white font-bold text-lg md:text-xl leading-tight">{current.title}</h3>
               {current.description && (
-                <p className="text-white/80 text-sm mt-1">{current.description}</p>
+                <TruncatedDescription text={current.description} className="text-white/80 text-sm mt-1" />
               )}
             </div>
           )}

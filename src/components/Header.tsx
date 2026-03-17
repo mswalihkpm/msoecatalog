@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, BookOpen, Settings } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/logo.png";
@@ -8,6 +8,9 @@ import logo from "@/assets/logo.png";
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -16,15 +19,28 @@ export const Header = () => {
     { path: "/categories", label: "Categories" },
   ];
 
+  const handleLogoTap = useCallback(() => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      navigate("/admin");
+    } else {
+      tapTimerRef.current = setTimeout(() => {
+        tapCountRef.current = 0;
+      }, 2000);
+    }
+  }, [navigate]);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-3">
+        <div className="flex items-center gap-3 cursor-pointer select-none" onClick={handleLogoTap}>
           <img src={logo} alt="Library Logo" className="h-10 w-10 object-contain" />
-         <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+          <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Imthiyaaz Library
           </span>
-        </Link>
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
@@ -44,11 +60,6 @@ export const Header = () => {
           <Link to="/settings">
             <Button variant="ghost" size="icon" title="Settings">
               <Settings className="h-5 w-5" />
-            </Button>
-          </Link>
-          <Link to="/admin">
-            <Button variant="ghost" size="icon" title="Admin Panel">
-              <BookOpen className="h-5 w-5" />
             </Button>
           </Link>
         </nav>
@@ -79,11 +90,6 @@ export const Header = () => {
               <Link to="/settings" onClick={() => setIsOpen(false)}>
                 <Button variant="ghost" size="icon" title="Settings">
                   <Settings className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/admin" onClick={() => setIsOpen(false)}>
-                <Button variant="ghost" size="icon" title="Admin Panel">
-                  <BookOpen className="h-5 w-5" />
                 </Button>
               </Link>
             </nav>

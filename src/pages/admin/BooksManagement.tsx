@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2, Lock } from "lucide-react";
+import { BookHistoryDialog } from "@/components/BookHistoryDialog";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,7 @@ const BooksManagement = () => {
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [isPasscodeDialogOpen, setIsPasscodeDialogOpen] = useState(false);
   const [passcodeInput, setPasscodeInput] = useState("");
+  const [historyBook, setHistoryBook] = useState<Book | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -358,6 +360,7 @@ const BooksManagement = () => {
   };
 
   return (
+    <>
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -723,7 +726,14 @@ const BooksManagement = () => {
                       )}
                     </TableCell>
                     <TableCell>{book.siNumber}</TableCell>
-                    <TableCell className="font-medium">{book.title}</TableCell>
+                    <TableCell className="font-medium">
+                      <button
+                        onClick={() => setHistoryBook(book)}
+                        className="text-left hover:text-primary hover:underline transition-colors cursor-pointer"
+                      >
+                        {book.title}
+                      </button>
+                    </TableCell>
                     <TableCell>{book.author}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{book.category}</Badge>
@@ -786,6 +796,14 @@ const BooksManagement = () => {
         </CardContent>
       </Card>
     </div>
+    <BookHistoryDialog
+      bookId={historyBook?.id || ""}
+      bookTitle={historyBook?.title || ""}
+      bookCode={historyBook?.numberCode || ""}
+      open={!!historyBook}
+      onOpenChange={(open) => { if (!open) setHistoryBook(null); }}
+    />
+    </>
   );
 };
 

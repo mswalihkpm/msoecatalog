@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { StudentHistoryDialog } from "@/components/StudentHistoryDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -43,6 +44,7 @@ const StudentsManagement = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "" });
+  const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -318,7 +320,14 @@ const StudentsManagement = () => {
                           onCheckedChange={() => toggleSelectStudent(student.id)}
                         />
                       </TableCell>
-                     <TableCell className="font-medium">{student.name}</TableCell>
+                     <TableCell className="font-medium">
+                       <button
+                         onClick={() => setHistoryStudent(student.name)}
+                         className="text-left hover:text-primary hover:underline transition-colors cursor-pointer"
+                       >
+                         {student.name}
+                       </button>
+                     </TableCell>
                      <TableCell>
                        <Badge variant="secondary">{student.class}</Badge>
                      </TableCell>
@@ -356,6 +365,11 @@ const StudentsManagement = () => {
           </div>
         </CardContent>
       </Card>
+      <StudentHistoryDialog
+        studentName={historyStudent || ""}
+        open={!!historyStudent}
+        onOpenChange={(open) => { if (!open) setHistoryStudent(null); }}
+      />
     </div>
   );
 };
