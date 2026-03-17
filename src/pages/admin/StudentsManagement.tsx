@@ -365,9 +365,13 @@ const StudentsManagement = () => {
           </div>
         </CardContent>
       </Card>
+      <StudentHistoryDialog
+        studentName={historyStudent || ""}
+        open={!!historyStudent}
+        onOpenChange={(open) => { if (!open) setHistoryStudent(null); }}
+      />
     </div>
   );
 };
 
-// Add history dialog at end of component - need to restructure
 export default StudentsManagement;
