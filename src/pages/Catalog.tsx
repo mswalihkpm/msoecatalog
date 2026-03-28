@@ -27,14 +27,18 @@ const Catalog = () => {
 
   // Restore scroll position when navigating back
   useEffect(() => {
-    const savedScroll = sessionStorage.getItem("catalogScroll");
-    if (savedScroll) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScroll, 10));
-        sessionStorage.removeItem("catalogScroll");
-      }, 100);
+    if (!isLoading && books.length > 0) {
+      const savedScroll = sessionStorage.getItem("catalogScroll");
+      if (savedScroll) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo(0, parseInt(savedScroll, 10));
+            sessionStorage.removeItem("catalogScroll");
+          });
+        });
+      }
     }
-  }, [isLoading]);
+  }, [isLoading, books.length]);
 
   useEffect(() => {
     initializeData();
