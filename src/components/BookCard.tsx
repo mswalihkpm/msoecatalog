@@ -9,7 +9,7 @@ interface BookCardProps {
 
 export const BookCard = ({ book }: BookCardProps) => {
   return (
-    <Link to={`/book/${book.id}`}>
+    <Link to={`/book/${book.id}`} onClick={() => sessionStorage.setItem("catalogScroll", String(window.scrollY))}>
       <div className="group relative h-full overflow-hidden rounded-xl border-2 border-primary/20 bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-teal hover:-translate-y-1">
         {/* Cover Image Container */}
         <div className="relative aspect-[2/3] overflow-hidden">
