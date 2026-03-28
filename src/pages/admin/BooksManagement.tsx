@@ -526,7 +526,26 @@ const BooksManagement = () => {
                     ) : (
                       <div
                         onClick={() => coverInputRef.current?.click()}
-                        className="w-24 h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                        onPaste={(e) => {
+                          const items = e.clipboardData?.items;
+                          if (!items) return;
+                          for (const item of Array.from(items)) {
+                            if (item.type.startsWith("image/")) {
+                              const file = item.getAsFile();
+                              if (file) {
+                                if (file.size > 2 * 1024 * 1024) {
+                                  toast.error("Image must be less than 2MB");
+                                  return;
+                                }
+                                setCoverFile(file);
+                                setCoverPreview(URL.createObjectURL(file));
+                              }
+                              break;
+                            }
+                          }
+                        }}
+                        tabIndex={0}
+                        className="w-24 h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors focus:border-primary focus:outline-none"
                       >
                         <Image className="h-6 w-6 text-muted-foreground mb-1" />
                         <span className="text-xs text-muted-foreground">Upload</span>
@@ -540,7 +559,7 @@ const BooksManagement = () => {
                       className="hidden"
                     />
                     <div className="text-xs text-muted-foreground">
-                      <p>Upload a cover image</p>
+                      <p>Upload or paste an image</p>
                       <p>Max size: 2MB</p>
                     </div>
                   </div>

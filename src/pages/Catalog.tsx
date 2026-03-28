@@ -25,6 +25,17 @@ const Catalog = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Restore scroll position when navigating back
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem("catalogScroll");
+    if (savedScroll) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScroll, 10));
+        sessionStorage.removeItem("catalogScroll");
+      }, 100);
+    }
+  }, [isLoading]);
+
   useEffect(() => {
     initializeData();
     const loadBooks = async () => {
