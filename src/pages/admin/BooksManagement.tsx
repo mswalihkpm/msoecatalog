@@ -558,9 +558,43 @@ const BooksManagement = () => {
                       onChange={handleCoverUpload}
                       className="hidden"
                     />
-                    <div className="text-xs text-muted-foreground">
-                      <p>Upload or paste an image</p>
-                      <p>Max size: 2MB</p>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={async () => {
+                          try {
+                            const clipboardItems = await navigator.clipboard.read();
+                            for (const item of clipboardItems) {
+                              const imageType = item.types.find(t => t.startsWith("image/"));
+                              if (imageType) {
+                                const blob = await item.getType(imageType);
+                                if (blob.size > 2 * 1024 * 1024) {
+                                  toast.error("Image must be less than 2MB");
+                                  return;
+                                }
+                                const file = new File([blob], "pasted-cover.png", { type: imageType });
+                                setCoverFile(file);
+                                setCoverPreview(URL.createObjectURL(file));
+                                toast.success("Image pasted!");
+                                return;
+                              }
+                            }
+                            toast.error("No image found in clipboard");
+                          } catch {
+                            toast.error("Could not read clipboard. Try copying the image again.");
+                          }
+                        }}
+                      >
+                        <Image className="h-3.5 w-3.5" />
+                        Paste
+                      </Button>
+                      <div className="text-xs text-muted-foreground">
+                        <p>Upload or paste an image</p>
+                        <p>Max size: 2MB</p>
+                      </div>
                     </div>
                   </div>
                 </div>
