@@ -65,6 +65,21 @@ const Dashboard = () => {
     loadStats();
   }, []);
 
+  const requestChartData = useMemo(() => {
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = startOfDay(subDays(new Date(), 29 - i));
+      return { date, label: format(date, "MMM d"), count: 0 };
+    });
+
+    requests.forEach((req) => {
+      const reqDate = startOfDay(parseISO(req.requestDate));
+      const entry = last30Days.find((d) => d.date.getTime() === reqDate.getTime());
+      if (entry) entry.count++;
+    });
+
+    return last30Days.map(({ label, count }) => ({ date: label, requests: count }));
+  }, [requests]);
+
   const filteredRequests = useMemo(() => {
     return requests.filter((request) => {
       const matchesSearch =
