@@ -273,8 +273,8 @@ const BooksManagement = () => {
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        const newBooks = jsonData.map((row: any) => ({
-          siNumber: String(row["SI Number"] || row["siNumber"] || ""),
+        const newBooks = jsonData.map((row: any, idx: number) => ({
+          siNumber: String(row["SI Number"] || row["SI No"] || row["SI no"] || row["Si Number"] || row["Si No"] || row["Sl No"] || row["SL Number"] || row["SL No"] || row["siNumber"] || row["si_number"] || row["SI"] || row["Sl"] || row["No"] || idx + 1),
           title: String(row["Title"] || row["Book Name"] || row["title"] || ""),
           author: String(row["Author"] || row["author"] || ""),
           category: String(row["Category"] || row["category"] || "Others") as Category,
