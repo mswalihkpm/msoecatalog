@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/select";
 import { getBooks, getBorrowRecords, getReviews, getBookRequests } from "@/lib/store";
 import { Book, BookRequest } from "@/lib/types";
-import { format } from "date-fns";
+import { format, subDays, parseISO, startOfDay } from "date-fns";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -63,6 +64,21 @@ const Dashboard = () => {
 
     loadStats();
   }, []);
+
+  const requestChartData = useMemo(() => {
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = startOfDay(subDays(new Date(), 29 - i));
+      return { date, label: format(date, "MMM d"), count: 0 };
+    });
+
+    requests.forEach((req) => {
+      const reqDate = startOfDay(parseISO(req.requestDate));
+      const entry = last30Days.find((d) => d.date.getTime() === reqDate.getTime());
+      if (entry) entry.count++;
+    });
+
+    return last30Days.map(({ label, count }) => ({ date: label, requests: count }));
+  }, [requests]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((request) => {
@@ -255,6 +271,39 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-serif">Book Requests Analysis (Last 30 Days)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={requestChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  interval={Math.ceil(requestChartData.length / 8)}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--background))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                />
+                <Bar dataKey="requests" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
