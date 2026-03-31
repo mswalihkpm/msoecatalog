@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/select";
 import { getBooks, getBorrowRecords, getReviews, getBookRequests } from "@/lib/store";
 import { Book, BookRequest } from "@/lib/types";
-import { format } from "date-fns";
+import { format, subDays, parseISO, startOfDay } from "date-fns";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
