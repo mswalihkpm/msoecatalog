@@ -49,6 +49,7 @@ export type Database = {
           request_date: string
           requester_class: string
           requester_name: string
+          return_date: string | null
           status: string
         }
         Insert: {
@@ -61,6 +62,7 @@ export type Database = {
           request_date?: string
           requester_class: string
           requester_name: string
+          return_date?: string | null
           status?: string
         }
         Update: {
@@ -73,6 +75,7 @@ export type Database = {
           request_date?: string
           requester_class?: string
           requester_name?: string
+          return_date?: string | null
           status?: string
         }
         Relationships: [
