@@ -460,6 +460,7 @@ export const getBookRequests = async (): Promise<BookRequest[]> => {
     requesterName: request.requester_name,
     requesterClass: request.requester_class,
     requestDate: request.request_date,
+    returnDate: (request as any).return_date || undefined,
     status: request.status as "pending" | "approved" | "rejected",
   }));
 };

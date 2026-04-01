@@ -261,7 +261,22 @@ const BookDetail = () => {
                         placeholder="Search student name..."
                       />
                     </div>
-                  </div>
+                    <div className="space-y-2">
+                      <Label>Days to return *</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="Enter number of days"
+                        value={daysToReturn}
+                        onChange={(e) => setDaysToReturn(e.target.value)}
+                      />
+                      {calculatedReturnDate && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Return by: <span className="font-semibold text-foreground">{format(calculatedReturnDate, "MMM d, yyyy")}</span>
+                        </p>
+                      )}
+                    </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
                       Cancel
