@@ -154,7 +154,13 @@ const Catalog = () => {
       return matchesSearch && matchesCategory && matchesAvailability;
     });
 
-    return filtered.sort((a, b) => b.averageRating - a.averageRating);
+    return filtered.sort((a, b) => {
+      if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
+      const aCover = a.coverImage ? 1 : 0;
+      const bCover = b.coverImage ? 1 : 0;
+      if (bCover !== aCover) return bCover - aCover;
+      return a.title.localeCompare(b.title);
+    });
   }, [books, searchQuery, selectedCategory, availabilityFilter]);
 
   // Reset to page 1 when filters change
