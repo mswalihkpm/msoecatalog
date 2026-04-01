@@ -487,15 +487,16 @@ const BorrowsManagement = () => {
             <CardContent className="p-0 overflow-x-auto">
               <Table className="min-w-[700px]">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Book</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Requester</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Request Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
+                 <TableRow>
+                     <TableHead>Book</TableHead>
+                     <TableHead>Code</TableHead>
+                     <TableHead>Requester</TableHead>
+                     <TableHead>Class</TableHead>
+                     <TableHead>Request Date</TableHead>
+                     <TableHead>Return Date</TableHead>
+                     <TableHead>Status</TableHead>
+                     <TableHead className="text-right">Actions</TableHead>
+                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {requests.length > 0 ? (

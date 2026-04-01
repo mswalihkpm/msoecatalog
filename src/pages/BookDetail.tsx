@@ -277,6 +277,7 @@ const BookDetail = () => {
                         </p>
                       )}
                     </div>
+                  </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
                       Cancel
