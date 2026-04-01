@@ -70,11 +70,13 @@ const BookDetail = () => {
       bookVolume: book.volume,
       requesterName: selectedStudent.name,
       requesterClass: selectedStudent.class,
+      returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
     });
 
     toast.success("Request submitted successfully!");
     setIsRequestDialogOpen(false);
     setSelectedStudent(null);
+    setDaysToReturn("");
   };
 
   if (!book) {
