@@ -15,7 +15,7 @@ import { Moon, Sun, HelpCircle, Mail } from "lucide-react";
 const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
-    return stored ? stored === "dark" : true; // default dark
+    return stored ? stored === "dark" : false; // default light
   });
 
   useEffect(() => {

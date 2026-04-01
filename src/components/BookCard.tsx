@@ -44,8 +44,7 @@ export const BookCard = ({ book, onOpen }: BookCardProps) => {
             {book.isBorrowed ? "BORROWED" : "AVAILABLE"}
           </Badge>
 
-          {/* Gradient Overlay at Bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-card via-card/80 to-transparent" />
+          {/* Gradient Overlay at Bottom - removed shading */}
         </div>
 
         {/* Book Info */}

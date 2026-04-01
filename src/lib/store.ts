@@ -465,16 +465,20 @@ export const getBookRequests = async (): Promise<BookRequest[]> => {
 };
 
 export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestDate" | "status">): Promise<BookRequest | null> => {
+  const insertData: Record<string, unknown> = {
+    book_id: request.bookId,
+    book_title: request.bookTitle,
+    book_number_code: request.bookNumberCode,
+    book_volume: request.bookVolume,
+    requester_name: request.requesterName,
+    requester_class: request.requesterClass,
+  };
+  if (request.returnDate) {
+    insertData.return_date = request.returnDate;
+  }
   const { data, error } = await supabase
     .from("book_requests")
-    .insert({
-      book_id: request.bookId,
-      book_title: request.bookTitle,
-      book_number_code: request.bookNumberCode,
-      book_volume: request.bookVolume,
-      requester_name: request.requesterName,
-      requester_class: request.requesterClass,
-    })
+    .insert(insertData as any)
     .select()
     .single();
 
