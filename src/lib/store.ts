@@ -3,7 +3,19 @@ import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student } from 
 
 // Initialize data - now just ensures dark mode
 export const initializeData = () => {
-  document.documentElement.classList.add("dark");
+  const stored = localStorage.getItem("theme");
+  if (stored === "light") {
+    document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
+  } else if (stored === "dark") {
+    document.documentElement.classList.remove("light");
+    document.documentElement.classList.add("dark");
+  } else {
+    // Default to light
+    document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
+    localStorage.setItem("theme", "light");
+  }
 };
 
 // Books - Database operations
