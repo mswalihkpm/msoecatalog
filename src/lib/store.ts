@@ -496,6 +496,7 @@ export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestD
     requesterName: data.requester_name,
     requesterClass: data.requester_class,
     requestDate: data.request_date,
+    returnDate: (data as any).return_date || undefined,
     status: data.status as "pending" | "approved" | "rejected",
   };
 };
