@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Star, Calendar, User, BookOpen, Image, Send, Hash, FileText, Building } from "lucide-react";
 import { Header } from "@/components/Header";
