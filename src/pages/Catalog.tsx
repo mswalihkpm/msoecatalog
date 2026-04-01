@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { BookCard } from "@/components/BookCard";
 import { SearchFilters } from "@/components/SearchFilters";
@@ -13,32 +13,111 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 const BOOKS_PER_PAGE = 40;
+const CATALOG_BROWSE_STATE_KEY = "catalogBrowseState";
+
+type CatalogBrowseState = {
+  availabilityFilter: string;
+  currentPage: number;
+  scrollY: number;
+  searchQuery: string;
+  selectedCategory: string;
+};
+
+const readSavedCatalogState = (): CatalogBrowseState | null => {
+  if (typeof window === "undefined") return null;
+
+  const rawState = sessionStorage.getItem(CATALOG_BROWSE_STATE_KEY);
+  if (!rawState) return null;
+
+  try {
+    const parsedState = JSON.parse(rawState) as Partial<CatalogBrowseState>;
+
+    if (
+      typeof parsedState.searchQuery !== "string" ||
+      typeof parsedState.selectedCategory !== "string" ||
+      typeof parsedState.availabilityFilter !== "string" ||
+      typeof parsedState.currentPage !== "number" ||
+      typeof parsedState.scrollY !== "number"
+    ) {
+      sessionStorage.removeItem(CATALOG_BROWSE_STATE_KEY);
+      return null;
+    }
+
+    return parsedState as CatalogBrowseState;
+  } catch {
+    sessionStorage.removeItem(CATALOG_BROWSE_STATE_KEY);
+    return null;
+  }
+};
 
 const Catalog = () => {
   const [searchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
+  const initialBrowseStateRef = useRef<CatalogBrowseState | null>(readSavedCatalogState());
+  const hasRestoredScrollRef = useRef(false);
+  const skipInitialPageResetRef = useRef(true);
   
   const [books, setBooks] = useState<Book[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "all");
-  const [availabilityFilter, setAvailabilityFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState(() => initialBrowseStateRef.current?.searchQuery ?? "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    () => categoryFromUrl || initialBrowseStateRef.current?.selectedCategory || "all"
+  );
+  const [availabilityFilter, setAvailabilityFilter] = useState(
+    () => initialBrowseStateRef.current?.availabilityFilter ?? "all"
+  );
+  const [currentPage, setCurrentPage] = useState(() => initialBrowseStateRef.current?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore scroll position when navigating back
+  const saveBrowseState = useCallback(() => {
+    sessionStorage.setItem(
+      CATALOG_BROWSE_STATE_KEY,
+      JSON.stringify({
+        availabilityFilter,
+        currentPage,
+        scrollY: window.scrollY,
+        searchQuery,
+        selectedCategory,
+      } satisfies CatalogBrowseState)
+    );
+  }, [availabilityFilter, currentPage, searchQuery, selectedCategory]);
+
+  // Restore browse context when navigating back
   useEffect(() => {
-    if (!isLoading && books.length > 0) {
-      const savedScroll = sessionStorage.getItem("catalogScroll");
-      if (savedScroll) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo(0, parseInt(savedScroll, 10));
-            sessionStorage.removeItem("catalogScroll");
-          });
-        });
-      }
+    const savedState = initialBrowseStateRef.current;
+
+    if (
+      !savedState ||
+      isLoading ||
+      books.length === 0 ||
+      hasRestoredScrollRef.current
+    ) {
+      return;
     }
-  }, [isLoading, books.length]);
+
+    const restoreScroll = () => {
+      window.scrollTo({ top: savedState.scrollY, behavior: "auto" });
+    };
+
+    let firstFrame = 0;
+    let secondFrame = 0;
+    firstFrame = requestAnimationFrame(() => {
+      restoreScroll();
+      secondFrame = requestAnimationFrame(restoreScroll);
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      restoreScroll();
+      hasRestoredScrollRef.current = true;
+      initialBrowseStateRef.current = null;
+      sessionStorage.removeItem(CATALOG_BROWSE_STATE_KEY);
+    }, 180);
+
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      window.clearTimeout(timeoutId);
+    };
+  }, [books.length, currentPage, isLoading]);
 
   useEffect(() => {
     initializeData();
@@ -80,6 +159,11 @@ const Catalog = () => {
 
   // Reset to page 1 when filters change
   useEffect(() => {
+    if (skipInitialPageResetRef.current) {
+      skipInitialPageResetRef.current = false;
+      return;
+    }
+
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, availabilityFilter]);
 
@@ -237,7 +321,7 @@ const Catalog = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.02 }}
                   >
-                    <BookCard book={book} />
+                    <BookCard book={book} onOpen={saveBrowseState} />
                   </motion.div>
                 ))}
               </div>
