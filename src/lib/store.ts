@@ -3,7 +3,19 @@ import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student } from 
 
 // Initialize data - now just ensures dark mode
 export const initializeData = () => {
-  document.documentElement.classList.add("dark");
+  const stored = localStorage.getItem("theme");
+  if (stored === "light") {
+    document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
+  } else if (stored === "dark") {
+    document.documentElement.classList.remove("light");
+    document.documentElement.classList.add("dark");
+  } else {
+    // Default to light
+    document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
+    localStorage.setItem("theme", "light");
+  }
 };
 
 // Books - Database operations
@@ -448,21 +460,26 @@ export const getBookRequests = async (): Promise<BookRequest[]> => {
     requesterName: request.requester_name,
     requesterClass: request.requester_class,
     requestDate: request.request_date,
+    returnDate: (request as any).return_date || undefined,
     status: request.status as "pending" | "approved" | "rejected",
   }));
 };
 
 export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestDate" | "status">): Promise<BookRequest | null> => {
+  const insertData: Record<string, unknown> = {
+    book_id: request.bookId,
+    book_title: request.bookTitle,
+    book_number_code: request.bookNumberCode,
+    book_volume: request.bookVolume,
+    requester_name: request.requesterName,
+    requester_class: request.requesterClass,
+  };
+  if (request.returnDate) {
+    insertData.return_date = request.returnDate;
+  }
   const { data, error } = await supabase
     .from("book_requests")
-    .insert({
-      book_id: request.bookId,
-      book_title: request.bookTitle,
-      book_number_code: request.bookNumberCode,
-      book_volume: request.bookVolume,
-      requester_name: request.requesterName,
-      requester_class: request.requesterClass,
-    })
+    .insert(insertData as any)
     .select()
     .single();
 
@@ -480,6 +497,7 @@ export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestD
     requesterName: data.requester_name,
     requesterClass: data.requester_class,
     requestDate: data.request_date,
+    returnDate: (data as any).return_date || undefined,
     status: data.status as "pending" | "approved" | "rejected",
   };
 };

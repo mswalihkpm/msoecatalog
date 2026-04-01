@@ -48,6 +48,7 @@ export interface BookRequest {
   requesterName: string;
   requesterClass: string;
   requestDate: string;
+  returnDate?: string;
   status: "pending" | "approved" | "rejected";
 }
 

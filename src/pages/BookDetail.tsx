@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Star, Calendar, User, BookOpen, Image, Send, Hash, FileText, Building } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,15 @@ const BookDetail = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [daysToReturn, setDaysToReturn] = useState<string>("");
+
+  const calculatedReturnDate = useMemo(() => {
+    const days = parseInt(daysToReturn);
+    if (!days || days <= 0) return null;
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date;
+  }, [daysToReturn]);
 
   const loadData = async () => {
     if (id) {
@@ -61,11 +71,13 @@ const BookDetail = () => {
       bookVolume: book.volume,
       requesterName: selectedStudent.name,
       requesterClass: selectedStudent.class,
+      returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
     });
 
     toast.success("Request submitted successfully!");
     setIsRequestDialogOpen(false);
     setSelectedStudent(null);
+    setDaysToReturn("");
   };
 
   if (!book) {
@@ -249,6 +261,22 @@ const BookDetail = () => {
                         selectedStudent={selectedStudent}
                         placeholder="Search student name..."
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Days to return *</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="Enter number of days"
+                        value={daysToReturn}
+                        onChange={(e) => setDaysToReturn(e.target.value)}
+                      />
+                      {calculatedReturnDate && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Return by: <span className="font-semibold text-foreground">{format(calculatedReturnDate, "MMM d, yyyy")}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
                   <DialogFooter>

@@ -1,0 +1,1 @@
+ALTER TABLE public.book_requests ADD COLUMN return_date date;
