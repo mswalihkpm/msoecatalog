@@ -32,6 +32,15 @@ const BookDetail = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [daysToReturn, setDaysToReturn] = useState<string>("");
+
+  const calculatedReturnDate = useMemo(() => {
+    const days = parseInt(daysToReturn);
+    if (!days || days <= 0) return null;
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date;
+  }, [daysToReturn]);
 
   const loadData = async () => {
     if (id) {
