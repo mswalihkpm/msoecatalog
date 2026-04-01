@@ -515,6 +515,9 @@ const BorrowsManagement = () => {
                           {format(new Date(request.requestDate), "MMM d, yyyy")}
                         </TableCell>
                         <TableCell>
+                          {request.returnDate ? format(new Date(request.returnDate), "MMM d, yyyy") : "-"}
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant={
                               request.status === "approved"
