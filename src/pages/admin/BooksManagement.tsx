@@ -280,6 +280,7 @@ const BooksManagement = () => {
           category: String(row["Category"] || row["category"] || "Others") as Category,
           numberCode: String(row["Number Code"] || row["Code"] || row["numberCode"] || ""),
           description: String(row["Description"] || row["description"] || ""),
+          coverImage: String(row["Cover Image"] || row["Cover"] || row["cover_image"] || row["coverImage"] || ""),
           volume: String(row["Volume"] || row["volume"] || ""),
           pages: String(row["Pages"] || row["pages"] || ""),
           publication: String(row["Publication"] || row["publication"] || ""),
