@@ -111,6 +111,7 @@ const Dashboard = () => {
       "Pages": book.pages || "-",
       "Publication": book.publication || "-",
       "Description": book.description || "-",
+      "Cover Image": book.coverImage || "-",
       "Status": book.isBorrowed ? "Borrowed" : "Available",
       "Borrowed By": book.borrowedBy || "-",
       "Average Rating": book.averageRating.toFixed(1),
