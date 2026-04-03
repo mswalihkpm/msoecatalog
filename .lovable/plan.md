@@ -1,30 +1,32 @@
 
 
-## Plan: Update Catalog Book Sorting Order
+## Plan: Support Embedded Cover Images in Bulk Upload
 
-**File to modify:** `src/pages/Catalog.tsx`
+### What changes
+Update the bulk upload logic in `src/pages/admin/BooksManagement.tsx` to extract embedded images from Excel files and upload them to storage, while keeping the "Bulk Upload Format" info box exactly as it is now.
 
-**Change:** Update the sort function in the `filteredBooks` `useMemo` to use a three-level sort:
+### How it works
+1. **Switch from `xlsx` to `exceljs`** for parsing bulk uploads — `exceljs` can read embedded images from Excel files, while `xlsx` (SheetJS) cannot.
+2. **Extract embedded images** from the uploaded workbook using `workbook.getImages()` or the worksheet's image collection.
+3. **Match images to rows** by their anchor position (the row the image is placed in).
+4. **Upload each image** to the `book-covers` storage bucket using the existing `uploadCoverToStorage` pattern.
+5. **Assign the resulting public URL** to the corresponding book's `coverImage` field.
+6. **No changes to the Bulk Upload Format info box** — it stays exactly as shown.
 
-1. **Rating descending** — higher-rated books appear first
-2. **Has cover image** — books with an uploaded cover photo come before those without
-3. **Alphabetical by title** — within the same rating and cover-photo status, sort A→Z
+### File modified
+- `src/pages/admin/BooksManagement.tsx` — update `handleBulkUpload` to use `exceljs` for parsing, extract embedded images, and upload them.
 
-**Implementation:**
-Replace the current `.sort((a, b) => b.averageRating - a.averageRating)` with:
+### Technical details
 
-```ts
-return filtered.sort((a, b) => {
-  // 1. Higher rating first
-  if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
-  // 2. Books with cover photo first
-  const aCover = a.coverImage ? 1 : 0;
-  const bCover = b.coverImage ? 1 : 0;
-  if (bCover !== aCover) return bCover - aCover;
-  // 3. Alphabetical by title
-  return a.title.localeCompare(b.title);
-});
+The `exceljs` library (already installed) provides access to worksheet images via `worksheet.getImages()`, which returns objects with `imageId` and `range` (anchor row/col). The image buffer is retrieved via `workbook.getImage(imageId)`. Each image is converted to a `File`, uploaded to Supabase storage, and the public URL is set as the book's `coverImage`.
+
+```text
+Excel file with embedded images
+  ↓ parse with exceljs
+  ↓ extract rows → book data
+  ↓ extract images → match to rows by anchor position
+  ↓ upload each image to storage
+  ↓ assign URL to book.coverImage
+  ↓ bulkAddBooks(books)
 ```
-
-Single file, ~5 lines changed.
 
