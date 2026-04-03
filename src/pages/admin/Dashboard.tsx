@@ -31,6 +31,7 @@ const Dashboard = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [requests, setRequests] = useState<BookRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [requestSearch, setRequestSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
