@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle, Search } from "lucide-react";
+import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import {
 import { getBooks, getBorrowRecords, getReviews, getBookRequests } from "@/lib/store";
 import { Book, BookRequest } from "@/lib/types";
 import { format, subDays, parseISO, startOfDay } from "date-fns";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -31,6 +31,7 @@ const Dashboard = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [requests, setRequests] = useState<BookRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [requestSearch, setRequestSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -95,45 +96,115 @@ const Dashboard = () => {
     });
   }, [requests, requestSearch, statusFilter]);
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (books.length === 0) {
       toast.error("No books to export");
       return;
     }
 
-    const exportData = books.map((book, index) => ({
-      "SI No": book.siNumber || index + 1,
-      "Title": book.title,
-      "Author": book.author,
-      "Category": book.category,
-      "Number Code": book.numberCode,
-      "Volume": book.volume || "-",
-      "Pages": book.pages || "-",
-      "Publication": book.publication || "-",
-      "Description": book.description || "-",
-      "Cover Image": book.coverImage || "-",
-      "Status": book.isBorrowed ? "Borrowed" : "Available",
-      "Borrowed By": book.borrowedBy || "-",
-      "Average Rating": book.averageRating.toFixed(1),
-      "Total Reviews": book.totalReviews,
-    }));
+    setIsExporting(true);
+    toast.info("Preparing catalog export with cover images...");
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Catalog");
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Catalog");
 
-    const maxWidths = exportData.reduce((acc, row) => {
-      Object.keys(row).forEach((key, i) => {
-        const value = String(row[key as keyof typeof row]);
-        acc[i] = Math.max(acc[i] || key.length, value.length);
+      const headers = [
+        "SI No", "Title", "Author", "Category", "Number Code",
+        "Volume", "Pages", "Publication", "Description", "Cover Image",
+        "Status", "Borrowed By", "Average Rating", "Total Reviews"
+      ];
+
+      const headerRow = worksheet.addRow(headers);
+      headerRow.font = { bold: true, size: 12 };
+      headerRow.alignment = { vertical: "middle", horizontal: "center" };
+      headerRow.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD4A574" } };
+        cell.border = {
+          top: { style: "thin" }, bottom: { style: "thin" },
+          left: { style: "thin" }, right: { style: "thin" },
+        };
       });
-      return acc;
-    }, {} as Record<number, number>);
 
-    worksheet["!cols"] = Object.values(maxWidths).map((w) => ({ wch: Math.min(w + 2, 50) }));
+      // Set column widths
+      worksheet.columns = [
+        { width: 8 }, { width: 30 }, { width: 20 }, { width: 14 }, { width: 14 },
+        { width: 10 }, { width: 8 }, { width: 18 }, { width: 30 }, { width: 18 },
+        { width: 12 }, { width: 16 }, { width: 14 }, { width: 13 },
+      ];
 
-    XLSX.writeFile(workbook, `library_catalog_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-    toast.success("Catalog exported to Excel successfully!");
+      // Fetch all cover images in parallel
+      const imagePromises = books.map(async (book) => {
+        if (!book.coverImage) return null;
+        try {
+          const response = await fetch(book.coverImage);
+          if (!response.ok) return null;
+          const blob = await response.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          const ext = book.coverImage.toLowerCase().includes(".png") ? "png" : "jpeg";
+          return { buffer: arrayBuffer, ext } as { buffer: ArrayBuffer; ext: "png" | "jpeg" };
+        } catch {
+          return null;
+        }
+      });
+
+      const imageResults = await Promise.all(imagePromises);
+
+      for (let i = 0; i < books.length; i++) {
+        const book = books[i];
+        const rowIndex = i + 2; // +2 because row 1 is header
+
+        const row = worksheet.addRow([
+          book.siNumber || i + 1,
+          book.title,
+          book.author,
+          book.category,
+          book.numberCode,
+          book.volume || "-",
+          book.pages || "-",
+          book.publication || "-",
+          book.description || "-",
+          "", // Cover Image column - will add image
+          book.isBorrowed ? "Borrowed" : "Available",
+          book.borrowedBy || "-",
+          book.averageRating.toFixed(1),
+          book.totalReviews,
+        ]);
+
+        row.alignment = { vertical: "middle", wrapText: true };
+
+        const imgData = imageResults[i];
+        if (imgData) {
+          const imageId = workbook.addImage({
+            buffer: imgData.buffer,
+            extension: imgData.ext,
+          });
+          worksheet.addImage(imageId, {
+            tl: { col: 9, row: rowIndex - 1 },
+            ext: { width: 80, height: 100 },
+          });
+          row.height = 80;
+        } else {
+          row.height = 20;
+        }
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `library_catalog_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("Catalog exported with cover images!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export catalog");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const statCards = [
@@ -198,9 +269,18 @@ const Dashboard = () => {
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-2">Dashboard</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Welcome back! Here's an overview of your library.</p>
         </div>
-        <Button onClick={exportToExcel} className="gap-2 bg-secondary hover:bg-secondary/90 w-full sm:w-auto">
-          <FileSpreadsheet className="h-4 w-4" />
-          Export Catalog
+        <Button onClick={exportToExcel} disabled={isExporting} className="gap-2 bg-secondary hover:bg-secondary/90 w-full sm:w-auto">
+          {isExporting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Exporting...
+            </>
+          ) : (
+            <>
+              <FileSpreadsheet className="h-4 w-4" />
+              Export Catalog
+            </>
+          )}
         </Button>
       </div>
 

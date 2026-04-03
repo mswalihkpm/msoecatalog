@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2, Lock } from "lucide-react";
+import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2, Lock, Download } from "lucide-react";
 import { BookHistoryDialog } from "@/components/BookHistoryDialog";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
@@ -322,6 +322,32 @@ const BooksManagement = () => {
     }
   };
 
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        "SI Number": "1",
+        "Title": "Example Book Title",
+        "Author": "Author Name",
+        "Category": "Islamic",
+        "Number Code": "001",
+        "Description": "Book description here",
+        "Cover Image": "https://example.com/cover.jpg",
+        "Volume": "1",
+        "Pages": "200",
+        "Publication": "Publisher Name",
+      },
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws["!cols"] = [
+      { wch: 12 }, { wch: 25 }, { wch: 18 }, { wch: 12 }, { wch: 14 },
+      { wch: 30 }, { wch: 35 }, { wch: 8 }, { wch: 8 }, { wch: 18 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, "bulk_upload_template.xlsx");
+    toast.success("Template downloaded! Fill it and upload.");
+  };
+
   const filteredBooks = books.filter(
     (book) =>
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -437,6 +463,14 @@ const BooksManagement = () => {
                 Bulk Upload
               </>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={downloadTemplate}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Template
           </Button>
           <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
             <DialogTrigger asChild>
