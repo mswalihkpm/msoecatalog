@@ -464,6 +464,14 @@ const BooksManagement = () => {
               </>
             )}
           </Button>
+          <Button
+            variant="outline"
+            onClick={downloadTemplate}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Template
+          </Button>
           <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2 text-destructive border-destructive">
