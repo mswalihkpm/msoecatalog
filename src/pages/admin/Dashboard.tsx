@@ -269,9 +269,18 @@ const Dashboard = () => {
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-2">Dashboard</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Welcome back! Here's an overview of your library.</p>
         </div>
-        <Button onClick={exportToExcel} className="gap-2 bg-secondary hover:bg-secondary/90 w-full sm:w-auto">
-          <FileSpreadsheet className="h-4 w-4" />
-          Export Catalog
+        <Button onClick={exportToExcel} disabled={isExporting} className="gap-2 bg-secondary hover:bg-secondary/90 w-full sm:w-auto">
+          {isExporting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Exporting...
+            </>
+          ) : (
+            <>
+              <FileSpreadsheet className="h-4 w-4" />
+              Export Catalog
+            </>
+          )}
         </Button>
       </div>
 
