@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle, Search } from "lucide-react";
+import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import {
 import { getBooks, getBorrowRecords, getReviews, getBookRequests } from "@/lib/store";
 import { Book, BookRequest } from "@/lib/types";
 import { format, subDays, parseISO, startOfDay } from "date-fns";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
