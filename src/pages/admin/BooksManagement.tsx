@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2, Lock, Download } from "lucide-react";
+import { Plus, Upload, Trash2, Edit, Search, Image, X, Loader2, Lock } from "lucide-react";
 import { BookHistoryDialog } from "@/components/BookHistoryDialog";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
