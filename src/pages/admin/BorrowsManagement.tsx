@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X, Printer } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -136,10 +136,6 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Your Rating</Label>
-                <StarRating rating={reviewRating} onRatingChange={setReviewRating} size="lg" />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="comment">Your Review</Label>
                 <Textarea
                   id="comment"
