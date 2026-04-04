@@ -317,9 +317,15 @@ const BorrowsManagement = () => {
                     id="borrowDate"
                     type="date"
                     value={formData.borrowedDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, borrowedDate: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newBorrowDate = e.target.value;
+                      const returnDate = newBorrowDate ? (() => {
+                        const d = new Date(newBorrowDate);
+                        d.setDate(d.getDate() + 14);
+                        return d.toISOString().split("T")[0];
+                      })() : "";
+                      setFormData({ ...formData, borrowedDate: newBorrowDate, returnDate });
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
