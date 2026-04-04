@@ -234,6 +234,68 @@ const BorrowsManagement = () => {
 
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
+  const getBookSiNumber = (bookId: string) => {
+    const book = books.find((b) => b.id === bookId);
+    return book?.siNumber || "-";
+  };
+
+  const handlePrintRequests = () => {
+    const from = parseInt(printFromNum) || 1;
+    const to = parseInt(printToNum) || requests.length;
+    const selectedRequests = requests.slice(from - 1, to);
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Book Requests</title>
+        <style>
+          @page { size: A4; margin: 20mm; }
+          body { font-family: 'Lora', 'Amiri', serif; font-size: 12px; }
+          h1 { text-align: center; font-size: 18px; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
+          th { background: #f0f0f0; font-weight: bold; }
+          .text-center { text-align: center; }
+        </style>
+      </head>
+      <body>
+        <h1>Book Requests (${from} - ${to})</h1>
+        <table>
+          <thead>
+            <tr>
+              <th class="text-center">#</th>
+              <th>SI No.</th>
+              <th>Book Code</th>
+              <th>Book Name</th>
+              <th>Requester</th>
+              <th>Return Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${selectedRequests.map((r, i) => `
+              <tr>
+                <td class="text-center">${from + i}</td>
+                <td>${getBookSiNumber(r.bookId)}</td>
+                <td>${r.bookNumberCode}</td>
+                <td>${r.bookTitle}${r.bookVolume ? ` (Vol. ${r.bookVolume})` : ""}</td>
+                <td>${r.requesterName}</td>
+                <td>${r.returnDate ? format(new Date(r.returnDate), "MMM d, yyyy") : "-"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
