@@ -553,23 +553,55 @@ const BorrowsManagement = () => {
         </TabsContent>
 
         <TabsContent value="requests" className="space-y-4">
+          {/* Print Controls */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">From #</Label>
+              <Input
+                type="number"
+                min="1"
+                value={printFromNum}
+                onChange={(e) => setPrintFromNum(e.target.value)}
+                placeholder="1"
+                className="w-20 h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">To #</Label>
+              <Input
+                type="number"
+                min="1"
+                value={printToNum}
+                onChange={(e) => setPrintToNum(e.target.value)}
+                placeholder={String(requests.length)}
+                className="w-20 h-9"
+              />
+            </div>
+            <Button onClick={handlePrintRequests} variant="outline" className="gap-2 h-9">
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="font-serif text-lg">Book Requests</CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
-              <Table className="min-w-[700px]">
+              <Table className="min-w-[800px]">
                 <TableHeader>
-                 <TableRow>
-                     <TableHead>Book</TableHead>
-                     <TableHead>Code</TableHead>
-                     <TableHead>Requester</TableHead>
-                     <TableHead>Class</TableHead>
-                     <TableHead>Request Date</TableHead>
-                     <TableHead>Return Date</TableHead>
-                     <TableHead>Status</TableHead>
-                     <TableHead className="text-right">Actions</TableHead>
-                   </TableRow>
+                  <TableRow>
+                    <TableHead>#</TableHead>
+                    <TableHead>SI No.</TableHead>
+                    <TableHead>Book</TableHead>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Requester</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Request Date</TableHead>
+                    <TableHead>Return Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
                   {requests.length > 0 ? (
