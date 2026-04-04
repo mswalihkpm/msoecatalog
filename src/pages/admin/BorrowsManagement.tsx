@@ -689,7 +689,7 @@ const BorrowsManagement = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                         No book requests
                       </TableCell>
                     </TableRow>
