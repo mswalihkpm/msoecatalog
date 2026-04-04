@@ -267,10 +267,19 @@ const BookDetail = () => {
                       <Input
                         type="number"
                         min="1"
-                        placeholder="Enter number of days"
+                        max="20"
+                        placeholder="Enter number of days (max 20)"
                         value={daysToReturn}
-                        onChange={(e) => setDaysToReturn(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || (parseInt(val) >= 1 && parseInt(val) <= 20)) {
+                            setDaysToReturn(val);
+                          }
+                        }}
                       />
+                      {parseInt(daysToReturn) > 20 && (
+                        <p className="text-sm text-destructive">Maximum 20 days allowed</p>
+                      )}
                       {calculatedReturnDate && (
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
