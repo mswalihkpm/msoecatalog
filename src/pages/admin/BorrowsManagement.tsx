@@ -64,6 +64,8 @@ const BorrowsManagement = () => {
   const [editingRecord, setEditingRecord] = useState<BorrowRecord | null>(null);
   const [approveRequest, setApproveRequest] = useState<BookRequest | null>(null);
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [printFromNum, setPrintFromNum] = useState("");
+  const [printToNum, setPrintToNum] = useState("");
 
   const [formData, setFormData] = useState({
     bookId: "",
