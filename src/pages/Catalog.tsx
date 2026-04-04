@@ -141,7 +141,8 @@ const Catalog = () => {
         !searchQuery ||
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.numberCode.toLowerCase().includes(searchQuery.toLowerCase());
+        book.numberCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (book.publication && book.publication.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesCategory =
         selectedCategory === "all" || book.category === selectedCategory;

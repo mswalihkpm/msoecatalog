@@ -62,7 +62,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
 
     await addReview({
       bookId,
-      userName: selectedStudentForReview.name,
+      userName: `${selectedStudentForReview.name} (${selectedStudentForReview.class})`,
       rating: 0, // No rating for text reviews
       comment: comment.trim(),
     });
