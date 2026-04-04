@@ -51,7 +51,7 @@ export const SearchFilters = ({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by title, author, or code..."
+            placeholder="Search by title, author, code, or publication..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
