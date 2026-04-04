@@ -174,9 +174,12 @@ const BorrowsManagement = () => {
 
   const handleApproveClick = (request: BookRequest) => {
     setApproveRequest(request);
+    const today = new Date();
+    const returnDate = new Date(today);
+    returnDate.setDate(returnDate.getDate() + 14);
     setApproveFormData({
-      borrowedDate: new Date().toISOString().split("T")[0],
-      returnDate: "",
+      borrowedDate: today.toISOString().split("T")[0],
+      returnDate: request.returnDate || returnDate.toISOString().split("T")[0],
     });
     setIsApproveDialogOpen(true);
   };
