@@ -605,8 +605,10 @@ const BorrowsManagement = () => {
                 </TableHeader>
                 <TableBody>
                   {requests.length > 0 ? (
-                    requests.map((request) => (
+                    requests.map((request, index) => (
                       <TableRow key={request.id}>
+                        <TableCell className="font-mono text-sm">{index + 1}</TableCell>
+                        <TableCell className="font-mono text-sm">{getBookSiNumber(request.bookId)}</TableCell>
                         <TableCell className="font-medium">
                           {request.bookTitle}
                           {request.bookVolume && <span className="text-muted-foreground text-sm ml-1">(Vol. {request.bookVolume})</span>}
