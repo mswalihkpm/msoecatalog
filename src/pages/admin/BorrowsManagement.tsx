@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X, Printer } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,8 @@ const BorrowsManagement = () => {
   const [editingRecord, setEditingRecord] = useState<BorrowRecord | null>(null);
   const [approveRequest, setApproveRequest] = useState<BookRequest | null>(null);
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [printFromNum, setPrintFromNum] = useState("");
+  const [printToNum, setPrintToNum] = useState("");
 
   const [formData, setFormData] = useState({
     bookId: "",
@@ -172,9 +174,12 @@ const BorrowsManagement = () => {
 
   const handleApproveClick = (request: BookRequest) => {
     setApproveRequest(request);
+    const today = new Date();
+    const returnDate = new Date(today);
+    returnDate.setDate(returnDate.getDate() + 14);
     setApproveFormData({
-      borrowedDate: new Date().toISOString().split("T")[0],
-      returnDate: "",
+      borrowedDate: today.toISOString().split("T")[0],
+      returnDate: request.returnDate || returnDate.toISOString().split("T")[0],
     });
     setIsApproveDialogOpen(true);
   };
@@ -228,6 +233,68 @@ const BorrowsManagement = () => {
   );
 
   const pendingRequests = requests.filter((r) => r.status === "pending");
+
+  const getBookSiNumber = (bookId: string) => {
+    const book = books.find((b) => b.id === bookId);
+    return book?.siNumber || "-";
+  };
+
+  const handlePrintRequests = () => {
+    const from = parseInt(printFromNum) || 1;
+    const to = parseInt(printToNum) || requests.length;
+    const selectedRequests = requests.slice(from - 1, to);
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Book Requests</title>
+        <style>
+          @page { size: A4; margin: 20mm; }
+          body { font-family: 'Lora', 'Amiri', serif; font-size: 12px; }
+          h1 { text-align: center; font-size: 18px; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
+          th { background: #f0f0f0; font-weight: bold; }
+          .text-center { text-align: center; }
+        </style>
+      </head>
+      <body>
+        <h1>Book Requests (${from} - ${to})</h1>
+        <table>
+          <thead>
+            <tr>
+              <th class="text-center">#</th>
+              <th>SI No.</th>
+              <th>Book Code</th>
+              <th>Book Name</th>
+              <th>Requester</th>
+              <th>Return Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${selectedRequests.map((r, i) => `
+              <tr>
+                <td class="text-center">${from + i}</td>
+                <td>${getBookSiNumber(r.bookId)}</td>
+                <td>${r.bookNumberCode}</td>
+                <td>${r.bookTitle}${r.bookVolume ? ` (Vol. ${r.bookVolume})` : ""}</td>
+                <td>${r.requesterName}</td>
+                <td>${r.returnDate ? format(new Date(r.returnDate), "MMM d, yyyy") : "-"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -317,9 +384,15 @@ const BorrowsManagement = () => {
                     id="borrowDate"
                     type="date"
                     value={formData.borrowedDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, borrowedDate: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newBorrowDate = e.target.value;
+                      const returnDate = newBorrowDate ? (() => {
+                        const d = new Date(newBorrowDate);
+                        d.setDate(d.getDate() + 14);
+                        return d.toISOString().split("T")[0];
+                      })() : "";
+                      setFormData({ ...formData, borrowedDate: newBorrowDate, returnDate });
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
@@ -480,28 +553,62 @@ const BorrowsManagement = () => {
         </TabsContent>
 
         <TabsContent value="requests" className="space-y-4">
+          {/* Print Controls */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">From #</Label>
+              <Input
+                type="number"
+                min="1"
+                value={printFromNum}
+                onChange={(e) => setPrintFromNum(e.target.value)}
+                placeholder="1"
+                className="w-20 h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">To #</Label>
+              <Input
+                type="number"
+                min="1"
+                value={printToNum}
+                onChange={(e) => setPrintToNum(e.target.value)}
+                placeholder={String(requests.length)}
+                className="w-20 h-9"
+              />
+            </div>
+            <Button onClick={handlePrintRequests} variant="outline" className="gap-2 h-9">
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="font-serif text-lg">Book Requests</CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
-              <Table className="min-w-[700px]">
+              <Table className="min-w-[800px]">
                 <TableHeader>
-                 <TableRow>
-                     <TableHead>Book</TableHead>
-                     <TableHead>Code</TableHead>
-                     <TableHead>Requester</TableHead>
-                     <TableHead>Class</TableHead>
-                     <TableHead>Request Date</TableHead>
-                     <TableHead>Return Date</TableHead>
-                     <TableHead>Status</TableHead>
-                     <TableHead className="text-right">Actions</TableHead>
-                   </TableRow>
+                  <TableRow>
+                    <TableHead>#</TableHead>
+                    <TableHead>SI No.</TableHead>
+                    <TableHead>Book</TableHead>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Requester</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Request Date</TableHead>
+                    <TableHead>Return Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
                   {requests.length > 0 ? (
-                    requests.map((request) => (
+                    requests.map((request, index) => (
                       <TableRow key={request.id}>
+                        <TableCell className="font-mono text-sm">{index + 1}</TableCell>
+                        <TableCell className="font-mono text-sm">{getBookSiNumber(request.bookId)}</TableCell>
                         <TableCell className="font-medium">
                           {request.bookTitle}
                           {request.bookVolume && <span className="text-muted-foreground text-sm ml-1">(Vol. {request.bookVolume})</span>}
@@ -582,7 +689,7 @@ const BorrowsManagement = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                         No book requests
                       </TableCell>
                     </TableRow>
@@ -615,9 +722,15 @@ const BorrowsManagement = () => {
                   id="approveBorrowDate"
                   type="date"
                   value={approveFormData.borrowedDate}
-                  onChange={(e) =>
-                    setApproveFormData({ ...approveFormData, borrowedDate: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    const returnDate = newDate ? (() => {
+                      const d = new Date(newDate);
+                      d.setDate(d.getDate() + 14);
+                      return d.toISOString().split("T")[0];
+                    })() : "";
+                    setApproveFormData({ borrowedDate: newDate, returnDate });
+                  }}
                 />
               </div>
               <div className="space-y-2">
