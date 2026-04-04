@@ -55,10 +55,6 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
       toast.error("Please select a student");
       return;
     }
-    if (reviewRating === 0) {
-      toast.error("Please select a rating");
-      return;
-    }
     if (!comment.trim()) {
       toast.error("Please write a review");
       return;
@@ -66,8 +62,8 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
 
     await addReview({
       bookId,
-      userName: selectedStudentForReview.name, // Show reviewer name
-      rating: reviewRating,
+      userName: selectedStudentForReview.name,
+      rating: 0, // No rating for text reviews
       comment: comment.trim(),
     });
 
