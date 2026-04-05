@@ -10,7 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Moon, Sun, HelpCircle, Mail } from "lucide-react";
+import { Moon, Sun, HelpCircle, Mail, Shield } from "lucide-react";
 
 const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -127,6 +127,71 @@ const Settings = () => {
                     mswalihkpm@gmail.com
                   </a>
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Terms and Conditions */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="font-serif flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Terms & Conditions
+              </CardTitle>
+              <CardDescription>Library usage policies and guidelines</CardDescription>
+            </CardHeader>
+            <CardContent className="prose prose-sm dark:prose-invert max-w-none">
+              <div className="space-y-4 text-sm text-muted-foreground">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">1. Library Membership</h4>
+                  <p>Only registered students are eligible to borrow books from the library. Each student must have a valid account with a verified secret code.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">2. Borrowing Rules</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Students may borrow one book at a time.</li>
+                    <li>The maximum borrowing period is 20 days from the date of issue.</li>
+                    <li>Books must be returned on or before the specified return date.</li>
+                    <li>Late returns may result in temporary suspension of borrowing privileges.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">3. Book Care</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Borrowed books must be handled with care and returned in the same condition.</li>
+                    <li>Students are responsible for any damage, loss, or defacement of borrowed materials.</li>
+                    <li>Writing, highlighting, or marking in library books is strictly prohibited.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">4. Reviews & Ratings</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Students are encouraged to rate and review books to help fellow readers.</li>
+                    <li>Reviews must be respectful, honest, and free from inappropriate language.</li>
+                    <li>The library reserves the right to remove reviews that violate these guidelines.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">5. Book Requests</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Book requests are subject to approval by the library administration.</li>
+                    <li>Requests will be processed on a first-come, first-served basis.</li>
+                    <li>The library reserves the right to reject requests based on availability.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">6. Code of Conduct</h4>
+                  <p>Students must maintain a quiet and respectful environment in the library. Any misuse of the library system, including sharing secret codes or impersonating other students, may result in account suspension.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">7. Privacy</h4>
+                  <p>Student information is stored securely and used solely for library management purposes. Personal data will not be shared with third parties.</p>
+                </div>
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground italic">
+                    By using this library application, you agree to abide by these terms and conditions. The library administration reserves the right to update these policies at any time.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -640,6 +640,18 @@ export const bulkAddStudents = async (students: Omit<Student, "id" | "createdAt"
   return insertedCount;
 };
 
+export const updateStudent = async (id: string, updates: Partial<Omit<Student, "id" | "createdAt" | "updatedAt">>) => {
+  const dbUpdates: Record<string, unknown> = {};
+  if (updates.name !== undefined) dbUpdates.name = updates.name;
+  if (updates.class !== undefined) dbUpdates.class = updates.class;
+  if (updates.code !== undefined) dbUpdates.code = updates.code;
+
+  const { error } = await supabase.from("students").update(dbUpdates).eq("id", id);
+  if (error) {
+    console.error("Error updating student:", error);
+  }
+};
+
 export const deleteStudent = async (id: string) => {
   const { error } = await supabase.from("students").delete().eq("id", id);
   if (error) {
