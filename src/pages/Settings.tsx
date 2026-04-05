@@ -10,7 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Moon, Sun, HelpCircle, Mail } from "lucide-react";
+import { Moon, Sun, HelpCircle, Mail, Shield } from "lucide-react";
 
 const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {

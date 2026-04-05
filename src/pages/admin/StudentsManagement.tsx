@@ -33,8 +33,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Upload, Trash2, Search, Users } from "lucide-react";
-import { getStudents, addStudent, deleteStudent, bulkAddStudents, bulkDeleteStudents } from "@/lib/store";
+import { Plus, Upload, Trash2, Search, Users, Pencil } from "lucide-react";
+import { getStudents, addStudent, deleteStudent, updateStudent, bulkAddStudents, bulkDeleteStudents } from "@/lib/store";
 import { Student } from "@/lib/types";
 import * as XLSX from "xlsx";
 
@@ -45,6 +45,8 @@ const StudentsManagement = () => {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "" });
   const [historyStudent, setHistoryStudent] = useState<string | null>(null);
+  const [editStudent, setEditStudent] = useState<Student | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", class: "", code: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -70,6 +72,23 @@ const StudentsManagement = () => {
     toast.success("Student added successfully");
     setNewStudent({ name: "", class: "", code: "" });
     setIsAddDialogOpen(false);
+    loadStudents();
+  };
+
+  const handleEditStudent = async () => {
+    if (!editStudent) return;
+    if (!editForm.name.trim() || !editForm.class.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    if (!editForm.code.trim() || !/^\d{3}$/.test(editForm.code)) {
+      toast.error("Please enter a valid 3-digit code");
+      return;
+    }
+
+    await updateStudent(editStudent.id, { name: editForm.name, class: editForm.class, code: editForm.code });
+    toast.success("Student updated successfully");
+    setEditStudent(null);
     loadStudents();
   };
 
@@ -256,6 +275,48 @@ const StudentsManagement = () => {
         </div>
       </div>
 
+      {/* Edit Student Dialog */}
+      <Dialog open={!!editStudent} onOpenChange={(open) => { if (!open) setEditStudent(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Student</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Student Name</Label>
+              <Input
+                placeholder="Enter student name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Class</Label>
+              <Input
+                placeholder="Enter class"
+                value={editForm.class}
+                onChange={(e) => setEditForm({ ...editForm, class: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Secret Code (3 digits)</Label>
+              <Input
+                placeholder="e.g. 123"
+                value={editForm.code}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                  setEditForm({ ...editForm, code: val });
+                }}
+                maxLength={3}
+              />
+            </div>
+            <Button onClick={handleEditStudent} className="w-full">
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -335,27 +396,39 @@ const StudentsManagement = () => {
                        <Badge variant="outline" className="font-mono">{student.code}</Badge>
                      </TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Student?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete {student.name}. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditStudent(student);
+                              setEditForm({ name: student.name, class: student.class, code: student.code });
+                            }}
+                          >
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Student?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete {student.name}. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
