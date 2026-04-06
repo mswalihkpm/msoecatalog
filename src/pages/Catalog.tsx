@@ -156,6 +156,10 @@ const Catalog = () => {
     });
 
     return filtered.sort((a, b) => {
+      // Push EN-coded books to the end
+      const aIsEN = a.numberCode.toUpperCase().startsWith("EN") ? 1 : 0;
+      const bIsEN = b.numberCode.toUpperCase().startsWith("EN") ? 1 : 0;
+      if (aIsEN !== bIsEN) return aIsEN - bIsEN;
       if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
       const aCover = a.coverImage ? 1 : 0;
       const bCover = b.coverImage ? 1 : 0;
