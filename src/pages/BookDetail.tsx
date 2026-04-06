@@ -22,10 +22,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBookById, getReviews, addBookRequest } from "@/lib/store";
+import { getBookById, getReviews, addBookRequest, getPendingRequestCount } from "@/lib/store";
 import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
