@@ -259,75 +259,124 @@ const BookDetail = () => {
                 </CardContent>
               </Card>
             ) : (
-              <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold">
-                    <BookOpen className="h-5 w-5" />
-                    Request Book
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="font-serif">Request Book</DialogTitle>
-                    <DialogDescription>
-                      Fill in your details to request "{book.title}"
-                      {book.volume && ` (Volume ${book.volume})`}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Requester *</Label>
-                      <StudentSearch
-                        onSelect={setSelectedStudent}
-                        selectedStudent={selectedStudent}
-                        placeholder="Search student name..."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Days to return *</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="20"
-                        placeholder="Enter number of days (max 20)"
-                        value={daysToReturn}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '' || (parseInt(val) >= 1 && parseInt(val) <= 20)) {
-                            setDaysToReturn(val);
-                          }
-                        }}
-                      />
-                      {parseInt(daysToReturn) > 20 && (
-                        <p className="text-sm text-destructive">Maximum 20 days allowed</p>
+              <div className="space-y-4">
+                {/* Queue info */}
+                {pendingCount > 0 && (
+                  <Card className="bg-muted/30 border-primary/20">
+                    <CardContent className="p-4">
+                      <p className="text-sm font-medium text-foreground">
+                        📋 {pendingCount} student{pendingCount !== 1 ? 's have' : ' has'} already requested this book.
+                      </p>
+                      {userQueuePosition && (
+                        <p className="text-sm text-primary font-semibold mt-1">
+                          You are person #{userQueuePosition} in the queue.
+                        </p>
                       )}
-                      {calculatedReturnDate && (
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Borrow date (Sunday): <span className="font-semibold text-foreground">{format(nextSunday, "MMM d, yyyy")}</span>
-                          </p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Return by: <span className="font-semibold text-foreground">{format(calculatedReturnDate, "MMM d, yyyy")}</span>
-                          </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {userQueuePosition && (
+                  <Alert className="border-primary/20 bg-primary/5">
+                    <AlertDescription className="text-sm text-muted-foreground italic">
+                      Note: If the first student doesn't take the book, the second or third can get it; if the first takes it, the others won't.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {pendingCount >= 3 ? (
+                  <Card className="bg-destructive/10 border-destructive/20">
+                    <CardContent className="pt-4">
+                      <p className="font-medium text-destructive">Maximum requests reached</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        3 students have already requested this book. Please check back later.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold">
+                        <BookOpen className="h-5 w-5" />
+                        Request Book ({3 - pendingCount} slot{3 - pendingCount !== 1 ? 's' : ''} left)
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="font-serif">Request Book</DialogTitle>
+                        <DialogDescription>
+                          Fill in your details to request "{book.title}"
+                          {book.volume && ` (Volume ${book.volume})`}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        {pendingCount > 0 && (
+                          <Alert className="border-primary/20 bg-primary/5">
+                            <AlertDescription className="text-sm">
+                              {pendingCount} student{pendingCount !== 1 ? 's have' : ' has'} already requested this book. You will be person #{pendingCount + 1}.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        <div className="space-y-2">
+                          <Label>Requester *</Label>
+                          <StudentSearch
+                            onSelect={setSelectedStudent}
+                            selectedStudent={selectedStudent}
+                            placeholder="Search student name..."
+                          />
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleRequestBook}
-                      className="bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      Submit Request
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                        <div className="space-y-2">
+                          <Label>Days to return *</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="20"
+                            placeholder="Enter number of days (max 20)"
+                            value={daysToReturn}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === '' || (parseInt(val) >= 1 && parseInt(val) <= 20)) {
+                                setDaysToReturn(val);
+                              }
+                            }}
+                          />
+                          {parseInt(daysToReturn) > 20 && (
+                            <p className="text-sm text-destructive">Maximum 20 days allowed</p>
+                          )}
+                          {calculatedReturnDate && (
+                            <div className="space-y-1">
+                              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Borrow date (Sunday): <span className="font-semibold text-foreground">{format(nextSunday, "MMM d, yyyy")}</span>
+                              </p>
+                              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Return by: <span className="font-semibold text-foreground">{format(calculatedReturnDate, "MMM d, yyyy")}</span>
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        <Alert className="border-muted bg-muted/30">
+                          <AlertDescription className="text-xs text-muted-foreground italic">
+                            Note: If the first student doesn't take the book, the second or third can get it; if the first takes it, the others won't.
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleRequestBook}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          Submit Request
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             )}
           </div>
         </div>

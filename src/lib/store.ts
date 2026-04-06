@@ -465,6 +465,19 @@ export const getBookRequests = async (): Promise<BookRequest[]> => {
   }));
 };
 
+export const getPendingRequestCount = async (bookId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from("book_requests")
+    .select("*", { count: "exact", head: true })
+    .eq("book_id", bookId)
+    .eq("status", "pending");
+  if (error) {
+    console.error("Error counting pending requests:", error);
+    return 0;
+  }
+  return count || 0;
+};
+
 export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestDate" | "status">): Promise<BookRequest | null> => {
   const insertData: Record<string, unknown> = {
     book_id: request.bookId,
