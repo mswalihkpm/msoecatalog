@@ -37,6 +37,7 @@ const BookDetail = () => {
   const [daysToReturn, setDaysToReturn] = useState<string>("");
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
+  const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
 
   const nextSunday = useMemo(() => {
     const today = new Date();
