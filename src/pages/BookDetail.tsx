@@ -291,10 +291,16 @@ const BookDetail = () => {
                         <p className="text-sm text-destructive">Maximum 20 days allowed</p>
                       )}
                       {calculatedReturnDate && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Return by: <span className="font-semibold text-foreground">{format(calculatedReturnDate, "MMM d, yyyy")}</span>
-                        </p>
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Borrow date (Sunday): <span className="font-semibold text-foreground">{format(nextSunday, "MMM d, yyyy")}</span>
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Return by: <span className="font-semibold text-foreground">{format(calculatedReturnDate, "MMM d, yyyy")}</span>
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>
