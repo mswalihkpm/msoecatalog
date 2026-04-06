@@ -77,6 +77,11 @@ const BookDetail = () => {
     }
     if (!book) return;
 
+    if (pendingCount >= 3) {
+      toast.error("Maximum 3 requests allowed for this book. Please try later.");
+      return;
+    }
+
     await addBookRequest({
       bookId: book.id,
       bookTitle: book.title,
@@ -87,7 +92,10 @@ const BookDetail = () => {
       returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
     });
 
-    toast.success("Request submitted successfully!");
+    const newPosition = pendingCount + 1;
+    setUserQueuePosition(newPosition);
+    setPendingCount(newPosition);
+    toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
     setIsRequestDialogOpen(false);
     setSelectedStudent(null);
     setDaysToReturn("");
