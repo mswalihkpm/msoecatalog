@@ -35,6 +35,8 @@ const BookDetail = () => {
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [daysToReturn, setDaysToReturn] = useState<string>("");
+  const [pendingCount, setPendingCount] = useState<number>(0);
+  const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
 
   const nextSunday = useMemo(() => {
     const today = new Date();
