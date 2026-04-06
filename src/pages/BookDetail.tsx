@@ -359,7 +359,6 @@ const BookDetail = () => {
                               </AlertDescription>
                             </Alert>
                           )}
-                          />
                         </div>
                         <div className="space-y-2">
                           <Label>Days to return *</Label>
