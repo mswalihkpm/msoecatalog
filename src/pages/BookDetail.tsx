@@ -345,6 +345,21 @@ const BookDetail = () => {
                             selectedStudent={selectedStudent}
                             placeholder="Search student name..."
                           />
+                          {selectedStudent && studentPendingCount >= 2 && (
+                            <Alert className="border-destructive/20 bg-destructive/5 mt-2">
+                              <AlertDescription className="text-sm text-destructive font-medium">
+                                ⚠️ You already have {studentPendingCount} pending request{studentPendingCount !== 1 ? 's' : ''}. A student can only request 2 books at a time. Please return your borrowed books first before requesting a new one.
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          {selectedStudent && studentPendingCount === 1 && (
+                            <Alert className="border-yellow-500/20 bg-yellow-500/5 mt-2">
+                              <AlertDescription className="text-sm text-yellow-700 dark:text-yellow-400">
+                                📌 You have 1 pending request. You can request 1 more book. After that, you must return old books to request again.
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label>Days to return *</Label>
