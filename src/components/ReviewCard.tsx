@@ -29,7 +29,6 @@ export const ReviewCard = ({ review, onDelete, showDeleteButton = false }: Revie
               {review.userName && review.userName !== "Anonymous" && (
                 <span className="font-medium text-foreground">{review.userName}</span>
               )}
-              <StarRating rating={review.rating} readonly size="sm" />
             </div>
             {review.comment && (
               <p className="text-sm text-muted-foreground">{review.comment}</p>
