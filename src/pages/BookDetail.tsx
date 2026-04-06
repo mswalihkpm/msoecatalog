@@ -404,6 +404,7 @@ const BookDetail = () => {
                         <Button
                           onClick={handleRequestBook}
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          disabled={selectedStudent !== null && studentPendingCount >= 2}
                         >
                           Submit Request
                         </Button>
