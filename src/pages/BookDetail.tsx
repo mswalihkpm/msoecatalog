@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBookById, getReviews, addBookRequest, getPendingRequestCount } from "@/lib/store";
+import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount } from "@/lib/store";
 import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ const BookDetail = () => {
   const [daysToReturn, setDaysToReturn] = useState<string>("");
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
+  const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
 
   const nextSunday = useMemo(() => {
     const today = new Date();
@@ -72,6 +73,18 @@ const BookDetail = () => {
     loadData();
   }, [id]);
 
+  useEffect(() => {
+    const checkStudentLimit = async () => {
+      if (selectedStudent) {
+        const count = await getStudentPendingRequestCount(selectedStudent.name);
+        setStudentPendingCount(count);
+      } else {
+        setStudentPendingCount(0);
+      }
+    };
+    checkStudentLimit();
+  }, [selectedStudent]);
+
   const handleRequestBook = async () => {
     if (!selectedStudent) {
       toast.error("Please select a student");
@@ -81,6 +94,11 @@ const BookDetail = () => {
 
     if (pendingCount >= 3) {
       toast.error("Maximum 3 requests allowed for this book. Please try later.");
+      return;
+    }
+
+    if (studentPendingCount >= 2) {
+      toast.error("You already have 2 pending requests. Return old books first.");
       return;
     }
 
@@ -97,6 +115,7 @@ const BookDetail = () => {
     const newPosition = pendingCount + 1;
     setUserQueuePosition(newPosition);
     setPendingCount(newPosition);
+    setStudentPendingCount(prev => prev + 1);
     toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
     setIsRequestDialogOpen(false);
     setSelectedStudent(null);
@@ -326,6 +345,20 @@ const BookDetail = () => {
                             selectedStudent={selectedStudent}
                             placeholder="Search student name..."
                           />
+                          {selectedStudent && studentPendingCount >= 2 && (
+                            <Alert className="border-destructive/20 bg-destructive/5 mt-2">
+                              <AlertDescription className="text-sm text-destructive font-medium">
+                                ⚠️ You already have {studentPendingCount} pending request{studentPendingCount !== 1 ? 's' : ''}. A student can only request 2 books at a time. Please return your borrowed books first before requesting a new one.
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          {selectedStudent && studentPendingCount === 1 && (
+                            <Alert className="border-yellow-500/20 bg-yellow-500/5 mt-2">
+                              <AlertDescription className="text-sm text-yellow-700 dark:text-yellow-400">
+                                📌 You have 1 pending request. You can request 1 more book. After that, you must return old books to request again.
+                              </AlertDescription>
+                            </Alert>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label>Days to return *</Label>
@@ -371,6 +404,7 @@ const BookDetail = () => {
                         <Button
                           onClick={handleRequestBook}
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          disabled={selectedStudent !== null && studentPendingCount >= 2}
                         >
                           Submit Request
                         </Button>
