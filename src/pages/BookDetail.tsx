@@ -35,13 +35,23 @@ const BookDetail = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [daysToReturn, setDaysToReturn] = useState<string>("");
 
+  const nextSunday = useMemo(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...6=Sat
+    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() + daysUntilSunday);
+    sunday.setHours(0, 0, 0, 0);
+    return sunday;
+  }, []);
+
   const calculatedReturnDate = useMemo(() => {
     const days = parseInt(daysToReturn);
     if (!days || days <= 0) return null;
-    const date = new Date();
+    const date = new Date(nextSunday);
     date.setDate(date.getDate() + days);
     return date;
-  }, [daysToReturn]);
+  }, [daysToReturn, nextSunday]);
 
   const loadData = async () => {
     if (id) {
