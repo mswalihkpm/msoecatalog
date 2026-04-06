@@ -60,6 +60,8 @@ const BookDetail = () => {
       setBook(bookData || null);
       const reviewsData = await getReviews(id);
       setReviews(reviewsData);
+      const count = await getPendingRequestCount(id);
+      setPendingCount(count);
     }
   };
 
