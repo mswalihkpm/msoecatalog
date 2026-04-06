@@ -73,6 +73,18 @@ const BookDetail = () => {
     loadData();
   }, [id]);
 
+  useEffect(() => {
+    const checkStudentLimit = async () => {
+      if (selectedStudent) {
+        const count = await getStudentPendingRequestCount(selectedStudent.name);
+        setStudentPendingCount(count);
+      } else {
+        setStudentPendingCount(0);
+      }
+    };
+    checkStudentLimit();
+  }, [selectedStudent]);
+
   const handleRequestBook = async () => {
     if (!selectedStudent) {
       toast.error("Please select a student");
@@ -82,6 +94,11 @@ const BookDetail = () => {
 
     if (pendingCount >= 3) {
       toast.error("Maximum 3 requests allowed for this book. Please try later.");
+      return;
+    }
+
+    if (studentPendingCount >= 2) {
+      toast.error("You already have 2 pending requests. Return old books first.");
       return;
     }
 
@@ -98,6 +115,7 @@ const BookDetail = () => {
     const newPosition = pendingCount + 1;
     setUserQueuePosition(newPosition);
     setPendingCount(newPosition);
+    setStudentPendingCount(prev => prev + 1);
     toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
     setIsRequestDialogOpen(false);
     setSelectedStudent(null);
