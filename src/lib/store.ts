@@ -710,6 +710,21 @@ export const bulkDeleteStudents = async (ids: string[]): Promise<number> => {
   return ids.length;
 };
 
+export const hasStudentRequestedBook = async (studentName: string, bookId: string): Promise<boolean> => {
+  const { count, error } = await supabase
+    .from("book_requests")
+    .select("*", { count: "exact", head: true })
+    .eq("requester_name", studentName)
+    .eq("book_id", bookId)
+    .eq("status", "pending");
+
+  if (error) {
+    console.error("Error checking student book request:", error);
+    return false;
+  }
+  return (count ?? 0) > 0;
+};
+
 export const searchStudents = async (query: string): Promise<Student[]> => {
   const { data, error } = await supabase
     .from("students")

@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount, getAdminSettings } from "@/lib/store";
+import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount, getAdminSettings, hasStudentRequestedBook } from "@/lib/store";
 import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -41,6 +41,7 @@ const BookDetail = () => {
   const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
   const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
   const [libraryOpenDay, setLibraryOpenDay] = useState<number>(0);
+  const [alreadyRequestedSameBook, setAlreadyRequestedSameBook] = useState(false);
 
   const nextOpenDay = useMemo(() => {
     const today = new Date();
@@ -80,15 +81,18 @@ const BookDetail = () => {
 
   useEffect(() => {
     const checkStudentLimit = async () => {
-      if (selectedStudent) {
+      if (selectedStudent && id) {
         const count = await getStudentPendingRequestCount(selectedStudent.name);
         setStudentPendingCount(count);
+        const already = await hasStudentRequestedBook(selectedStudent.name, id);
+        setAlreadyRequestedSameBook(already);
       } else {
         setStudentPendingCount(0);
+        setAlreadyRequestedSameBook(false);
       }
     };
     checkStudentLimit();
-  }, [selectedStudent]);
+  }, [selectedStudent, id]);
 
   const handleRequestBook = async () => {
     if (!selectedStudent) {
@@ -104,6 +108,11 @@ const BookDetail = () => {
 
     if (studentPendingCount >= 2) {
       toast.error("You already have 2 pending requests. Return old books first.");
+      return;
+    }
+
+    if (alreadyRequestedSameBook) {
+      toast.error("You have already requested this same book before!");
       return;
     }
 
@@ -357,7 +366,14 @@ const BookDetail = () => {
                               </AlertDescription>
                             </Alert>
                           )}
-                          {selectedStudent && studentPendingCount === 1 && (
+                          {selectedStudent && alreadyRequestedSameBook && studentPendingCount < 2 && (
+                            <Alert className="border-destructive/20 bg-destructive/5 mt-2">
+                              <AlertDescription className="text-sm text-destructive font-medium">
+                                ⚠️ You have already requested this same book before! You cannot request the same book again.
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          {selectedStudent && studentPendingCount === 1 && !alreadyRequestedSameBook && (
                             <Alert className="border-yellow-500/20 bg-yellow-500/5 mt-2">
                               <AlertDescription className="text-sm text-yellow-700 dark:text-yellow-400">
                                 📌 You have 1 pending request. You can request 1 more book. After that, you must return old books to request again.
@@ -409,7 +425,7 @@ const BookDetail = () => {
                         <Button
                           onClick={handleRequestBook}
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
-                          disabled={selectedStudent !== null && studentPendingCount >= 2}
+                          disabled={(selectedStudent !== null && studentPendingCount >= 2) || alreadyRequestedSameBook}
                         >
                           Submit Request
                         </Button>
