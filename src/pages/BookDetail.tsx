@@ -81,15 +81,18 @@ const BookDetail = () => {
 
   useEffect(() => {
     const checkStudentLimit = async () => {
-      if (selectedStudent) {
+      if (selectedStudent && id) {
         const count = await getStudentPendingRequestCount(selectedStudent.name);
         setStudentPendingCount(count);
+        const already = await hasStudentRequestedBook(selectedStudent.name, id);
+        setAlreadyRequestedSameBook(already);
       } else {
         setStudentPendingCount(0);
+        setAlreadyRequestedSameBook(false);
       }
     };
     checkStudentLimit();
-  }, [selectedStudent]);
+  }, [selectedStudent, id]);
 
   const handleRequestBook = async () => {
     if (!selectedStudent) {
