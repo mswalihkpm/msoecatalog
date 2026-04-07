@@ -111,6 +111,11 @@ const BookDetail = () => {
       return;
     }
 
+    if (alreadyRequestedSameBook) {
+      toast.error("You have already requested this same book before!");
+      return;
+    }
+
     await addBookRequest({
       bookId: book.id,
       bookTitle: book.title,
