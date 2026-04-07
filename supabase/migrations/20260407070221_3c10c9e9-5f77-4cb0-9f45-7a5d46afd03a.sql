@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_settings ADD COLUMN library_open_day integer NOT NULL DEFAULT 0;

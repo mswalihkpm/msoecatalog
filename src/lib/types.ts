@@ -55,6 +55,7 @@ export interface BookRequest {
 export interface AdminSettings {
   username: string;
   password: string;
+  libraryOpenDay: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
 }
 
 export type Category = 

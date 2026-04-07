@@ -557,13 +557,25 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
 
   if (error || !data) {
     console.error("Error fetching admin settings:", error);
-    return { username: "msoelib", password: "alif" };
+    return { username: "msoelib", password: "alif", libraryOpenDay: 0 };
   }
 
   return {
     username: data.username,
     password: data.password,
+    libraryOpenDay: data.library_open_day ?? 0,
   };
+};
+
+export const updateLibraryOpenDay = async (day: number) => {
+  const { error } = await supabase
+    .from("admin_settings")
+    .update({ library_open_day: day } as any)
+    .eq("username", "msoelib");
+
+  if (error) {
+    console.error("Error updating library open day:", error);
+  }
 };
 
 export const updateAdminPassword = async (newPassword: string) => {

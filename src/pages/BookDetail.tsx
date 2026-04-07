@@ -22,11 +22,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount } from "@/lib/store";
+import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount, getAdminSettings } from "@/lib/store";
 import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,26 +40,29 @@ const BookDetail = () => {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
   const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
+  const [libraryOpenDay, setLibraryOpenDay] = useState<number>(0);
 
-  const nextSunday = useMemo(() => {
+  const nextOpenDay = useMemo(() => {
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...6=Sat
-    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-    const sunday = new Date(today);
-    sunday.setDate(today.getDate() + daysUntilSunday);
-    sunday.setHours(0, 0, 0, 0);
-    return sunday;
-  }, []);
+    const dayOfWeek = today.getDay();
+    const daysUntilOpen = dayOfWeek === libraryOpenDay ? 0 : ((libraryOpenDay - dayOfWeek + 7) % 7);
+    const openDate = new Date(today);
+    openDate.setDate(today.getDate() + daysUntilOpen);
+    openDate.setHours(0, 0, 0, 0);
+    return openDate;
+  }, [libraryOpenDay]);
 
   const calculatedReturnDate = useMemo(() => {
     const days = parseInt(daysToReturn);
     if (!days || days <= 0) return null;
-    const date = new Date(nextSunday);
+    const date = new Date(nextOpenDay);
     date.setDate(date.getDate() + days);
     return date;
-  }, [daysToReturn, nextSunday]);
+  }, [daysToReturn, nextOpenDay]);
 
   const loadData = async () => {
+    const settings = await getAdminSettings();
+    setLibraryOpenDay(settings.libraryOpenDay);
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
@@ -382,7 +387,7 @@ const BookDetail = () => {
                             <div className="space-y-1">
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                Borrow date (Sunday): <span className="font-semibold text-foreground">{format(nextSunday, "MMM d, yyyy")}</span>
+                                Borrow date ({DAY_NAMES[libraryOpenDay]}): <span className="font-semibold text-foreground">{format(nextOpenDay, "MMM d, yyyy")}</span>
                               </p>
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
