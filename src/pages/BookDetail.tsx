@@ -61,6 +61,8 @@ const BookDetail = () => {
   }, [daysToReturn, nextOpenDay]);
 
   const loadData = async () => {
+    const settings = await getAdminSettings();
+    setLibraryOpenDay(settings.libraryOpenDay);
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
