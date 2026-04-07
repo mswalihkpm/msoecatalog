@@ -557,7 +557,7 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
 
   if (error || !data) {
     console.error("Error fetching admin settings:", error);
-    return { username: "msoelib", password: "alif" };
+    return { username: "msoelib", password: "alif", libraryOpenDay: 0 };
   }
 
   return {
