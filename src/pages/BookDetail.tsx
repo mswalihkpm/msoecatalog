@@ -366,7 +366,14 @@ const BookDetail = () => {
                               </AlertDescription>
                             </Alert>
                           )}
-                          {selectedStudent && studentPendingCount === 1 && (
+                          {selectedStudent && alreadyRequestedSameBook && studentPendingCount < 2 && (
+                            <Alert className="border-destructive/20 bg-destructive/5 mt-2">
+                              <AlertDescription className="text-sm text-destructive font-medium">
+                                ⚠️ You have already requested this same book before! You cannot request the same book again.
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          {selectedStudent && studentPendingCount === 1 && !alreadyRequestedSameBook && (
                             <Alert className="border-yellow-500/20 bg-yellow-500/5 mt-2">
                               <AlertDescription className="text-sm text-yellow-700 dark:text-yellow-400">
                                 📌 You have 1 pending request. You can request 1 more book. After that, you must return old books to request again.
