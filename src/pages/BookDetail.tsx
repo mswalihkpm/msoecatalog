@@ -385,7 +385,7 @@ const BookDetail = () => {
                             <div className="space-y-1">
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                Borrow date (Sunday): <span className="font-semibold text-foreground">{format(nextSunday, "MMM d, yyyy")}</span>
+                                Borrow date ({DAY_NAMES[libraryOpenDay]}): <span className="font-semibold text-foreground">{format(nextOpenDay, "MMM d, yyyy")}</span>
                               </p>
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
