@@ -55,10 +55,10 @@ const BookDetail = () => {
   const calculatedReturnDate = useMemo(() => {
     const days = parseInt(daysToReturn);
     if (!days || days <= 0) return null;
-    const date = new Date(nextSunday);
+    const date = new Date(nextOpenDay);
     date.setDate(date.getDate() + days);
     return date;
-  }, [daysToReturn, nextSunday]);
+  }, [daysToReturn, nextOpenDay]);
 
   const loadData = async () => {
     if (id) {
