@@ -41,6 +41,7 @@ const BookDetail = () => {
   const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
   const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
   const [libraryOpenDay, setLibraryOpenDay] = useState<number>(0);
+  const [alreadyRequestedSameBook, setAlreadyRequestedSameBook] = useState(false);
 
   const nextOpenDay = useMemo(() => {
     const today = new Date();
