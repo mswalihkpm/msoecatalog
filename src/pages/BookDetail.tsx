@@ -428,9 +428,9 @@ const BookDetail = () => {
                         <Button
                           onClick={handleRequestBook}
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
-                          disabled={(selectedStudent !== null && studentPendingCount >= 2) || alreadyRequestedSameBook}
+                          disabled={isSubmitting || (selectedStudent !== null && studentPendingCount >= 2) || alreadyRequestedSameBook}
                         >
-                          Submit Request
+                          {isSubmitting ? "Submitting..." : "Submit Request"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
