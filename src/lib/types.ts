@@ -56,6 +56,7 @@ export interface AdminSettings {
   username: string;
   password: string;
   libraryOpenDay: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  libraryOpenDate?: string; // specific date string e.g. "2026-04-13"
 }
 
 export type Category = 

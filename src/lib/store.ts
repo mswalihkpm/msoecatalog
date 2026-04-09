@@ -564,6 +564,7 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
     username: data.username,
     password: data.password,
     libraryOpenDay: data.library_open_day ?? 0,
+    libraryOpenDate: (data as any).library_open_date || undefined,
   };
 };
 
@@ -575,6 +576,17 @@ export const updateLibraryOpenDay = async (day: number) => {
 
   if (error) {
     console.error("Error updating library open day:", error);
+  }
+};
+
+export const updateLibraryOpenDate = async (date: string) => {
+  const { error } = await supabase
+    .from("admin_settings")
+    .update({ library_open_date: date } as any)
+    .eq("username", "msoelib");
+
+  if (error) {
+    console.error("Error updating library open date:", error);
   }
 };
 

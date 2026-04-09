@@ -28,8 +28,6 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<Book | null>(null);
@@ -40,30 +38,28 @@ const BookDetail = () => {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
   const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
-  const [libraryOpenDay, setLibraryOpenDay] = useState<number>(0);
+  const [libraryOpenDate, setLibraryOpenDate] = useState<Date | null>(null);
   const [alreadyRequestedSameBook, setAlreadyRequestedSameBook] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const nextOpenDay = useMemo(() => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysUntilOpen = dayOfWeek === libraryOpenDay ? 0 : ((libraryOpenDay - dayOfWeek + 7) % 7);
-    const openDate = new Date(today);
-    openDate.setDate(today.getDate() + daysUntilOpen);
-    openDate.setHours(0, 0, 0, 0);
-    return openDate;
-  }, [libraryOpenDay]);
+  const borrowDate = useMemo(() => {
+    if (!libraryOpenDate) return null;
+    return libraryOpenDate;
+  }, [libraryOpenDate]);
 
   const calculatedReturnDate = useMemo(() => {
     const days = parseInt(daysToReturn);
-    if (!days || days <= 0) return null;
-    const date = new Date(nextOpenDay);
+    if (!days || days <= 0 || !borrowDate) return null;
+    const date = new Date(borrowDate);
     date.setDate(date.getDate() + days);
     return date;
-  }, [daysToReturn, nextOpenDay]);
+  }, [daysToReturn, borrowDate]);
 
   const loadData = async () => {
     const settings = await getAdminSettings();
-    setLibraryOpenDay(settings.libraryOpenDay);
+    if (settings.libraryOpenDate) {
+      setLibraryOpenDate(new Date(settings.libraryOpenDate + "T00:00:00"));
+    }
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
@@ -95,6 +91,7 @@ const BookDetail = () => {
   }, [selectedStudent, id]);
 
   const handleRequestBook = async () => {
+    if (isSubmitting) return;
     if (!selectedStudent) {
       toast.error("Please select a student");
       return;
@@ -116,24 +113,30 @@ const BookDetail = () => {
       return;
     }
 
-    await addBookRequest({
-      bookId: book.id,
-      bookTitle: book.title,
-      bookNumberCode: book.numberCode,
-      bookVolume: book.volume,
-      requesterName: selectedStudent.name,
-      requesterClass: selectedStudent.class,
-      returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      await addBookRequest({
+        bookId: book.id,
+        bookTitle: book.title,
+        bookNumberCode: book.numberCode,
+        bookVolume: book.volume,
+        requesterName: selectedStudent.name,
+        requesterClass: selectedStudent.class,
+        returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
+      });
 
-    const newPosition = pendingCount + 1;
-    setUserQueuePosition(newPosition);
-    setPendingCount(newPosition);
-    setStudentPendingCount(prev => prev + 1);
-    toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
-    setIsRequestDialogOpen(false);
-    setSelectedStudent(null);
-    setDaysToReturn("");
+      const newPosition = pendingCount + 1;
+      setUserQueuePosition(newPosition);
+      setPendingCount(newPosition);
+      setStudentPendingCount(prev => prev + 1);
+      setAlreadyRequestedSameBook(true);
+      toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
+      setIsRequestDialogOpen(false);
+      setSelectedStudent(null);
+      setDaysToReturn("");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!book) {
@@ -399,11 +402,11 @@ const BookDetail = () => {
                           {parseInt(daysToReturn) > 20 && (
                             <p className="text-sm text-destructive">Maximum 20 days allowed</p>
                           )}
-                          {calculatedReturnDate && (
+                          {calculatedReturnDate && borrowDate && (
                             <div className="space-y-1">
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                Borrow date ({DAY_NAMES[libraryOpenDay]}): <span className="font-semibold text-foreground">{format(nextOpenDay, "MMM d, yyyy")}</span>
+                                Borrow date: <span className="font-semibold text-foreground">{format(borrowDate, "MMM d, yyyy")}</span>
                               </p>
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
@@ -425,9 +428,9 @@ const BookDetail = () => {
                         <Button
                           onClick={handleRequestBook}
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
-                          disabled={(selectedStudent !== null && studentPendingCount >= 2) || alreadyRequestedSameBook}
+                          disabled={isSubmitting || (selectedStudent !== null && studentPendingCount >= 2) || alreadyRequestedSameBook}
                         >
-                          Submit Request
+                          {isSubmitting ? "Submitting..." : "Submit Request"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
