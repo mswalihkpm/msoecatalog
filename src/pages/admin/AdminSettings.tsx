@@ -4,19 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateAdminPassword, getAdminSettings, updateLibraryOpenDay } from "@/lib/store";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { updateAdminPassword, getAdminSettings, updateLibraryOpenDate } from "@/lib/store";
 import { toast } from "sonner";
-
-const DAY_OPTIONS = [
-  { value: "0", label: "Sunday" },
-  { value: "1", label: "Monday" },
-  { value: "2", label: "Tuesday" },
-  { value: "3", label: "Wednesday" },
-  { value: "4", label: "Thursday" },
-  { value: "5", label: "Friday" },
-  { value: "6", label: "Saturday" },
-];
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const AdminSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -25,13 +18,15 @@ const AdminSettings = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [storedPassword, setStoredPassword] = useState("");
-  const [libraryOpenDay, setLibraryOpenDay] = useState<string>("0");
+  const [libraryOpenDate, setLibraryOpenDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     const loadSettings = async () => {
       const settings = await getAdminSettings();
       setStoredPassword(settings.password);
-      setLibraryOpenDay(String(settings.libraryOpenDay));
+      if (settings.libraryOpenDate) {
+        setLibraryOpenDate(new Date(settings.libraryOpenDate + "T00:00:00"));
+      }
     };
     loadSettings();
   }, []);
@@ -65,11 +60,12 @@ const AdminSettings = () => {
     setConfirmPassword("");
   };
 
-  const handleOpenDayChange = async (value: string) => {
-    setLibraryOpenDay(value);
-    await updateLibraryOpenDay(parseInt(value));
-    const dayName = DAY_OPTIONS.find(d => d.value === value)?.label;
-    toast.success(`Library open day set to ${dayName}`);
+  const handleOpenDateChange = async (date: Date | undefined) => {
+    if (!date) return;
+    setLibraryOpenDate(date);
+    const dateStr = format(date, "yyyy-MM-dd");
+    await updateLibraryOpenDate(dateStr);
+    toast.success(`Library open date set to ${format(date, "MMMM d, yyyy")}`);
   };
 
   return (
@@ -79,35 +75,48 @@ const AdminSettings = () => {
         <p className="text-muted-foreground">Manage your admin preferences</p>
       </div>
 
-      {/* Library Open Day */}
+      {/* Library Open Date */}
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="font-serif flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
-            Library Open Day
+            Library Open Date
           </CardTitle>
           <CardDescription>
-            Set the day when the library processes book borrowing. Return dates will be calculated from this day.
+            Pick the date when the library will process book borrowing. Return dates will be calculated from this date.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Select Library Open Day</Label>
-            <Select value={libraryOpenDay} onValueChange={handleOpenDayChange}>
-              <SelectTrigger className="w-full max-w-xs">
-                <SelectValue placeholder="Select a day" />
-              </SelectTrigger>
-              <SelectContent>
-                {DAY_OPTIONS.map((day) => (
-                  <SelectItem key={day.value} value={day.value}>
-                    {day.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Currently set to: <span className="font-semibold text-foreground">{DAY_OPTIONS.find(d => d.value === libraryOpenDay)?.label}</span>
-            </p>
+            <Label>Select Library Open Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full max-w-xs justify-start text-left font-normal",
+                    !libraryOpenDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  {libraryOpenDate ? format(libraryOpenDate, "MMMM d, yyyy") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={libraryOpenDate}
+                  onSelect={handleOpenDateChange}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            {libraryOpenDate && (
+              <p className="text-xs text-muted-foreground">
+                Currently set to: <span className="font-semibold text-foreground">{format(libraryOpenDate, "EEEE, MMMM d, yyyy")}</span>
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
