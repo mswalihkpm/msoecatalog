@@ -28,8 +28,6 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<Book | null>(null);
@@ -40,18 +38,14 @@ const BookDetail = () => {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [userQueuePosition, setUserQueuePosition] = useState<number | null>(null);
   const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
-  const [libraryOpenDay, setLibraryOpenDay] = useState<number>(0);
+  const [libraryOpenDate, setLibraryOpenDate] = useState<Date | null>(null);
   const [alreadyRequestedSameBook, setAlreadyRequestedSameBook] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const nextOpenDay = useMemo(() => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysUntilOpen = dayOfWeek === libraryOpenDay ? 0 : ((libraryOpenDay - dayOfWeek + 7) % 7);
-    const openDate = new Date(today);
-    openDate.setDate(today.getDate() + daysUntilOpen);
-    openDate.setHours(0, 0, 0, 0);
-    return openDate;
-  }, [libraryOpenDay]);
+  const borrowDate = useMemo(() => {
+    if (!libraryOpenDate) return null;
+    return libraryOpenDate;
+  }, [libraryOpenDate]);
 
   const calculatedReturnDate = useMemo(() => {
     const days = parseInt(daysToReturn);
