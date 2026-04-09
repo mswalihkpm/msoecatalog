@@ -402,11 +402,11 @@ const BookDetail = () => {
                           {parseInt(daysToReturn) > 20 && (
                             <p className="text-sm text-destructive">Maximum 20 days allowed</p>
                           )}
-                          {calculatedReturnDate && (
+                          {calculatedReturnDate && borrowDate && (
                             <div className="space-y-1">
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                Borrow date ({DAY_NAMES[libraryOpenDay]}): <span className="font-semibold text-foreground">{format(nextOpenDay, "MMM d, yyyy")}</span>
+                                Borrow date: <span className="font-semibold text-foreground">{format(borrowDate, "MMM d, yyyy")}</span>
                               </p>
                               <p className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
