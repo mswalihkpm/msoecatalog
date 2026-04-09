@@ -49,15 +49,17 @@ const BookDetail = () => {
 
   const calculatedReturnDate = useMemo(() => {
     const days = parseInt(daysToReturn);
-    if (!days || days <= 0) return null;
-    const date = new Date(nextOpenDay);
+    if (!days || days <= 0 || !borrowDate) return null;
+    const date = new Date(borrowDate);
     date.setDate(date.getDate() + days);
     return date;
-  }, [daysToReturn, nextOpenDay]);
+  }, [daysToReturn, borrowDate]);
 
   const loadData = async () => {
     const settings = await getAdminSettings();
-    setLibraryOpenDay(settings.libraryOpenDay);
+    if (settings.libraryOpenDate) {
+      setLibraryOpenDate(new Date(settings.libraryOpenDate + "T00:00:00"));
+    }
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
@@ -89,6 +91,7 @@ const BookDetail = () => {
   }, [selectedStudent, id]);
 
   const handleRequestBook = async () => {
+    if (isSubmitting) return;
     if (!selectedStudent) {
       toast.error("Please select a student");
       return;
@@ -110,24 +113,30 @@ const BookDetail = () => {
       return;
     }
 
-    await addBookRequest({
-      bookId: book.id,
-      bookTitle: book.title,
-      bookNumberCode: book.numberCode,
-      bookVolume: book.volume,
-      requesterName: selectedStudent.name,
-      requesterClass: selectedStudent.class,
-      returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      await addBookRequest({
+        bookId: book.id,
+        bookTitle: book.title,
+        bookNumberCode: book.numberCode,
+        bookVolume: book.volume,
+        requesterName: selectedStudent.name,
+        requesterClass: selectedStudent.class,
+        returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
+      });
 
-    const newPosition = pendingCount + 1;
-    setUserQueuePosition(newPosition);
-    setPendingCount(newPosition);
-    setStudentPendingCount(prev => prev + 1);
-    toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
-    setIsRequestDialogOpen(false);
-    setSelectedStudent(null);
-    setDaysToReturn("");
+      const newPosition = pendingCount + 1;
+      setUserQueuePosition(newPosition);
+      setPendingCount(newPosition);
+      setStudentPendingCount(prev => prev + 1);
+      setAlreadyRequestedSameBook(true);
+      toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
+      setIsRequestDialogOpen(false);
+      setSelectedStudent(null);
+      setDaysToReturn("");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!book) {
