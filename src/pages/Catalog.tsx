@@ -123,8 +123,9 @@ const Catalog = () => {
   useEffect(() => {
     initializeData();
     const loadBooks = async () => {
-      const booksData = await getBooks();
+      const [booksData, requestsData] = await Promise.all([getBooks(), getBookRequests()]);
       setBooks(booksData);
+      setPendingBookIds(new Set(requestsData.filter(r => r.status === "pending").map(r => r.bookId)));
       setIsLoading(false);
     };
     loadBooks();
