@@ -5,7 +5,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PromoBanner } from "@/components/PromoBanner";
-import { getBooks, initializeData } from "@/lib/store";
+import { getBooks, initializeData, getBookRequests } from "@/lib/store";
 import { Book } from "@/lib/types";
 import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
