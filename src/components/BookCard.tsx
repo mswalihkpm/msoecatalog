@@ -45,6 +45,16 @@ export const BookCard = ({ book, onOpen, hasPendingRequest = false }: BookCardPr
             {book.isBorrowed ? "BORROWED" : "AVAILABLE"}
           </Badge>
 
+          {/* Red shading overlay when book has pending request */}
+          {hasPendingRequest && (
+            <>
+              <div className="absolute inset-0 bg-destructive/40 pointer-events-none" />
+              <Badge className="absolute bottom-2 left-2 bg-destructive text-destructive-foreground font-semibold uppercase text-[10px] px-2 py-0.5">
+                Requested
+              </Badge>
+            </>
+          )}
+
           {/* Gradient Overlay at Bottom - removed shading */}
         </div>
 
