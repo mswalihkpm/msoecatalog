@@ -40,6 +40,8 @@ const BookDetail = () => {
   const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
   const [libraryOpenDate, setLibraryOpenDate] = useState<Date | null>(null);
   const [alreadyRequestedSameBook, setAlreadyRequestedSameBook] = useState(false);
+  const [existingRequestId, setExistingRequestId] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const borrowDate = useMemo(() => {
