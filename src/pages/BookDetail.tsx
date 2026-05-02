@@ -82,15 +82,35 @@ const BookDetail = () => {
       if (selectedStudent && id) {
         const count = await getStudentPendingRequestCount(selectedStudent.name);
         setStudentPendingCount(count);
-        const already = await hasStudentRequestedBook(selectedStudent.name, id);
-        setAlreadyRequestedSameBook(already);
+        const existing = await getStudentPendingRequestForBook(selectedStudent.name, id);
+        setExistingRequestId(existing?.id ?? null);
+        setAlreadyRequestedSameBook(!!existing);
       } else {
         setStudentPendingCount(0);
         setAlreadyRequestedSameBook(false);
+        setExistingRequestId(null);
       }
     };
     checkStudentLimit();
   }, [selectedStudent, id]);
+
+  const handleCancelRequest = async () => {
+    if (!existingRequestId) return;
+    setIsCancelling(true);
+    try {
+      await deleteBookRequest(existingRequestId);
+      toast.success("Your request has been cancelled.");
+      setExistingRequestId(null);
+      setAlreadyRequestedSameBook(false);
+      setStudentPendingCount(prev => Math.max(0, prev - 1));
+      setPendingCount(prev => Math.max(0, prev - 1));
+      setUserQueuePosition(null);
+      setIsRequestDialogOpen(false);
+      setSelectedStudent(null);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const handleRequestBook = async () => {
     if (isSubmitting) return;
