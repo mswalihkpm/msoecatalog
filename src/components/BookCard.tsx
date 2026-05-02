@@ -6,12 +6,13 @@ import { Badge } from "@/components/ui/badge";
 interface BookCardProps {
   book: Book;
   onOpen?: () => void;
+  hasPendingRequest?: boolean;
 }
 
-export const BookCard = ({ book, onOpen }: BookCardProps) => {
+export const BookCard = ({ book, onOpen, hasPendingRequest = false }: BookCardProps) => {
   return (
     <Link to={`/book/${book.id}`} onClick={onOpen}>
-      <div className="group relative h-full overflow-hidden rounded-xl border-2 border-primary/20 bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-teal hover:-translate-y-1">
+      <div className={`group relative h-full overflow-hidden rounded-xl border-2 bg-card transition-all duration-300 hover:-translate-y-1 ${hasPendingRequest ? "border-destructive/50 hover:border-destructive hover:shadow-[0_0_25px_hsl(var(--destructive)/0.4)]" : "border-primary/20 hover:border-primary/50 hover:shadow-teal"}`}>
         {/* Cover Image Container */}
         <div className="relative aspect-[2/3] overflow-hidden">
           {book.coverImage ? (
@@ -43,6 +44,16 @@ export const BookCard = ({ book, onOpen }: BookCardProps) => {
           >
             {book.isBorrowed ? "BORROWED" : "AVAILABLE"}
           </Badge>
+
+          {/* Red shading overlay when book has pending request */}
+          {hasPendingRequest && (
+            <>
+              <div className="absolute inset-0 bg-destructive/40 pointer-events-none" />
+              <Badge className="absolute bottom-2 left-2 bg-destructive text-destructive-foreground font-semibold uppercase text-[10px] px-2 py-0.5">
+                Requested
+              </Badge>
+            </>
+          )}
 
           {/* Gradient Overlay at Bottom - removed shading */}
         </div>

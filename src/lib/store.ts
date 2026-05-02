@@ -181,19 +181,32 @@ export const deleteBook = async (id: string) => {
 };
 
 export const bulkDeleteBooks = async (fromSi: string, toSi: string): Promise<number> => {
-  const { data: books, error: fetchError } = await supabase
-    .from("books")
-    .select("id, si_number");
+  // Fetch ALL books in batches (default 1000-row limit otherwise truncates results)
+  const PAGE_SIZE = 1000;
+  let allBooks: { id: string; si_number: string }[] = [];
+  let from = 0;
+  let hasMore = true;
 
-  if (fetchError || !books) {
-    console.error("Error fetching books for bulk delete:", fetchError);
-    return 0;
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from("books")
+      .select("id, si_number")
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.error("Error fetching books for bulk delete:", error);
+      return 0;
+    }
+
+    allBooks = allBooks.concat(data || []);
+    hasMore = (data?.length || 0) === PAGE_SIZE;
+    from += PAGE_SIZE;
   }
 
   const fromNum = parseInt(fromSi, 10);
   const toNum = parseInt(toSi, 10);
 
-  const booksToDelete = books.filter((book) => {
+  const booksToDelete = allBooks.filter((book) => {
     const siNum = parseInt(book.si_number, 10);
     return !isNaN(siNum) && siNum >= fromNum && siNum <= toNum;
   });
@@ -201,14 +214,38 @@ export const bulkDeleteBooks = async (fromSi: string, toSi: string): Promise<num
   if (booksToDelete.length === 0) return 0;
 
   const idsToDelete = booksToDelete.map((b) => b.id);
-  const { error } = await supabase.from("books").delete().in("id", idsToDelete);
-
-  if (error) {
-    console.error("Error bulk deleting books:", error);
-    return 0;
+  // Delete in chunks to avoid URL/payload limits
+  const CHUNK = 200;
+  let deleted = 0;
+  for (let i = 0; i < idsToDelete.length; i += CHUNK) {
+    const slice = idsToDelete.slice(i, i + CHUNK);
+    const { error } = await supabase.from("books").delete().in("id", slice);
+    if (error) {
+      console.error("Error bulk deleting books chunk:", error);
+      break;
+    }
+    deleted += slice.length;
   }
 
-  return booksToDelete.length;
+  return deleted;
+};
+
+export const getStudentPendingRequestForBook = async (
+  studentName: string,
+  bookId: string
+): Promise<{ id: string } | null> => {
+  const { data, error } = await supabase
+    .from("book_requests")
+    .select("id")
+    .eq("requester_name", studentName)
+    .eq("book_id", bookId)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (error) {
+    console.error("Error fetching student pending request:", error);
+    return null;
+  }
+  return data ? { id: data.id } : null;
 };
 
 export const bulkAddBooks = async (books: Omit<Book, "id" | "averageRating" | "totalReviews">[]): Promise<number> => {

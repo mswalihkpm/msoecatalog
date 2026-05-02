@@ -5,7 +5,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PromoBanner } from "@/components/PromoBanner";
-import { getBooks, initializeData } from "@/lib/store";
+import { getBooks, initializeData, getBookRequests } from "@/lib/store";
 import { Book } from "@/lib/types";
 import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +67,7 @@ const Catalog = () => {
   );
   const [currentPage, setCurrentPage] = useState(() => initialBrowseStateRef.current?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingBookIds, setPendingBookIds] = useState<Set<string>>(new Set());
 
   const saveBrowseState = useCallback(() => {
     sessionStorage.setItem(
@@ -122,8 +123,9 @@ const Catalog = () => {
   useEffect(() => {
     initializeData();
     const loadBooks = async () => {
-      const booksData = await getBooks();
+      const [booksData, requestsData] = await Promise.all([getBooks(), getBookRequests()]);
       setBooks(booksData);
+      setPendingBookIds(new Set(requestsData.filter(r => r.status === "pending").map(r => r.bookId)));
       setIsLoading(false);
     };
     loadBooks();
@@ -332,7 +334,7 @@ const Catalog = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.02 }}
                   >
-                    <BookCard book={book} onOpen={saveBrowseState} />
+                    <BookCard book={book} onOpen={saveBrowseState} hasPendingRequest={pendingBookIds.has(book.id)} />
                   </motion.div>
                 ))}
               </div>

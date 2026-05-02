@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount, getAdminSettings, hasStudentRequestedBook } from "@/lib/store";
+import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount, getAdminSettings, hasStudentRequestedBook, getStudentPendingRequestForBook, deleteBookRequest } from "@/lib/store";
 import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -40,6 +40,8 @@ const BookDetail = () => {
   const [studentPendingCount, setStudentPendingCount] = useState<number>(0);
   const [libraryOpenDate, setLibraryOpenDate] = useState<Date | null>(null);
   const [alreadyRequestedSameBook, setAlreadyRequestedSameBook] = useState(false);
+  const [existingRequestId, setExistingRequestId] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const borrowDate = useMemo(() => {
@@ -80,15 +82,35 @@ const BookDetail = () => {
       if (selectedStudent && id) {
         const count = await getStudentPendingRequestCount(selectedStudent.name);
         setStudentPendingCount(count);
-        const already = await hasStudentRequestedBook(selectedStudent.name, id);
-        setAlreadyRequestedSameBook(already);
+        const existing = await getStudentPendingRequestForBook(selectedStudent.name, id);
+        setExistingRequestId(existing?.id ?? null);
+        setAlreadyRequestedSameBook(!!existing);
       } else {
         setStudentPendingCount(0);
         setAlreadyRequestedSameBook(false);
+        setExistingRequestId(null);
       }
     };
     checkStudentLimit();
   }, [selectedStudent, id]);
+
+  const handleCancelRequest = async () => {
+    if (!existingRequestId) return;
+    setIsCancelling(true);
+    try {
+      await deleteBookRequest(existingRequestId);
+      toast.success("Your request has been cancelled.");
+      setExistingRequestId(null);
+      setAlreadyRequestedSameBook(false);
+      setStudentPendingCount(prev => Math.max(0, prev - 1));
+      setPendingCount(prev => Math.max(0, prev - 1));
+      setUserQueuePosition(null);
+      setIsRequestDialogOpen(false);
+      setSelectedStudent(null);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const handleRequestBook = async () => {
     if (isSubmitting) return;
@@ -369,10 +391,10 @@ const BookDetail = () => {
                               </AlertDescription>
                             </Alert>
                           )}
-                          {selectedStudent && alreadyRequestedSameBook && studentPendingCount < 2 && (
+                          {selectedStudent && alreadyRequestedSameBook && (
                             <Alert className="border-destructive/20 bg-destructive/5 mt-2">
                               <AlertDescription className="text-sm text-destructive font-medium">
-                                ⚠️ You have already requested this same book before! You cannot request the same book again.
+                                ⚠️ You have already requested this book. You can cancel your request below if you no longer need it.
                               </AlertDescription>
                             </Alert>
                           )}
@@ -421,10 +443,19 @@ const BookDetail = () => {
                           </AlertDescription>
                         </Alert>
                       </div>
-                      <DialogFooter>
+                      <DialogFooter className="gap-2 sm:gap-2">
                         <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
-                          Cancel
+                          Close
                         </Button>
+                        {alreadyRequestedSameBook && existingRequestId && (
+                          <Button
+                            variant="destructive"
+                            onClick={handleCancelRequest}
+                            disabled={isCancelling}
+                          >
+                            {isCancelling ? "Cancelling..." : "Cancel My Request"}
+                          </Button>
+                        )}
                         <Button
                           onClick={handleRequestBook}
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
