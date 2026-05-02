@@ -67,6 +67,7 @@ const Catalog = () => {
   );
   const [currentPage, setCurrentPage] = useState(() => initialBrowseStateRef.current?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingBookIds, setPendingBookIds] = useState<Set<string>>(new Set());
 
   const saveBrowseState = useCallback(() => {
     sessionStorage.setItem(
