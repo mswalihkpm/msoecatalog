@@ -391,10 +391,10 @@ const BookDetail = () => {
                               </AlertDescription>
                             </Alert>
                           )}
-                          {selectedStudent && alreadyRequestedSameBook && studentPendingCount < 2 && (
+                          {selectedStudent && alreadyRequestedSameBook && (
                             <Alert className="border-destructive/20 bg-destructive/5 mt-2">
                               <AlertDescription className="text-sm text-destructive font-medium">
-                                ⚠️ You have already requested this same book before! You cannot request the same book again.
+                                ⚠️ You have already requested this book. You can cancel your request below if you no longer need it.
                               </AlertDescription>
                             </Alert>
                           )}
