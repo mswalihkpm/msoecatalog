@@ -443,10 +443,19 @@ const BookDetail = () => {
                           </AlertDescription>
                         </Alert>
                       </div>
-                      <DialogFooter>
+                      <DialogFooter className="gap-2 sm:gap-2">
                         <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
-                          Cancel
+                          Close
                         </Button>
+                        {alreadyRequestedSameBook && existingRequestId && (
+                          <Button
+                            variant="destructive"
+                            onClick={handleCancelRequest}
+                            disabled={isCancelling}
+                          >
+                            {isCancelling ? "Cancelling..." : "Cancel My Request"}
+                          </Button>
+                        )}
                         <Button
                           onClick={handleRequestBook}
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
