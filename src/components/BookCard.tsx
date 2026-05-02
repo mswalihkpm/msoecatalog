@@ -6,12 +6,13 @@ import { Badge } from "@/components/ui/badge";
 interface BookCardProps {
   book: Book;
   onOpen?: () => void;
+  hasPendingRequest?: boolean;
 }
 
-export const BookCard = ({ book, onOpen }: BookCardProps) => {
+export const BookCard = ({ book, onOpen, hasPendingRequest = false }: BookCardProps) => {
   return (
     <Link to={`/book/${book.id}`} onClick={onOpen}>
-      <div className="group relative h-full overflow-hidden rounded-xl border-2 border-primary/20 bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-teal hover:-translate-y-1">
+      <div className={`group relative h-full overflow-hidden rounded-xl border-2 bg-card transition-all duration-300 hover:-translate-y-1 ${hasPendingRequest ? "border-destructive/50 hover:border-destructive hover:shadow-[0_0_25px_hsl(var(--destructive)/0.4)]" : "border-primary/20 hover:border-primary/50 hover:shadow-teal"}`}>
         {/* Cover Image Container */}
         <div className="relative aspect-[2/3] overflow-hidden">
           {book.coverImage ? (
