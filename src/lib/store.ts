@@ -797,6 +797,41 @@ export const searchStudents = async (query: string): Promise<Student[]> => {
   }));
 };
 
+// Publication Logos
+export interface PublicationLogo {
+  id: string;
+  publicationName: string;
+  logoUrl?: string;
+}
+
+export const getPublicationLogos = async (): Promise<PublicationLogo[]> => {
+  const { data, error } = await supabase
+    .from("publication_logos" as any)
+    .select("*")
+    .order("publication_name", { ascending: true });
+  if (error || !data) {
+    console.error("Error fetching publication logos:", error);
+    return [];
+  }
+  return (data as any[]).map((d) => ({
+    id: d.id,
+    publicationName: d.publication_name,
+    logoUrl: d.logo_url || undefined,
+  }));
+};
+
+export const upsertPublicationLogo = async (publicationName: string, logoUrl: string | null) => {
+  const { error } = await supabase
+    .from("publication_logos" as any)
+    .upsert({ publication_name: publicationName, logo_url: logoUrl }, { onConflict: "publication_name" });
+  if (error) console.error("Error upserting publication logo:", error);
+};
+
+export const deletePublicationLogo = async (id: string) => {
+  const { error } = await supabase.from("publication_logos" as any).delete().eq("id", id);
+  if (error) console.error("Error deleting publication logo:", error);
+};
+
 export const verifyStudentCode = async (studentId: string, code: string): Promise<boolean> => {
   const { data, error } = await supabase
     .from("students")
