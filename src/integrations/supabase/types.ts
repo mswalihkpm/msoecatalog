@@ -251,6 +251,30 @@ export type Database = {
           },
         ]
       }
+      publication_logos: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          publication_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          publication_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          publication_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           book_id: string

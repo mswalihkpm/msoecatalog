@@ -10,6 +10,7 @@ import { updateAdminPassword, getAdminSettings, updateLibraryOpenDate } from "@/
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import PublicationLogosManager from "@/components/admin/PublicationLogosManager";
 
 const AdminSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -120,6 +121,9 @@ const AdminSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Publication Logos */}
+      <PublicationLogosManager />
 
       {/* Change Password */}
       <Card className="bg-card border-border">
