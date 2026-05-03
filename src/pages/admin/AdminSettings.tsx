@@ -10,6 +10,7 @@ import { updateAdminPassword, getAdminSettings, updateLibraryOpenDate } from "@/
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import PublicationLogosManager from "@/components/admin/PublicationLogosManager";
 
 const AdminSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
