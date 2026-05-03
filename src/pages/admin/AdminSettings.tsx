@@ -122,6 +122,9 @@ const AdminSettings = () => {
         </CardContent>
       </Card>
 
+      {/* Publication Logos */}
+      <PublicationLogosManager />
+
       {/* Change Password */}
       <Card className="bg-card border-border">
         <CardHeader>
