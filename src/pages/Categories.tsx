@@ -132,6 +132,13 @@ const Categories = () => {
       <main className="container px-4 py-8 relative z-10">
         {view === "categories" && (
           <>
+            <div className="mb-4 animate-fade-in">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4" /> Back
+                </Link>
+              </Button>
+            </div>
             <div className="text-center mb-12 animate-fade-in">
               <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
                 Browse by <span className="text-gradient-teal">Category</span>
