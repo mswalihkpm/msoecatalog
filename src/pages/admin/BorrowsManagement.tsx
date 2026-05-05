@@ -185,6 +185,8 @@ const BorrowsManagement = () => {
     setRenewDays("14");
     await loadData();
   };
+
+  const handleDelete = async (id: string) => {
     await deleteBorrowRecord(id);
     toast.success("Borrow record deleted");
     await loadData();
