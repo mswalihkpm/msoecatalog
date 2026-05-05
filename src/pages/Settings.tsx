@@ -34,23 +34,43 @@ const Settings = () => {
   const faqItems = [
     {
       question: "How do I search for books?",
-      answer: "Use the search bar on the catalog page to search by title, author, or category. You can also browse by categories."
+      answer: "Use the search bar on the Catalog page to search by title, author, book code, or publisher. You can also Browse by Category or Publication House from the bottom navigation."
     },
     {
       question: "How do I request a book?",
-      answer: "Go to the book detail page and click the 'Request Book' button. You'll need to select your name and class to complete the request."
+      answer: "Open a book's detail page and tap 'Request Book'. Enter your name, class, and your secret code to confirm the request. The librarian will be notified."
     },
     {
-      question: "How do I write a review?",
-      answer: "Navigate to a book's detail page and scroll down to the reviews section. You can rate the book and leave a comment."
+      question: "Can I cancel a request I've already made?",
+      answer: "Yes. Open the book you requested and tap 'Cancel Request'. This removes your pending request immediately."
+    },
+    {
+      question: "Why does a book cover show a red shading?",
+      answer: "A red shade on a cover means another reader currently has a pending request for that book. You can still queue your own request if allowed."
+    },
+    {
+      question: "How do I renew a borrowed book?",
+      answer: "Renewals are handled by the librarian. Visit the library and ask the admin to renew — they will set a new return date for you."
+    },
+    {
+      question: "How do I write or read reviews?",
+      answer: "Open any book's detail page and scroll to the reviews section. You can rate from 1–5 stars and leave a short comment."
     },
     {
       question: "What if a book is already borrowed?",
-      answer: "If a book shows 'Borrowed' status, it is currently with another reader. You can check back later or contact the library."
+      answer: "If a book shows 'Borrowed', it's currently with another reader. You can still request it — your request will be processed once it returns."
+    },
+    {
+      question: "Where can I see books from a specific publisher?",
+      answer: "Tap 'Publications' in the bottom footer, or open Categories and pick the Publications card. Each publisher's books are grouped together."
+    },
+    {
+      question: "How do I switch between light and dark mode?",
+      answer: "Open Settings from the bottom footer and use the Appearance toggle to switch themes. Your choice is remembered on this device."
     },
     {
       question: "I'm having trouble using the app. How can I get help?",
-      answer: "For any issues or questions, please reach out to us at mswalihkpm@gmail.com. We're happy to help with any problem you face!"
+      answer: "For any issues or questions, please reach out to us at mswalihkpm@gmail.com. We're happy to help!"
     },
   ];
 
