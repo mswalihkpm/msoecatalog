@@ -515,14 +515,26 @@ const BorrowsManagement = () => {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {!record.isReturned && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleMarkReturned(record.id)}
-                                className="text-secondary"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleMarkReturned(record.id)}
+                                  className="text-secondary"
+                                  title="Mark Returned"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => { setRenewRecord(record); setRenewDays("14"); }}
+                                  className="text-primary"
+                                  title="Renew"
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                             <Button
                               variant="ghost"
