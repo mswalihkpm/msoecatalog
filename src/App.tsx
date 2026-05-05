@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { initializeData } from "@/lib/store";
 import { SplashScreen } from "@/components/SplashScreen";
+import { MobileFooter } from "@/components/MobileFooter";
+import { BackButton } from "@/components/BackButton";
 import Catalog from "./pages/Catalog";
 import BookDetail from "./pages/BookDetail";
 import Settings from "./pages/Settings";
