@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X, Printer } from "lucide-react";
+import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X, Printer, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +66,8 @@ const BorrowsManagement = () => {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [printFromNum, setPrintFromNum] = useState("");
   const [printToNum, setPrintToNum] = useState("");
+  const [renewRecord, setRenewRecord] = useState<BorrowRecord | null>(null);
+  const [renewDays, setRenewDays] = useState<string>("14");
 
   const [formData, setFormData] = useState({
     bookId: "",
@@ -166,7 +168,23 @@ const BorrowsManagement = () => {
     await loadData();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleRenewSubmit = async () => {
+    if (!renewRecord) return;
+    const days = parseInt(renewDays, 10);
+    if (!days || days <= 0) {
+      toast.error("Enter a valid number of days");
+      return;
+    }
+    const newReturn = new Date();
+    newReturn.setDate(newReturn.getDate() + days);
+    const newReturnStr = newReturn.toISOString().split("T")[0];
+    await updateBorrowRecord(renewRecord.id, { returnDate: newReturnStr });
+    await updateBook(renewRecord.bookId, { returnDate: newReturnStr });
+    toast.success(`Renewed for ${days} days. New return: ${format(newReturn, "MMM d, yyyy")}`);
+    setRenewRecord(null);
+    setRenewDays("14");
+    await loadData();
+  };
     await deleteBorrowRecord(id);
     toast.success("Borrow record deleted");
     await loadData();
