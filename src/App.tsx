@@ -37,23 +37,29 @@ const AppContent = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Catalog />} />
-      <Route path="/book/:id" element={<BookDetail />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/categories" element={<Categories />} />
-      <Route path="/admin" element={<AdminLogin />} />
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="books" element={<BooksManagement />} />
-        <Route path="students" element={<StudentsManagement />} />
-        <Route path="reviews" element={<ReviewsManagement />} />
-        <Route path="borrows" element={<BorrowsManagement />} />
-        <Route path="settings" element={<AdminSettings />} />
-        <Route path="posters" element={<PostersManagement />} />
-      </Route>
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <BackButton />
+      <div className="pb-16 md:pb-0">
+        <Routes>
+          <Route path="/" element={<Catalog />} />
+          <Route path="/book/:id" element={<BookDetail />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="books" element={<BooksManagement />} />
+            <Route path="students" element={<StudentsManagement />} />
+            <Route path="reviews" element={<ReviewsManagement />} />
+            <Route path="borrows" element={<BorrowsManagement />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="posters" element={<PostersManagement />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+      <MobileFooter />
+    </>
   );
 };
 
