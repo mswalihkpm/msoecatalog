@@ -56,9 +56,27 @@ const Categories = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [pubLogos, setPubLogos] = useState<PublicationLogo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [view, setView] = useState<SavedState["view"]>(initialRef.current?.view ?? "categories");
+  const initialView: SavedState["view"] =
+    typeof window !== "undefined" && window.location.hash === "#publications"
+      ? "publications"
+      : initialRef.current?.view ?? "categories";
+  const [view, setView] = useState<SavedState["view"]>(initialView);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(initialRef.current?.selectedCategory ?? null);
   const [selectedPublication, setSelectedPublication] = useState<string | null>(initialRef.current?.selectedPublication ?? null);
+
+  // React to hash changes (mobile footer link)
+  useEffect(() => {
+    const onHash = () => {
+      if (window.location.hash === "#publications") {
+        setView("publications");
+        setSelectedCategory(null);
+        setSelectedPublication(null);
+        window.scrollTo({ top: 0 });
+      }
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   useEffect(() => {
     initializeData();
