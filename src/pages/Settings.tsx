@@ -164,52 +164,58 @@ const Settings = () => {
               <div className="space-y-4 text-sm text-muted-foreground">
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">1. Library Membership</h4>
-                  <p>Only registered students are eligible to borrow books from the library. Each student must have a valid account with a verified secret code.</p>
+                  <p>Only registered students of Imthiyaaz Library may borrow books. Each student is identified by a unique secret code issued by the librarian. Sharing your code with others is strictly forbidden — you are responsible for any activity made under your name.</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-1">2. Borrowing Rules</h4>
+                  <h4 className="font-semibold text-foreground mb-1">2. Borrowing & Return</h4>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li>Students may borrow one book at a time.</li>
-                    <li>The maximum borrowing period is 20 days from the date of issue.</li>
-                    <li>Books must be returned on or before the specified return date.</li>
-                    <li>Late returns may result in temporary suspension of borrowing privileges.</li>
+                    <li>Books are issued only on the announced library open date set by the admin.</li>
+                    <li>The default borrowing period is 14 days unless otherwise specified.</li>
+                    <li>Books must be returned on or before the return date shown in your borrow record.</li>
+                    <li>Renewals are at the librarian's discretion and may be granted in person.</li>
+                    <li>Repeated late returns may result in temporary suspension of borrowing privileges.</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-1">3. Book Care</h4>
+                  <h4 className="font-semibold text-foreground mb-1">3. Book Requests</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>You may submit a request through the app for any available or borrowed book.</li>
+                    <li>Requests are processed in order on a first-come, first-served basis.</li>
+                    <li>You may cancel your own pending request at any time from the book's page.</li>
+                    <li>The library reserves the right to approve or reject any request based on availability and student record.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">4. Care of Books</h4>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>Borrowed books must be handled with care and returned in the same condition.</li>
-                    <li>Students are responsible for any damage, loss, or defacement of borrowed materials.</li>
-                    <li>Writing, highlighting, or marking in library books is strictly prohibited.</li>
+                    <li>Writing, highlighting, folding pages, or marking inside library books is strictly prohibited.</li>
+                    <li>Students are responsible for the full cost of any damage, loss, or defacement of borrowed materials.</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-1">4. Reviews & Ratings</h4>
+                  <h4 className="font-semibold text-foreground mb-1">5. Reviews & Ratings</h4>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>Students are encouraged to rate and review books to help fellow readers.</li>
-                    <li>Reviews must be respectful, honest, and free from inappropriate language.</li>
-                    <li>The library reserves the right to remove reviews that violate these guidelines.</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground mb-1">5. Book Requests</h4>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Book requests are subject to approval by the library administration.</li>
-                    <li>Requests will be processed on a first-come, first-served basis.</li>
-                    <li>The library reserves the right to reject requests based on availability.</li>
+                    <li>Reviews must be respectful, honest, and free from inappropriate or hateful language.</li>
+                    <li>The library may remove any review that violates these guidelines without prior notice.</li>
                   </ul>
                 </div>
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">6. Code of Conduct</h4>
-                  <p>Students must maintain a quiet and respectful environment in the library. Any misuse of the library system, including sharing secret codes or impersonating other students, may result in account suspension.</p>
+                  <p>Maintain a quiet and respectful environment in and around the library. Misuse of the library system — including sharing secret codes, impersonating other students, or submitting false requests — may result in account suspension and disciplinary action.</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-foreground mb-1">7. Privacy</h4>
-                  <p>Student information is stored securely and used solely for library management purposes. Personal data will not be shared with third parties.</p>
+                  <p>Student information (name, class, borrowing history) is stored securely and used only for library management. We do not share personal data with third parties. Reviews are visible publicly under the name you submit.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">8. Changes to These Terms</h4>
+                  <p>The library administration may update these terms at any time. Continued use of the app after changes implies your acceptance of the updated terms.</p>
                 </div>
                 <div className="pt-2 border-t border-border">
                   <p className="text-xs text-muted-foreground italic">
-                    By using this library application, you agree to abide by these terms and conditions. The library administration reserves the right to update these policies at any time.
+                    Last updated: May 2026. By using the Imthiyaaz Library app, you agree to abide by these terms and conditions.
                   </p>
                 </div>
               </div>
