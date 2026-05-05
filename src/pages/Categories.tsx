@@ -150,14 +150,7 @@ const Categories = () => {
       <main className="container px-4 py-8 relative z-10">
         {view === "categories" && (
           <>
-            <div className="mb-4 animate-fade-in">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/">
-                  <ArrowLeft className="h-4 w-4" /> Back
-                </Link>
-              </Button>
-            </div>
-            <div className="text-center mb-12 animate-fade-in">
+            <div className="text-center mb-8 animate-fade-in">
               <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
                 Browse by <span className="text-gradient-teal">Category</span>
               </h1>
@@ -165,6 +158,36 @@ const Categories = () => {
                 Explore our collection organized by categories. Find the perfect book for your interests.
               </p>
             </div>
+
+            {/* Publication marquee */}
+            {publicationsList.length > 0 && (
+              <div className="mb-10 overflow-hidden relative group">
+                <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+                <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+                <div
+                  className="flex gap-4 whitespace-nowrap animate-marquee group-hover:[animation-play-state:paused]"
+                  style={{ width: "max-content" }}
+                >
+                  {[...publicationsList, ...publicationsList].map((p, i) => (
+                    <button
+                      key={`${p.name}-${i}`}
+                      onClick={() => { setSelectedPublication(p.name); setView("publication"); window.scrollTo({ top: 0 }); }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:border-primary/50 hover:shadow-teal transition-all shrink-0"
+                    >
+                      <div className="h-8 w-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+                        {p.logo ? (
+                          <img src={p.logo} alt={p.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <Building2 className="h-4 w-4 text-primary" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-foreground">{p.name}</span>
+                      <Badge variant="secondary" className="text-[10px]">{p.count}</Badge>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {isLoading ? (
               <div className="text-center py-16">
