@@ -51,6 +51,7 @@ import {
   getBookRequests,
   updateBookRequest,
   deleteBookRequest,
+  updateBook,
 } from "@/lib/store";
 import { Book, BorrowRecord, BookRequest } from "@/lib/types";
 import { toast } from "sonner";
