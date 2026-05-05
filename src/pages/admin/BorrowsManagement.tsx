@@ -792,6 +792,44 @@ const BorrowsManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Renew Dialog */}
+      <Dialog open={!!renewRecord} onOpenChange={(open) => !open && setRenewRecord(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Renew Borrow</DialogTitle>
+            <DialogDescription>
+              Extend the return date for "{renewRecord?.bookTitle}". New return date will be calculated from today.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="renewDays">Next how many days to return? *</Label>
+              <Input
+                id="renewDays"
+                type="number"
+                min="1"
+                value={renewDays}
+                onChange={(e) => setRenewDays(e.target.value)}
+                placeholder="e.g., 14"
+              />
+              {renewDays && parseInt(renewDays, 10) > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  New return date: <span className="font-semibold text-foreground">
+                    {format(new Date(Date.now() + parseInt(renewDays, 10) * 86400000), "MMM d, yyyy")}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenewRecord(null)}>Cancel</Button>
+            <Button onClick={handleRenewSubmit} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+              Renew
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
