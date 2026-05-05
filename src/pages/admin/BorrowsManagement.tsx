@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X, Printer } from "lucide-react";
+import { Plus, Trash2, Edit, Search, CheckCircle, Clock, Check, X, Printer, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,7 @@ import {
   getBookRequests,
   updateBookRequest,
   deleteBookRequest,
+  updateBook,
 } from "@/lib/store";
 import { Book, BorrowRecord, BookRequest } from "@/lib/types";
 import { toast } from "sonner";
@@ -66,6 +67,8 @@ const BorrowsManagement = () => {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [printFromNum, setPrintFromNum] = useState("");
   const [printToNum, setPrintToNum] = useState("");
+  const [renewRecord, setRenewRecord] = useState<BorrowRecord | null>(null);
+  const [renewDays, setRenewDays] = useState<string>("14");
 
   const [formData, setFormData] = useState({
     bookId: "",
@@ -163,6 +166,24 @@ const BorrowsManagement = () => {
   const handleMarkReturned = async (id: string) => {
     await updateBorrowRecord(id, { isReturned: true });
     toast.success("Book marked as returned");
+    await loadData();
+  };
+
+  const handleRenewSubmit = async () => {
+    if (!renewRecord) return;
+    const days = parseInt(renewDays, 10);
+    if (!days || days <= 0) {
+      toast.error("Enter a valid number of days");
+      return;
+    }
+    const newReturn = new Date();
+    newReturn.setDate(newReturn.getDate() + days);
+    const newReturnStr = newReturn.toISOString().split("T")[0];
+    await updateBorrowRecord(renewRecord.id, { returnDate: newReturnStr });
+    await updateBook(renewRecord.bookId, { returnDate: newReturnStr });
+    toast.success(`Renewed for ${days} days. New return: ${format(newReturn, "MMM d, yyyy")}`);
+    setRenewRecord(null);
+    setRenewDays("14");
     await loadData();
   };
 
@@ -494,14 +515,26 @@ const BorrowsManagement = () => {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {!record.isReturned && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleMarkReturned(record.id)}
-                                className="text-secondary"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleMarkReturned(record.id)}
+                                  className="text-secondary"
+                                  title="Mark Returned"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => { setRenewRecord(record); setRenewDays("14"); }}
+                                  className="text-primary"
+                                  title="Renew"
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                             <Button
                               variant="ghost"
@@ -755,6 +788,44 @@ const BorrowsManagement = () => {
               className="bg-gradient-gold text-primary-foreground hover:opacity-90"
             >
               Approve & Create Borrow
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Renew Dialog */}
+      <Dialog open={!!renewRecord} onOpenChange={(open) => !open && setRenewRecord(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Renew Borrow</DialogTitle>
+            <DialogDescription>
+              Extend the return date for "{renewRecord?.bookTitle}". New return date will be calculated from today.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="renewDays">Next how many days to return? *</Label>
+              <Input
+                id="renewDays"
+                type="number"
+                min="1"
+                value={renewDays}
+                onChange={(e) => setRenewDays(e.target.value)}
+                placeholder="e.g., 14"
+              />
+              {renewDays && parseInt(renewDays, 10) > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  New return date: <span className="font-semibold text-foreground">
+                    {format(new Date(Date.now() + parseInt(renewDays, 10) * 86400000), "MMM d, yyyy")}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenewRecord(null)}>Cancel</Button>
+            <Button onClick={handleRenewSubmit} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+              Renew
             </Button>
           </DialogFooter>
         </DialogContent>
