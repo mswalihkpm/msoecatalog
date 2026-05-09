@@ -10,7 +10,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Moon, Sun, HelpCircle, Mail, Shield } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Moon, Sun, HelpCircle, Mail, Shield, MessageCircle, Phone } from "lucide-react";
+import contactPhoto from "@/assets/contact-photo.jpg";
 
 const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -67,10 +70,6 @@ const Settings = () => {
     {
       question: "How do I switch between light and dark mode?",
       answer: "Open Settings from the bottom footer and use the Appearance toggle to switch themes. Your choice is remembered on this device."
-    },
-    {
-      question: "I'm having trouble using the app. How can I get help?",
-      answer: "For any issues or questions, please reach out to us at mswalihkpm@gmail.com. We're happy to help!"
     },
   ];
 
@@ -136,18 +135,64 @@ const Settings = () => {
                 ))}
               </Accordion>
 
-              <div className="mt-6 pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Need more help? Contact us at{" "}
-                  <a
-                    href="mailto:mswalihkpm@gmail.com"
-                    className="text-primary hover:underline font-medium"
-                  >
-                    mswalihkpm@gmail.com
-                  </a>
-                </p>
-              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Us */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="font-serif flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Contact Us
+              </CardTitle>
+              <CardDescription>Reach out for support or queries</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start gap-2">
+                    <Mail className="h-4 w-4" /> Open Contact Details
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[320px] sm:w-[380px]">
+                  <SheetHeader className="text-left">
+                    <SheetTitle className="font-serif">Get in touch</SheetTitle>
+                    <SheetDescription>We're happy to help with any questions.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 flex flex-col items-center gap-4">
+                    <div className="h-20 w-20 overflow-hidden rounded-md border-2 border-primary/30 shadow-sm">
+                      <img src={contactPhoto} alt="Support contact" className="h-full w-full object-cover" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Support Representative</p>
+                  </div>
+                  <div className="mt-6 space-y-3">
+                    <a
+                      href="mailto:mswalihkpm@gmail.com"
+                      className="flex items-center gap-3 rounded-lg border border-border p-3 hover:border-primary/50 hover:bg-accent transition-all"
+                    >
+                      <div className="p-2 rounded-md bg-primary/10 text-primary">
+                        <Mail className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Email</p>
+                        <p className="text-sm font-medium text-foreground truncate">mswalihkpm@gmail.com</p>
+                      </div>
+                    </a>
+                    <a
+                      href="tel:+919037339492"
+                      className="flex items-center gap-3 rounded-lg border border-border p-3 hover:border-primary/50 hover:bg-accent transition-all"
+                    >
+                      <div className="p-2 rounded-md bg-primary/10 text-primary">
+                        <Phone className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p className="text-sm font-medium text-foreground">+91 9037339492</p>
+                      </div>
+                    </a>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </CardContent>
           </Card>
 
