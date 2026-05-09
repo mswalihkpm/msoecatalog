@@ -109,7 +109,7 @@ export default {
         "fade-in": "fade-in 0.4s ease-out",
         "slide-in": "slide-in 0.3s ease-out",
         shimmer: "shimmer 2s infinite linear",
-        marquee: "marquee 30s linear infinite",
+        marquee: "marquee 80s linear infinite",
       },
     },
   },
