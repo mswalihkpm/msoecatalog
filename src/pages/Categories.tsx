@@ -176,17 +176,19 @@ const Categories = () => {
                     <button
                       key={`${p.name}-${i}`}
                       onClick={() => { setSelectedPublication(p.name); setView("publication"); window.scrollTo({ top: 0 }); }}
-                      className="flex flex-col items-center justify-center gap-1.5 p-2 w-24 h-24 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-teal transition-all shrink-0"
+                      className="flex flex-col items-center justify-center gap-1 p-2 w-24 h-24 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-teal transition-all shrink-0"
                     >
-                      <div className="h-12 w-12 rounded-md overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+                      <div className="h-8 w-8 rounded-md overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
                         {p.logo ? (
                           <img src={p.logo} alt={p.name} className="h-full w-full object-cover" />
                         ) : (
-                          <Building2 className="h-6 w-6 text-primary" />
+                          <Building2 className="h-4 w-4 text-primary" />
                         )}
                       </div>
-                      <span className="text-[10px] font-medium text-foreground leading-tight text-center line-clamp-2 break-words whitespace-normal max-w-full px-1">{p.name}</span>
-                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{p.count}</Badge>
+                      <span className="text-[11px] font-semibold text-foreground leading-tight text-center line-clamp-2 break-words whitespace-normal max-w-full px-0.5">
+                        {p.name}
+                      </span>
+                      <Badge variant="secondary" className="text-[9px] px-1 py-0 leading-none">{p.count}</Badge>
                     </button>
                   ))}
                 </div>
