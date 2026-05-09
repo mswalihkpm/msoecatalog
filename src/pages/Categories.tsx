@@ -128,12 +128,16 @@ const Categories = () => {
       .map(([name, count]) => ({ name, count, logo: logoByName.get(name.toLowerCase()) }));
   })();
 
-  const filteredBooks =
+  const codeCompare = (a: Book, b: Book) =>
+    (a.numberCode || "").localeCompare(b.numberCode || "", undefined, { numeric: true, sensitivity: "base" });
+
+  const filteredBooks = (
     view === "category" && selectedCategory
       ? books.filter((b) => b.category === selectedCategory)
       : view === "publication" && selectedPublication
       ? books.filter((b) => (b.publication || "").trim().toLowerCase() === selectedPublication.toLowerCase())
-      : [];
+      : []
+  ).sort(codeCompare);
 
   const goBack = () => {
     if (view === "category") setView("categories");
@@ -172,17 +176,17 @@ const Categories = () => {
                     <button
                       key={`${p.name}-${i}`}
                       onClick={() => { setSelectedPublication(p.name); setView("publication"); window.scrollTo({ top: 0 }); }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:border-primary/50 hover:shadow-teal transition-all shrink-0"
+                      className="flex flex-col items-center justify-center gap-1.5 p-2 w-24 h-24 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-teal transition-all shrink-0"
                     >
-                      <div className="h-8 w-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+                      <div className="h-12 w-12 rounded-md overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
                         {p.logo ? (
                           <img src={p.logo} alt={p.name} className="h-full w-full object-cover" />
                         ) : (
-                          <Building2 className="h-4 w-4 text-primary" />
+                          <Building2 className="h-6 w-6 text-primary" />
                         )}
                       </div>
-                      <span className="text-sm font-medium text-foreground">{p.name}</span>
-                      <Badge variant="secondary" className="text-[10px]">{p.count}</Badge>
+                      <span className="text-[10px] font-medium text-foreground truncate max-w-full leading-tight">{p.name}</span>
+                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{p.count}</Badge>
                     </button>
                   ))}
                 </div>
