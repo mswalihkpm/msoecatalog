@@ -185,7 +185,7 @@ const Categories = () => {
                           <Building2 className="h-4 w-4 text-primary" />
                         )}
                       </div>
-                      <span className="text-[11px] font-semibold text-foreground leading-tight text-center line-clamp-2 break-words whitespace-normal max-w-full px-0.5">
+                      <span className="text-[9px] font-semibold text-foreground leading-none text-center line-clamp-2 break-words whitespace-normal max-w-full px-0.5">
                         {p.name}
                       </span>
                       <Badge variant="secondary" className="text-[9px] px-1 py-0 leading-none">{p.count}</Badge>
