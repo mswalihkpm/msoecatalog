@@ -36,6 +36,14 @@ const Settings = () => {
     }
   }, [isDarkMode]);
 
+  const [books, setBooks] = useState<Book[]>([]);
+  useEffect(() => {
+    getBooks().then(setBooks).catch(() => {});
+  }, []);
+  const totalBooks = books.length;
+  const totalAvailable = books.filter((b) => !b.isBorrowed).length;
+  const topRating = books.reduce((m, b) => (b.averageRating > m ? b.averageRating : m), 0);
+
   const faqItems = [
     {
       question: "How do I search for books?",
