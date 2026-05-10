@@ -12,8 +12,10 @@ import {
 } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, HelpCircle, Mail, Shield, MessageCircle, Phone } from "lucide-react";
+import { Moon, Sun, HelpCircle, Mail, Shield, MessageCircle, Phone, BookOpen, TrendingUp, Star } from "lucide-react";
 import contactPhoto from "@/assets/contact-photo.jpg";
+import { getBooks } from "@/lib/store";
+import { Book } from "@/lib/types";
 
 const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
