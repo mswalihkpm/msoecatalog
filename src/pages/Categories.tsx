@@ -339,7 +339,7 @@ const Categories = () => {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">{book.title}</p>
+                        <p className="font-semibold text-foreground truncate">{book.title.replace(/\s*\([^)]*\)\s*/g, " ").trim()}</p>
                         <p className="text-sm text-muted-foreground truncate">by {book.author}</p>
                         <p className="text-xs text-primary font-mono mt-0.5">{book.numberCode}</p>
                       </div>
