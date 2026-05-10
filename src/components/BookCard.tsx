@@ -59,11 +59,11 @@ export const BookCard = ({ book, onOpen, hasPendingRequest = false }: BookCardPr
         </div>
 
         {/* Book Info */}
-        <div className="p-3 space-y-1.5">
-          <h3 className="font-serif text-sm font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+        <div className="p-2 sm:p-3 space-y-1 sm:space-y-1.5">
+          <h3 className="font-serif text-[11px] sm:text-sm font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
             {book.title}
           </h3>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide line-clamp-1">
+          <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wide line-clamp-1">
             {book.author}
           </p>
           

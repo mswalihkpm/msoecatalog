@@ -110,11 +110,14 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
           </div>
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Enter 3-digit code"
+              type="password"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="•••"
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 3))}
               maxLength={3}
-              className="flex-1 font-mono text-center text-lg tracking-widest"
+              className="flex-1 font-mono text-center text-2xl tracking-[0.5em]"
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleVerifyCode(); } }}
             />
             <button

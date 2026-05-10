@@ -63,7 +63,7 @@ export const StudentHistoryDialog = ({ studentName, open, onOpenChange }: Props)
                 <div className="space-y-2">
                   {borrows.map((b) => (
                     <div key={b.id} className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="font-medium text-sm">{b.book_title}{b.book_volume ? ` (Vol. ${b.book_volume})` : ""}</p>
+                      <p className="font-medium text-sm">{b.book_title.replace(/\s*\([^)]*\)\s*/g, "").trim()}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Borrowed: {format(new Date(b.borrowed_date), "MMM d, yyyy")} → Return: {format(new Date(b.return_date), "MMM d, yyyy")}
                       </p>
@@ -81,7 +81,7 @@ export const StudentHistoryDialog = ({ studentName, open, onOpenChange }: Props)
                 <div className="space-y-2">
                   {requests.map((r) => (
                     <div key={r.id} className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="font-medium text-sm">{r.book_title}{r.book_volume ? ` (Vol. ${r.book_volume})` : ""}</p>
+                      <p className="font-medium text-sm">{r.book_title.replace(/\s*\([^)]*\)\s*/g, "").trim()}</p>
                       <p className="text-xs text-muted-foreground mt-1">Code: {r.book_number_code} | Date: {format(new Date(r.request_date), "MMM d, yyyy")}</p>
                       <Badge variant={r.status === "approved" ? "secondary" : r.status === "rejected" ? "destructive" : "outline"} className="mt-1 text-xs">
                         {r.status}

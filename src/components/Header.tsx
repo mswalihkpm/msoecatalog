@@ -35,9 +35,9 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-3 cursor-pointer select-none" onClick={handleLogoTap}>
-          <img src={logo} alt="Library Logo" className="h-10 w-10 object-contain" />
-          <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        <div className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none min-w-0" onClick={handleLogoTap}>
+          <img src={logo} alt="Library Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain flex-shrink-0" />
+          <span className="text-base sm:text-xl font-bold text-foreground truncate" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Imthiyaaz Library
           </span>
         </div>
