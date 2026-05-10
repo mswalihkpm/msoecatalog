@@ -61,6 +61,7 @@ const BorrowsManagement = () => {
   const [requests, setRequests] = useState<BookRequest[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "returned">("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BorrowRecord | null>(null);
   const [approveRequest, setApproveRequest] = useState<BookRequest | null>(null);
@@ -247,11 +248,16 @@ const BorrowsManagement = () => {
     await loadData();
   };
 
-  const filteredRecords = records.filter(
-    (record) =>
+  const filteredRecords = records.filter((record) => {
+    const matchesSearch =
       record.bookTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.borrowerName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      record.borrowerName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && !record.isReturned) ||
+      (statusFilter === "returned" && record.isReturned);
+    return matchesSearch && matchesStatus;
+  });
 
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
@@ -462,15 +468,27 @@ const BorrowsManagement = () => {
         </TabsList>
 
         <TabsContent value="borrows" className="space-y-4">
-          {/* Search */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by book or borrower..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          {/* Search & Status Filter */}
+          <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by book or borrower..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "returned")}>
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active (Not Returned)</SelectItem>
+                <SelectItem value="returned">Returned</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Records Table */}
