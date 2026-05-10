@@ -215,8 +215,8 @@ const Catalog = () => {
       <AnimatedBackground />
       <Header />
       <main className="relative z-10">
-        {/* Hero Section - Full width dramatic */}
-        <section className="relative overflow-hidden border-b border-border">
+        {/* Hero Section - Full width dramatic (hidden on mobile) */}
+        <section className="relative overflow-hidden border-b border-border hidden md:block">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
           <div className="container px-4 py-16 md:py-24 relative">
             <div className="flex flex-col lg:flex-row gap-8 items-start">
