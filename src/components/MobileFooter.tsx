@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Library, FolderTree, Building2, Settings as SettingsIcon } from "lucide-react";
+import { Library, FolderTree, Building2, Store as StoreIcon } from "lucide-react";
 
 export const MobileFooter = () => {
   const location = useLocation();
