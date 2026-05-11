@@ -57,6 +57,7 @@ const AppContent = () => {
             <Route path="borrows" element={<BorrowsManagement />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="posters" element={<PostersManagement />} />
+            <Route path="store" element={<StoreManagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
