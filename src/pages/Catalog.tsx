@@ -262,7 +262,7 @@ const Catalog = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="grid grid-cols-3 gap-4 mt-12 max-w-lg"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12 max-w-2xl"
                 >
                   <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
                     <BookOpen className="h-5 w-5 text-primary mx-auto mb-1" />
@@ -280,6 +280,15 @@ const Catalog = () => {
                       {topRated[0]?.averageRating.toFixed(1) || "0.0"}
                     </p>
                     <p className="text-xs text-muted-foreground">Top Rated</p>
+                  </div>
+                  <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/30">
+                    <CalendarDays className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-base font-bold text-foreground leading-tight">
+                      {nextOpenDate ? format(nextOpenDate, "MMM d") : "TBA"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {nextOpenDate ? format(nextOpenDate, "EEEE") : "Next Opening"}
+                    </p>
                   </div>
                 </motion.div>
               </motion.div>
