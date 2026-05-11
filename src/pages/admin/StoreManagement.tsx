@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, Trash2, FileText, Image as ImageIcon, Video, FileSpreadsheet, File } from "lucide-react";
+import { Upload, Trash2, FileText, Image as ImageIcon, Video, FileSpreadsheet, File as FileIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
