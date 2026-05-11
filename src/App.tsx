@@ -47,6 +47,7 @@ const AppContent = () => {
           <Route path="/book/:id" element={<BookDetail />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/store" element={<Store />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
