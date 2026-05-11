@@ -21,6 +21,8 @@ import StudentsManagement from "./pages/admin/StudentsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import PostersManagement from "./pages/admin/PostersManagement";
+import StoreManagement from "./pages/admin/StoreManagement";
+import Store from "./pages/Store";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,7 @@ const AppContent = () => {
           <Route path="/book/:id" element={<BookDetail />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/store" element={<Store />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
@@ -54,6 +57,7 @@ const AppContent = () => {
             <Route path="borrows" element={<BorrowsManagement />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="posters" element={<PostersManagement />} />
+            <Route path="store" element={<StoreManagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

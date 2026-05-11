@@ -310,6 +310,78 @@ export type Database = {
           },
         ]
       }
+      store_items: {
+        Row: {
+          average_rating: number
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          mime_type: string | null
+          title: string
+          total_reviews: number
+          updated_at: string
+        }
+        Insert: {
+          average_rating?: number
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          title: string
+          total_reviews?: number
+          updated_at?: string
+        }
+        Update: {
+          average_rating?: number
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          title?: string
+          total_reviews?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          item_id: string
+          rating: number
+          user_name: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          rating?: number
+          user_name: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          rating?: number
+          user_name?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           class: string
