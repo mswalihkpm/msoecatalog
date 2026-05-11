@@ -5,9 +5,10 @@ import { SearchFilters } from "@/components/SearchFilters";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PromoBanner } from "@/components/PromoBanner";
-import { getBooks, initializeData, getBookRequests } from "@/lib/store";
+import { getBooks, initializeData, getBookRequests, getAdminSettings } from "@/lib/store";
 import { Book } from "@/lib/types";
-import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -68,6 +69,13 @@ const Catalog = () => {
   const [currentPage, setCurrentPage] = useState(() => initialBrowseStateRef.current?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingBookIds, setPendingBookIds] = useState<Set<string>>(new Set());
+  const [nextOpenDate, setNextOpenDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    getAdminSettings().then((s) => {
+      if (s.libraryOpenDate) setNextOpenDate(new Date(s.libraryOpenDate + "T00:00:00"));
+    }).catch(() => {});
+  }, []);
 
   const saveBrowseState = useCallback(() => {
     sessionStorage.setItem(
@@ -254,7 +262,7 @@ const Catalog = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="grid grid-cols-3 gap-4 mt-12 max-w-lg"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12 max-w-2xl"
                 >
                   <div className="text-center p-4 rounded-xl bg-card/50 border border-border">
                     <BookOpen className="h-5 w-5 text-primary mx-auto mb-1" />
@@ -272,6 +280,15 @@ const Catalog = () => {
                       {topRated[0]?.averageRating.toFixed(1) || "0.0"}
                     </p>
                     <p className="text-xs text-muted-foreground">Top Rated</p>
+                  </div>
+                  <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/30">
+                    <CalendarDays className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-base font-bold text-foreground leading-tight">
+                      {nextOpenDate ? format(nextOpenDate, "MMM d") : "TBA"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {nextOpenDate ? format(nextOpenDate, "EEEE") : "Next Opening"}
+                    </p>
                   </div>
                 </motion.div>
               </motion.div>
