@@ -69,6 +69,13 @@ const Catalog = () => {
   const [currentPage, setCurrentPage] = useState(() => initialBrowseStateRef.current?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingBookIds, setPendingBookIds] = useState<Set<string>>(new Set());
+  const [nextOpenDate, setNextOpenDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    getAdminSettings().then((s) => {
+      if (s.libraryOpenDate) setNextOpenDate(new Date(s.libraryOpenDate + "T00:00:00"));
+    }).catch(() => {});
+  }, []);
 
   const saveBrowseState = useCallback(() => {
     sessionStorage.setItem(
