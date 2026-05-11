@@ -39,7 +39,7 @@ const typeIcon = (t: string) => {
     case "image": return <ImageIcon className="h-4 w-4" />;
     case "video": return <Video className="h-4 w-4" />;
     case "spreadsheet": return <FileSpreadsheet className="h-4 w-4" />;
-    default: return <File className="h-4 w-4" />;
+    default: return <FileIcon className="h-4 w-4" />;
   }
 };
 
