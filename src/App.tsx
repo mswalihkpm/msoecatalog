@@ -21,6 +21,8 @@ import StudentsManagement from "./pages/admin/StudentsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import PostersManagement from "./pages/admin/PostersManagement";
+import StoreManagement from "./pages/admin/StoreManagement";
+import Store from "./pages/Store";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
