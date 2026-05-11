@@ -42,6 +42,7 @@ const AdminLayout = () => {
     { path: "/admin/reviews", label: "Reviews", icon: Star },
     { path: "/admin/borrows", label: "Borrows", icon: Library },
     { path: "/admin/posters", label: "Posters", icon: Megaphone },
+    { path: "/admin/store", label: "Store", icon: StoreIcon },
     { path: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
