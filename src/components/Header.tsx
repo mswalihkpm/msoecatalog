@@ -17,6 +17,7 @@ export const Header = () => {
   const navLinks = [
     { path: "/", label: "Catalog" },
     { path: "/categories", label: "Categories" },
+    { path: "/store", label: "Store" },
   ];
 
   const handleLogoTap = useCallback(() => {
