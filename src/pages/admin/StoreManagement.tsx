@@ -202,6 +202,15 @@ const StoreManagement = () => {
                 accept=".pdf,.xlsx,.xls,.csv,image/*,video/*" />
               {file && <p className="text-xs text-muted-foreground mt-1">{file.name} • {formatSize(file.size)}</p>}
             </div>
+            <div>
+              <Label>Cover Photo (optional, displayed in 3:4)</Label>
+              <Input ref={coverRef} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
+              {coverFile && (
+                <div className="mt-2 w-24 aspect-[3/4] rounded overflow-hidden border">
+                  <img src={URL.createObjectURL(coverFile)} alt="cover preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>Cancel</Button>
