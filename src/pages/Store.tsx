@@ -25,6 +25,7 @@ interface StoreItem {
   file_name: string;
   file_size: number | null;
   mime_type: string | null;
+  cover_image: string | null;
   average_rating: number;
   total_reviews: number;
   created_at: string;
