@@ -73,8 +73,9 @@ const StoreManagement = () => {
   useEffect(() => { load(); }, []);
 
   const reset = () => {
-    setTitle(""); setDescription(""); setFile(null);
+    setTitle(""); setDescription(""); setFile(null); setCoverFile(null);
     if (fileRef.current) fileRef.current.value = "";
+    if (coverRef.current) coverRef.current.value = "";
   };
 
   const handleUpload = async () => {
@@ -91,6 +92,17 @@ const StoreManagement = () => {
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-items").getPublicUrl(path);
 
+      let coverUrl: string | null = null;
+      if (coverFile) {
+        const cExt = coverFile.name.split(".").pop();
+        const cPath = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${cExt}`;
+        const { error: cErr } = await supabase.storage.from("store-items").upload(cPath, coverFile, {
+          contentType: coverFile.type, upsert: false,
+        });
+        if (cErr) throw cErr;
+        coverUrl = supabase.storage.from("store-items").getPublicUrl(cPath).data.publicUrl;
+      }
+
       const { error: insErr } = await supabase.from("store_items").insert({
         title: title.trim(),
         description: description.trim() || null,
@@ -99,6 +111,7 @@ const StoreManagement = () => {
         file_name: file.name,
         file_size: file.size,
         mime_type: file.type,
+        cover_image: coverUrl,
       });
       if (insErr) throw insErr;
 
