@@ -20,6 +20,7 @@ interface StoreItem {
   file_name: string;
   file_size: number | null;
   mime_type: string | null;
+  cover_image: string | null;
   average_rating: number;
   total_reviews: number;
   created_at: string;
@@ -57,8 +58,10 @@ const StoreManagement = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -70,8 +73,9 @@ const StoreManagement = () => {
   useEffect(() => { load(); }, []);
 
   const reset = () => {
-    setTitle(""); setDescription(""); setFile(null);
+    setTitle(""); setDescription(""); setFile(null); setCoverFile(null);
     if (fileRef.current) fileRef.current.value = "";
+    if (coverRef.current) coverRef.current.value = "";
   };
 
   const handleUpload = async () => {
@@ -88,6 +92,17 @@ const StoreManagement = () => {
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-items").getPublicUrl(path);
 
+      let coverUrl: string | null = null;
+      if (coverFile) {
+        const cExt = coverFile.name.split(".").pop();
+        const cPath = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${cExt}`;
+        const { error: cErr } = await supabase.storage.from("store-items").upload(cPath, coverFile, {
+          contentType: coverFile.type, upsert: false,
+        });
+        if (cErr) throw cErr;
+        coverUrl = supabase.storage.from("store-items").getPublicUrl(cPath).data.publicUrl;
+      }
+
       const { error: insErr } = await supabase.from("store_items").insert({
         title: title.trim(),
         description: description.trim() || null,
@@ -96,6 +111,7 @@ const StoreManagement = () => {
         file_name: file.name,
         file_size: file.size,
         mime_type: file.type,
+        cover_image: coverUrl,
       });
       if (insErr) throw insErr;
 
@@ -139,7 +155,12 @@ const StoreManagement = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.map(item => (
-            <Card key={item.id}>
+            <Card key={item.id} className="overflow-hidden">
+              {item.cover_image && (
+                <div className="aspect-[3/4] bg-muted overflow-hidden">
+                  <img src={item.cover_image} alt={item.title} className="w-full h-full object-cover" />
+                </div>
+              )}
               <CardContent className="p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -180,6 +201,15 @@ const StoreManagement = () => {
               <Input ref={fileRef} type="file" onChange={(e) => setFile(e.target.files?.[0] || null)}
                 accept=".pdf,.xlsx,.xls,.csv,image/*,video/*" />
               {file && <p className="text-xs text-muted-foreground mt-1">{file.name} • {formatSize(file.size)}</p>}
+            </div>
+            <div>
+              <Label>Cover Photo (optional, displayed in 3:4)</Label>
+              <Input ref={coverRef} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
+              {coverFile && (
+                <div className="mt-2 w-24 aspect-[3/4] rounded overflow-hidden border">
+                  <img src={URL.createObjectURL(coverFile)} alt="cover preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

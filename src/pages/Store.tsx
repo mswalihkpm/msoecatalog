@@ -25,6 +25,7 @@ interface StoreItem {
   file_name: string;
   file_size: number | null;
   mime_type: string | null;
+  cover_image: string | null;
   average_rating: number;
   total_reviews: number;
   created_at: string;
@@ -170,8 +171,10 @@ const Store = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {filtered.map((item) => (
               <Card key={item.id} className="overflow-hidden hover:shadow-lg transition cursor-pointer border-primary/20" onClick={() => openItem(item)}>
-                <div className="aspect-video bg-muted flex items-center justify-center relative overflow-hidden">
-                  {item.file_type === "image" ? (
+                <div className={`${item.cover_image ? "aspect-[3/4]" : "aspect-video"} bg-muted flex items-center justify-center relative overflow-hidden`}>
+                  {item.cover_image ? (
+                    <img src={item.cover_image} alt={item.title} className="w-full h-full object-cover" />
+                  ) : item.file_type === "image" ? (
                     <img src={item.file_url} alt={item.title} className="w-full h-full object-cover" />
                   ) : item.file_type === "video" ? (
                     <video src={item.file_url} className="w-full h-full object-cover" />
