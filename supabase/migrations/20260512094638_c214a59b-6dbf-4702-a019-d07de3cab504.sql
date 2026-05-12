@@ -1,0 +1,1 @@
+ALTER TABLE public.store_items ADD COLUMN IF NOT EXISTS cover_image text;

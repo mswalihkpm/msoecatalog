@@ -313,6 +313,7 @@ export type Database = {
       store_items: {
         Row: {
           average_rating: number
+          cover_image: string | null
           created_at: string
           description: string | null
           file_name: string
@@ -327,6 +328,7 @@ export type Database = {
         }
         Insert: {
           average_rating?: number
+          cover_image?: string | null
           created_at?: string
           description?: string | null
           file_name: string
@@ -341,6 +343,7 @@ export type Database = {
         }
         Update: {
           average_rating?: number
+          cover_image?: string | null
           created_at?: string
           description?: string | null
           file_name?: string
