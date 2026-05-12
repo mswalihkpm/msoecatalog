@@ -155,7 +155,12 @@ const StoreManagement = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.map(item => (
-            <Card key={item.id}>
+            <Card key={item.id} className="overflow-hidden">
+              {item.cover_image && (
+                <div className="aspect-[3/4] bg-muted overflow-hidden">
+                  <img src={item.cover_image} alt={item.title} className="w-full h-full object-cover" />
+                </div>
+              )}
               <CardContent className="p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
