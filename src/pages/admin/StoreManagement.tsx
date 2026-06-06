@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, Trash2, FileText, Image as ImageIcon, Video, FileSpreadsheet, File as FileIcon } from "lucide-react";
+import { Upload, Trash2, FileText, Image as ImageIcon, Video, FileSpreadsheet, File as FileIcon, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -51,15 +52,47 @@ const formatSize = (b?: number | null) => {
   return `${(b / 1024 / 1024 / 1024).toFixed(2)} GB`;
 };
 
+const uploadWithProgress = async (
+  bucket: string,
+  path: string,
+  file: File,
+  onProgress: (pct: number) => void
+): Promise<string> => {
+  const { data: signed, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path);
+  if (error || !signed) throw new Error(error?.message || "Failed to get upload URL");
+
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", signed.signedUrl, true);
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.setRequestHeader("x-upsert", "false");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed (${xhr.status}): ${xhr.responseText}`));
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.send(file);
+  });
+
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+};
+
 const StoreManagement = () => {
   const [items, setItems] = useState<StoreItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<StoreItem | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [fileProgress, setFileProgress] = useState(0);
+  const [coverProgress, setCoverProgress] = useState(0);
+  const [phase, setPhase] = useState<"" | "file" | "cover" | "saving">("");
   const fileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
 
@@ -74,53 +107,87 @@ const StoreManagement = () => {
 
   const reset = () => {
     setTitle(""); setDescription(""); setFile(null); setCoverFile(null);
+    setFileProgress(0); setCoverProgress(0); setPhase("");
+    setEditing(null);
     if (fileRef.current) fileRef.current.value = "";
     if (coverRef.current) coverRef.current.value = "";
   };
 
-  const handleUpload = async () => {
-    if (!file) return toast.error("Please select a file");
+  const openCreate = () => { reset(); setOpen(true); };
+  const openEdit = (item: StoreItem) => {
+    reset();
+    setEditing(item);
+    setTitle(item.title);
+    setDescription(item.description || "");
+    setOpen(true);
+  };
+
+  const handleSubmit = async () => {
     if (!title.trim()) return toast.error("Please enter a title");
+    if (!editing && !file) return toast.error("Please select a file");
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("store-items").upload(path, file, {
-        contentType: file.type, upsert: false,
-      });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("store-items").getPublicUrl(path);
+      let fileUrl = editing?.file_url;
+      let fileType = editing?.file_type;
+      let fileName = editing?.file_name;
+      let fileSize: number | null = editing?.file_size ?? null;
+      let mimeType: string | null = editing?.mime_type ?? null;
+      let coverUrl: string | null = editing?.cover_image ?? null;
 
-      let coverUrl: string | null = null;
-      if (coverFile) {
-        const cExt = coverFile.name.split(".").pop();
-        const cPath = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${cExt}`;
-        const { error: cErr } = await supabase.storage.from("store-items").upload(cPath, coverFile, {
-          contentType: coverFile.type, upsert: false,
-        });
-        if (cErr) throw cErr;
-        coverUrl = supabase.storage.from("store-items").getPublicUrl(cPath).data.publicUrl;
+      if (file) {
+        setPhase("file");
+        const ext = file.name.split(".").pop();
+        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        fileUrl = await uploadWithProgress("store-items", path, file, setFileProgress);
+        fileType = detectType(file.type);
+        fileName = file.name;
+        fileSize = file.size;
+        mimeType = file.type;
       }
 
-      const { error: insErr } = await supabase.from("store_items").insert({
-        title: title.trim(),
-        description: description.trim() || null,
-        file_url: urlData.publicUrl,
-        file_type: detectType(file.type),
-        file_name: file.name,
-        file_size: file.size,
-        mime_type: file.type,
-        cover_image: coverUrl,
-      });
-      if (insErr) throw insErr;
+      if (coverFile) {
+        setPhase("cover");
+        const cExt = coverFile.name.split(".").pop();
+        const cPath = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${cExt}`;
+        coverUrl = await uploadWithProgress("store-items", cPath, coverFile, setCoverProgress);
+      }
 
-      toast.success("Item uploaded!");
+      setPhase("saving");
+      if (editing) {
+        const { error } = await supabase.from("store_items").update({
+          title: title.trim(),
+          description: description.trim() || null,
+          file_url: fileUrl!,
+          file_type: fileType!,
+          file_name: fileName!,
+          file_size: fileSize,
+          mime_type: mimeType,
+          cover_image: coverUrl,
+        }).eq("id", editing.id);
+        if (error) throw error;
+        toast.success("Item updated!");
+      } else {
+        const { error } = await supabase.from("store_items").insert({
+          title: title.trim(),
+          description: description.trim() || null,
+          file_url: fileUrl!,
+          file_type: fileType!,
+          file_name: fileName!,
+          file_size: fileSize,
+          mime_type: mimeType,
+          cover_image: coverUrl,
+        });
+        if (error) throw error;
+        toast.success("Item uploaded!");
+      }
+
       reset(); setOpen(false); load();
     } catch (e: any) {
-      toast.error(e.message || "Upload failed");
+      toast.error(e.message || "Operation failed");
     } finally {
       setUploading(false);
+      setPhase("");
     }
   };
 
@@ -145,7 +212,7 @@ const StoreManagement = () => {
           <h1 className="font-serif text-2xl font-bold">Store Management</h1>
           <p className="text-sm text-muted-foreground">Upload PDFs, images, videos, spreadsheets for users.</p>
         </div>
-        <Button onClick={() => setOpen(true)} className="gap-2"><Upload className="h-4 w-4" /> Upload</Button>
+        <Button onClick={openCreate} className="gap-2"><Upload className="h-4 w-4" /> Upload</Button>
       </div>
 
       {loading ? (
@@ -166,9 +233,14 @@ const StoreManagement = () => {
                   <div className="flex items-center gap-2 min-w-0">
                     <Badge variant="secondary" className="gap-1 uppercase text-[10px]">{typeIcon(item.file_type)}{item.file_type}</Badge>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(item)} className="h-8 w-8 text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(item)} className="h-8 w-8">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item)} className="h-8 w-8 text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <h3 className="font-semibold text-sm line-clamp-2">{item.title}</h3>
                 {item.description && <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>}
@@ -184,9 +256,9 @@ const StoreManagement = () => {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+      <Dialog open={open} onOpenChange={(o) => { if (!uploading) { setOpen(o); if (!o) reset(); } }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Upload Store Item</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? "Edit Store Item" : "Upload Store Item"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Title *</Label>
@@ -197,24 +269,53 @@ const StoreManagement = () => {
               <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Optional description" />
             </div>
             <div>
-              <Label>File * (PDF, images, videos, Excel, etc.)</Label>
-              <Input ref={fileRef} type="file" onChange={(e) => setFile(e.target.files?.[0] || null)}
+              <Label>{editing ? "Replace File (optional)" : "File *"} (PDF, images, videos, Excel, etc.)</Label>
+              <Input ref={fileRef} type="file" onChange={(e) => { setFile(e.target.files?.[0] || null); setFileProgress(0); }}
                 accept=".pdf,.xlsx,.xls,.csv,image/*,video/*" />
               {file && <p className="text-xs text-muted-foreground mt-1">{file.name} • {formatSize(file.size)}</p>}
+              {(phase === "file" || (fileProgress > 0 && fileProgress < 100)) && file && (
+                <div className="mt-2 space-y-1">
+                  <Progress value={fileProgress} className="h-2" />
+                  <p className="text-xs text-muted-foreground text-right">{fileProgress}%</p>
+                </div>
+              )}
+              {editing && !file && (
+                <p className="text-xs text-muted-foreground mt-1">Current: {editing.file_name}</p>
+              )}
             </div>
             <div>
               <Label>Cover Photo (optional, displayed in 3:4)</Label>
-              <Input ref={coverRef} type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
+              <Input ref={coverRef} type="file" accept="image/*" onChange={(e) => { setCoverFile(e.target.files?.[0] || null); setCoverProgress(0); }} />
               {coverFile && (
                 <div className="mt-2 w-24 aspect-[3/4] rounded overflow-hidden border">
                   <img src={URL.createObjectURL(coverFile)} alt="cover preview" className="w-full h-full object-cover" />
                 </div>
               )}
+              {!coverFile && editing?.cover_image && (
+                <div className="mt-2 w-24 aspect-[3/4] rounded overflow-hidden border">
+                  <img src={editing.cover_image} alt="current cover" className="w-full h-full object-cover" />
+                </div>
+              )}
+              {(phase === "cover" || (coverProgress > 0 && coverProgress < 100)) && coverFile && (
+                <div className="mt-2 space-y-1">
+                  <Progress value={coverProgress} className="h-2" />
+                  <p className="text-xs text-muted-foreground text-right">{coverProgress}%</p>
+                </div>
+              )}
             </div>
+            {phase === "saving" && <p className="text-xs text-muted-foreground">Saving...</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>Cancel</Button>
-            <Button onClick={handleUpload} disabled={uploading}>{uploading ? "Uploading..." : "Upload"}</Button>
+            <Button onClick={handleSubmit} disabled={uploading}>
+              {uploading
+                ? phase === "file"
+                  ? `Uploading file ${fileProgress}%`
+                  : phase === "cover"
+                  ? `Uploading cover ${coverProgress}%`
+                  : "Saving..."
+                : editing ? "Save Changes" : "Upload"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
