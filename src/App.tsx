@@ -8,6 +8,7 @@ import { initializeData } from "@/lib/store";
 import { SplashScreen } from "@/components/SplashScreen";
 import { MobileFooter } from "@/components/MobileFooter";
 import { BackButton } from "@/components/BackButton";
+import { AIAssistant } from "@/components/AIAssistant";
 import Catalog from "./pages/Catalog";
 import BookDetail from "./pages/BookDetail";
 import Settings from "./pages/Settings";
@@ -63,6 +64,7 @@ const AppContent = () => {
         </Routes>
       </div>
       <MobileFooter />
+      <AIAssistant />
     </>
   );
 };

@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -8,9 +8,6 @@ import logo from "@/assets/logo.png";
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -20,23 +17,10 @@ export const Header = () => {
     { path: "/store", label: "Store" },
   ];
 
-  const handleLogoTap = useCallback(() => {
-    tapCountRef.current += 1;
-    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
-    if (tapCountRef.current >= 5) {
-      tapCountRef.current = 0;
-      navigate("/admin");
-    } else {
-      tapTimerRef.current = setTimeout(() => {
-        tapCountRef.current = 0;
-      }, 2000);
-    }
-  }, [navigate]);
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none min-w-0" onClick={handleLogoTap}>
+        <div className="flex items-center gap-2 sm:gap-3 select-none min-w-0">
           <img src={logo} alt="Library Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain flex-shrink-0" />
           <span className="text-base sm:text-xl font-bold text-foreground truncate" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Imthiyaaz Library
@@ -50,9 +34,7 @@ export const Header = () => {
               key={link.path}
               to={link.path}
               className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive(link.path)
-                  ? "text-primary"
-                  : "text-muted-foreground"
+                isActive(link.path) ? "text-primary" : "text-muted-foreground"
               }`}
             >
               {link.label}
@@ -80,9 +62,7 @@ export const Header = () => {
                   to={link.path}
                   onClick={() => setIsOpen(false)}
                   className={`text-lg font-medium transition-colors hover:text-primary ${
-                    isActive(link.path)
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                    isActive(link.path) ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
                   {link.label}

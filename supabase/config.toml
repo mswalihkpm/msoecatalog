@@ -1,1 +1,4 @@
 project_id = "lezoaunsbfgrbcskedoq"
+
+[functions.library-ai]
+verify_jwt = false
