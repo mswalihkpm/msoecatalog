@@ -80,15 +80,7 @@ export const AIAssistant = () => {
       {/* Side panel */}
       <AnimatePresence>
         {open && (
-          <>
-            <motion.div
-              key="overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm"
-              onClick={() => setOpen(false)}
-            />
+          <></>
             <motion.div
               key="panel"
               initial={{ x: "100%", opacity: 0, rotateY: 25 }}
