@@ -80,7 +80,7 @@ export const AIAssistant = () => {
       {/* Side panel */}
       <AnimatePresence>
         {open && (
-          <></>
+          <>
             <motion.div
               key="panel"
               initial={{ x: "100%", opacity: 0, rotateY: 25 }}
