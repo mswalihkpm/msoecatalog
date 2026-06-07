@@ -170,10 +170,10 @@ const Catalog = () => {
       const aIsEN = a.numberCode.toUpperCase().startsWith("EN") ? 1 : 0;
       const bIsEN = b.numberCode.toUpperCase().startsWith("EN") ? 1 : 0;
       if (aIsEN !== bIsEN) return aIsEN - bIsEN;
+      // Sort by number of reviews first (more reviews = higher priority)
+      if (b.totalReviews !== a.totalReviews) return b.totalReviews - a.totalReviews;
+      // Then by average rating
       if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
-      const aCover = a.coverImage ? 1 : 0;
-      const bCover = b.coverImage ? 1 : 0;
-      if (bCover !== aCover) return bCover - aCover;
       return a.title.localeCompare(b.title);
     });
   }, [books, searchQuery, selectedCategory, availabilityFilter]);
