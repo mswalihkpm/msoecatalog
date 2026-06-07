@@ -20,13 +20,17 @@ export const AIAssistant = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Reset chat each time the panel is opened
+  // Reset chat each time the panel is opened, and shift app content to the left
   useEffect(() => {
     if (open) {
       setMessages([INITIAL_MSG]);
       setInput("");
       setLoading(false);
+      document.body.classList.add("ai-panel-open");
+    } else {
+      document.body.classList.remove("ai-panel-open");
     }
+    return () => document.body.classList.remove("ai-panel-open");
   }, [open]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
