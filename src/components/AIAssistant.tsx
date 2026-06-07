@@ -8,17 +8,26 @@ import { toast } from "sonner";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+const INITIAL_MSG: Msg = {
+  role: "assistant",
+  content:
+    "അസ്സലാമു അലൈക്കും! 👋 ഞാൻ Imthiyaaz Library സഹായിയാണ്. പുസ്തകങ്ങൾ, ആപ്പ് ഉപയോഗം, വിവരണപ്രകാരം പുസ്തക ശുപാർശ — എന്തും ചോദിക്കാം.",
+};
+
 export const AIAssistant = () => {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([
-    {
-      role: "assistant",
-      content:
-        "അസ്സലാമു അലൈക്കും! 👋 ഞാൻ Imthiyaaz Library സഹായിയാണ്. പുസ്തകങ്ങൾ, ആപ്പ് ഉപയോഗം, വിവരണപ്രകാരം പുസ്തക ശുപാർശ — എന്തും ചോദിക്കാം.",
-    },
-  ]);
+  const [messages, setMessages] = useState<Msg[]>([INITIAL_MSG]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Reset chat each time the panel is opened
+  useEffect(() => {
+    if (open) {
+      setMessages([INITIAL_MSG]);
+      setInput("");
+      setLoading(false);
+    }
+  }, [open]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,14 +81,6 @@ export const AIAssistant = () => {
       <AnimatePresence>
         {open && (
           <>
-            <motion.div
-              key="overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm"
-              onClick={() => setOpen(false)}
-            />
             <motion.div
               key="panel"
               initial={{ x: "100%", opacity: 0, rotateY: 25 }}
