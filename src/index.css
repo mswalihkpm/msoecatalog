@@ -268,3 +268,14 @@
     opacity: 0;
   }
 }
+
+/* Shift app content when AI side panel is open (sm+ screens) */
+@media (min-width: 640px) {
+  body.ai-panel-open {
+    padding-right: 420px;
+    transition: padding-right 0.3s ease;
+  }
+}
+body {
+  transition: padding-right 0.3s ease;
+}
