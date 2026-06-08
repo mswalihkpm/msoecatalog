@@ -202,9 +202,12 @@ const BookDetail = () => {
                   className="w-full h-auto object-cover"
                 />
               ) : (
-                <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-                  <BookOpen className="h-24 w-24 text-muted-foreground/50" />
-                </div>
+                <GeneratedCover
+                  title={book.title}
+                  author={book.author}
+                  publication={book.publication}
+                  className="w-full h-auto aspect-[3/4]"
+                />
               )}
             </div>
           </div>
