@@ -64,7 +64,7 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
       {/* Title */}
       <foreignObject x="30" y="160" width="240" height="90">
         <div
-          xmlns="http://www.w3.org/1999/xhtml"
+          
           style={{
             width: "100%",
             height: "100%",
@@ -89,7 +89,7 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
       {author && (
         <foreignObject x="30" y="260" width="240" height="40">
           <div
-            xmlns="http://www.w3.org/1999/xhtml"
+            
             style={{
               width: "100%",
               textAlign: "center",
@@ -108,7 +108,7 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
       {publication && (
         <foreignObject x="20" y="355" width="260" height="36">
           <div
-            xmlns="http://www.w3.org/1999/xhtml"
+            
             style={{
               width: "100%",
               textAlign: "center",
