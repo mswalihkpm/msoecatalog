@@ -67,20 +67,9 @@ Deno.serve(async (req) => {
       borrowed: b.is_borrowed,
     }));
 
-    // If too many books, send only those that look relevant to the user's query
-    const MAX = 120;
-    let selected = compact;
-    if (compact.length > MAX) {
-      const tokens = lastUser.split(/\s+/).filter((w: string) => w.length > 2);
-      const scored = compact.map((b) => {
-        const hay = `${b.t} ${b.a} ${b.cat} ${b.pub} ${b.d}`.toLowerCase();
-        let score = 0;
-        for (const tok of tokens) if (hay.includes(tok)) score += 1;
-        return { b, score };
-      });
-      scored.sort((x, y) => y.score - x.score);
-      selected = scored.slice(0, MAX).map((s) => s.b);
-    }
+    // Send the full library to the model so it can search across every book.
+    const selected = compact;
+
 
     const booksContext = `പുസ്തക ലിസ്റ്റ് (JSON, ${selected.length}/${compact.length} entries — t=title, a=author, c=code, cat=category, pub=publication, p=pages, r=rating, d=description):\n${JSON.stringify(selected)}`;
 
