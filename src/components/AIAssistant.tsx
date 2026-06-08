@@ -47,18 +47,26 @@ export const AIAssistant = () => {
     setMessages(next);
     setInput("");
     setLoading(true);
+    setProgress(0);
+    // Simulated progress: climbs to ~90% while we wait for the network response
+    const progTimer = setInterval(() => {
+      setProgress((p) => (p < 90 ? p + Math.max(1, Math.round((92 - p) / 8)) : p));
+    }, 220);
     try {
       const { data, error } = await supabase.functions.invoke("library-ai", {
         body: { messages: next.map((m) => ({ role: m.role, content: m.content })) },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      setProgress(100);
       setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
     } catch (e: any) {
       toast.error(e.message || "AI പിശക്");
       setMessages((m) => [...m, { role: "assistant", content: "ക്ഷമിക്കണം, ഇപ്പോൾ ഉത്തരം നൽകാൻ കഴിയുന്നില്ല." }]);
     } finally {
+      clearInterval(progTimer);
       setLoading(false);
+      setTimeout(() => setProgress(0), 400);
     }
   };
 
