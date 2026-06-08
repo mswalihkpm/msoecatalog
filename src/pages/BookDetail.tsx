@@ -121,8 +121,9 @@ const BookDetail = () => {
     }
     if (!book) return;
 
-    if (pendingCount >= 3) {
-      toast.error("Maximum 3 requests allowed for this book. Please try later.");
+    const maxSlots = book.isBorrowed ? 4 : 3;
+    if (pendingCount >= maxSlots) {
+      toast.error(`Maximum ${maxSlots} requests allowed for this book. Please try later.`);
       return;
     }
 
