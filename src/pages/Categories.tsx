@@ -124,7 +124,7 @@ const Categories = () => {
     });
     const logoByName = new Map(pubLogos.map((p) => [p.publicationName.toLowerCase(), p.logoUrl]));
     return Array.from(map.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([name, count]) => ({ name, count, logo: logoByName.get(name.toLowerCase()) }));
   })();
 
