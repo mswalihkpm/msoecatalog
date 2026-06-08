@@ -165,8 +165,36 @@ const BorrowsManagement = () => {
   };
 
   const handleMarkReturned = async (id: string) => {
+    const record = records.find((r) => r.id === id);
     await updateBorrowRecord(id, { isReturned: true });
     toast.success("Book marked as returned");
+
+    // Auto-approve the next pending request (oldest) for this book, if any.
+    if (record) {
+      const pending = requests
+        .filter((r) => r.bookId === record.bookId && r.status === "pending")
+        .sort((a, b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
+      const next = pending[0];
+      if (next) {
+        const today = new Date();
+        const ret = new Date(today);
+        ret.setDate(ret.getDate() + 14);
+        const borrowedDate = today.toISOString().split("T")[0];
+        const returnDate = next.returnDate || ret.toISOString().split("T")[0];
+        await addBorrowRecord({
+          bookId: next.bookId,
+          bookTitle: next.bookTitle,
+          bookVolume: next.bookVolume,
+          borrowerName: next.requesterName,
+          borrowerClass: next.requesterClass,
+          borrowedDate,
+          returnDate,
+          isReturned: false,
+        });
+        await updateBookRequest(next.id, { status: "approved" });
+        toast.success(`Next request auto-approved: ${next.requesterName}`);
+      }
+    }
     await loadData();
   };
 
