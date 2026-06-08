@@ -335,7 +335,7 @@ const Categories = () => {
                         {book.coverImage ? (
                           <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
                         ) : (
-                          <BookOpen className="h-5 w-5 text-muted-foreground/50" />
+                          <GeneratedCover title={book.title} author={book.author} publication={book.publication} className="w-full h-full" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
