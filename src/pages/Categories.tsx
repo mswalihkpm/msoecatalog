@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getBooks, initializeData, getPublicationLogos, PublicationLogo } from "@/lib/store";
 import { Book, Category } from "@/lib/types";
+import { GeneratedCover } from "@/components/GeneratedCover";
 import {
   BookOpen, Scroll, User, FlaskConical, Languages, BookText,
   History, Layers, Feather, MoreHorizontal, ArrowLeft, Star, Building2,
@@ -124,7 +125,7 @@ const Categories = () => {
     });
     const logoByName = new Map(pubLogos.map((p) => [p.publicationName.toLowerCase(), p.logoUrl]));
     return Array.from(map.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([name, count]) => ({ name, count, logo: logoByName.get(name.toLowerCase()) }));
   })();
 
@@ -335,7 +336,7 @@ const Categories = () => {
                         {book.coverImage ? (
                           <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
                         ) : (
-                          <BookOpen className="h-5 w-5 text-muted-foreground/50" />
+                          <GeneratedCover title={book.title} author={book.author} publication={book.publication} className="w-full h-full" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

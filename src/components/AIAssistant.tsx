@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -19,6 +20,7 @@ export const AIAssistant = () => {
   const [messages, setMessages] = useState<Msg[]>([INITIAL_MSG]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   // Reset chat each time the panel is opened, and shift app content to the left
   useEffect(() => {
@@ -45,18 +47,26 @@ export const AIAssistant = () => {
     setMessages(next);
     setInput("");
     setLoading(true);
+    setProgress(0);
+    // Simulated progress: climbs to ~90% while we wait for the network response
+    const progTimer = setInterval(() => {
+      setProgress((p) => (p < 90 ? p + Math.max(1, Math.round((92 - p) / 8)) : p));
+    }, 220);
     try {
       const { data, error } = await supabase.functions.invoke("library-ai", {
         body: { messages: next.map((m) => ({ role: m.role, content: m.content })) },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      setProgress(100);
       setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
     } catch (e: any) {
       toast.error(e.message || "AI പിശക്");
       setMessages((m) => [...m, { role: "assistant", content: "ക്ഷമിക്കണം, ഇപ്പോൾ ഉത്തരം നൽകാൻ കഴിയുന്നില്ല." }]);
     } finally {
+      clearInterval(progTimer);
       setLoading(false);
+      setTimeout(() => setProgress(0), 400);
     }
   };
 
@@ -115,19 +125,36 @@ export const AIAssistant = () => {
                     key={i}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
+                    className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm ${
                       m.role === "user"
-                        ? "ml-auto bg-primary text-primary-foreground rounded-br-sm"
+                        ? "ml-auto bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
                         : "bg-muted text-foreground rounded-bl-sm"
                     }`}
                     style={{ fontFamily: m.role === "assistant" ? "'Noto Sans Malayalam', 'Lora', serif" : undefined }}
                   >
-                    {m.content}
+                    {m.role === "assistant" ? (
+                      <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-1 prose-strong:text-foreground">
+                        <ReactMarkdown>{m.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      m.content
+                    )}
                   </motion.div>
                 ))}
                 {loading && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> ചിന്തിക്കുന്നു...
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> ചിന്തിക്കുന്നു...
+                      </span>
+                      <span className="font-mono tabular-nums">{progress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full bg-primary transition-all duration-200 ease-out"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

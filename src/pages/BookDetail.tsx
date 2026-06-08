@@ -7,6 +7,7 @@ import { StarRating } from "@/components/StarRating";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ReviewForm } from "@/components/ReviewForm";
 import { StudentSearch } from "@/components/StudentSearch";
+import { GeneratedCover } from "@/components/GeneratedCover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,8 +121,9 @@ const BookDetail = () => {
     }
     if (!book) return;
 
-    if (pendingCount >= 3) {
-      toast.error("Maximum 3 requests allowed for this book. Please try later.");
+    const maxSlots = book.isBorrowed ? 4 : 3;
+    if (pendingCount >= maxSlots) {
+      toast.error(`Maximum ${maxSlots} requests allowed for this book. Please try later.`);
       return;
     }
 
@@ -202,9 +204,12 @@ const BookDetail = () => {
                   className="w-full h-auto object-cover"
                 />
               ) : (
-                <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-                  <BookOpen className="h-24 w-24 text-muted-foreground/50" />
-                </div>
+                <GeneratedCover
+                  title={book.title}
+                  author={book.author}
+                  publication={book.publication}
+                  className="w-full h-auto aspect-[3/4]"
+                />
               )}
             </div>
           </div>
@@ -344,12 +349,15 @@ const BookDetail = () => {
                   </Alert>
                 )}
 
-                {pendingCount >= 3 ? (
+                {(() => {
+                  const maxSlots = book.isBorrowed ? 4 : 3;
+                  const slotsLeft = Math.max(0, maxSlots - pendingCount);
+                  return pendingCount >= maxSlots ? (
                   <Card className="bg-destructive/10 border-destructive/20">
                     <CardContent className="pt-4">
                       <p className="font-medium text-destructive">Maximum requests reached</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        3 students have already requested this book. Please check back later.
+                        {maxSlots} students have already requested this book. Please check back later.
                       </p>
                     </CardContent>
                   </Card>
@@ -358,7 +366,7 @@ const BookDetail = () => {
                     <DialogTrigger asChild>
                       <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold">
                         <BookOpen className="h-5 w-5" />
-                        Request Book ({3 - pendingCount} slot{3 - pendingCount !== 1 ? 's' : ''} left)
+                        Request Book ({slotsLeft} slot{slotsLeft !== 1 ? 's' : ''} left)
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -466,7 +474,8 @@ const BookDetail = () => {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
-                )}
+                );
+                })()}
               </div>
             )}
           </div>
