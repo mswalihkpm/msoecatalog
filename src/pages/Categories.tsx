@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getBooks, initializeData, getPublicationLogos, PublicationLogo } from "@/lib/store";
 import { Book, Category } from "@/lib/types";
+import { GeneratedCover } from "@/components/GeneratedCover";
 import {
   BookOpen, Scroll, User, FlaskConical, Languages, BookText,
   History, Layers, Feather, MoreHorizontal, ArrowLeft, Star, Building2,
