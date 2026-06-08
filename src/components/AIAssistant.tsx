@@ -125,19 +125,36 @@ export const AIAssistant = () => {
                     key={i}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
+                    className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm ${
                       m.role === "user"
-                        ? "ml-auto bg-primary text-primary-foreground rounded-br-sm"
+                        ? "ml-auto bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
                         : "bg-muted text-foreground rounded-bl-sm"
                     }`}
                     style={{ fontFamily: m.role === "assistant" ? "'Noto Sans Malayalam', 'Lora', serif" : undefined }}
                   >
-                    {m.content}
+                    {m.role === "assistant" ? (
+                      <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-1 prose-strong:text-foreground">
+                        <ReactMarkdown>{m.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      m.content
+                    )}
                   </motion.div>
                 ))}
                 {loading && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> ചിന്തിക്കുന്നു...
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> ചിന്തിക്കുന്നു...
+                      </span>
+                      <span className="font-mono tabular-nums">{progress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full bg-primary transition-all duration-200 ease-out"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
