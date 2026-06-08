@@ -23,9 +23,12 @@ export const BookCard = ({ book, onOpen, hasPendingRequest = false }: BookCardPr
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-              <BookOpen className="h-10 w-10 text-muted-foreground/50" />
-            </div>
+            <GeneratedCover
+              title={book.title}
+              author={book.author}
+              publication={book.publication}
+              className="w-full h-full"
+            />
           )}
           
           {/* Category Badge - Top Left */}
