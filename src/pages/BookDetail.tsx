@@ -349,12 +349,15 @@ const BookDetail = () => {
                   </Alert>
                 )}
 
-                {pendingCount >= 3 ? (
+                {(() => {
+                  const maxSlots = book.isBorrowed ? 4 : 3;
+                  const slotsLeft = Math.max(0, maxSlots - pendingCount);
+                  return pendingCount >= maxSlots ? (
                   <Card className="bg-destructive/10 border-destructive/20">
                     <CardContent className="pt-4">
                       <p className="font-medium text-destructive">Maximum requests reached</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        3 students have already requested this book. Please check back later.
+                        {maxSlots} students have already requested this book. Please check back later.
                       </p>
                     </CardContent>
                   </Card>
@@ -363,7 +366,7 @@ const BookDetail = () => {
                     <DialogTrigger asChild>
                       <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold">
                         <BookOpen className="h-5 w-5" />
-                        Request Book ({3 - pendingCount} slot{3 - pendingCount !== 1 ? 's' : ''} left)
+                        Request Book ({slotsLeft} slot{slotsLeft !== 1 ? 's' : ''} left)
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
