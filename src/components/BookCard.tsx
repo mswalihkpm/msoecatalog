@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Star, BookOpen, Image } from "lucide-react";
 import { Book } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { GeneratedCover } from "@/components/GeneratedCover";
 
 interface BookCardProps {
   book: Book;
