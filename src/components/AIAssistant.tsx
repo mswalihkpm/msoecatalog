@@ -20,6 +20,7 @@ export const AIAssistant = () => {
   const [messages, setMessages] = useState<Msg[]>([INITIAL_MSG]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   // Reset chat each time the panel is opened, and shift app content to the left
   useEffect(() => {
