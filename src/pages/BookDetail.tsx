@@ -474,7 +474,8 @@ const BookDetail = () => {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
-                )}
+                );
+                })()}
               </div>
             )}
           </div>
