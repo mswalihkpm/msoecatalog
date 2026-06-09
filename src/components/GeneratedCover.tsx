@@ -6,7 +6,7 @@ interface GeneratedCoverProps {
 }
 
 // Strip parenthesized content e.g. "അറബിപ്പൊന്ന് (Arabi Ponnu)" → "അറബിപ്പൊന്ന്"
-const cleanTitle = (t: string) =>
+const cleanText = (t?: string) =>
   (t || "").replace(/\s*[\(\[\{].*?[\)\]\}]\s*/g, " ").replace(/\s+/g, " ").trim();
 
 const Ornament = ({ transform }: { transform: string }) => (
@@ -20,11 +20,34 @@ const Ornament = ({ transform }: { transform: string }) => (
   </g>
 );
 
+// Auto-fit font size based on character count (with non-latin script handling)
+const fitTitleSize = (text: string) => {
+  // Malayalam/Arabic glyphs render wider; treat each non-ASCII char as ~1.4 weight
+  let weight = 0;
+  for (const ch of text) weight += /[\x00-\x7F]/.test(ch) ? 1 : 1.4;
+  if (weight > 60) return 18;
+  if (weight > 45) return 22;
+  if (weight > 32) return 26;
+  if (weight > 22) return 30;
+  if (weight > 14) return 34;
+  return 38;
+};
+
+const fitAuthorSize = (text: string) => {
+  let weight = 0;
+  for (const ch of text) weight += /[\x00-\x7F]/.test(ch) ? 1 : 1.4;
+  if (weight > 36) return 12;
+  if (weight > 26) return 14;
+  if (weight > 18) return 16;
+  return 18;
+};
+
 export const GeneratedCover = ({ title, author, publication, className }: GeneratedCoverProps) => {
-  const display = cleanTitle(title) || "Untitled";
-  // Auto-fit title font-size based on length
-  const len = display.length;
-  const titleSize = len > 40 ? 22 : len > 25 ? 28 : len > 15 ? 34 : 42;
+  const displayTitle = cleanText(title) || "Untitled";
+  const displayAuthor = cleanText(author);
+  const displayPub = cleanText(publication);
+  const titleSize = fitTitleSize(displayTitle);
+  const authorSize = fitAuthorSize(displayAuthor);
 
   return (
     <svg
@@ -61,10 +84,10 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
         <circle cx="0" cy="-14" r="2.5" fill="#7b1d12" />
       </g>
 
-      {/* Title */}
-      <foreignObject x="30" y="160" width="240" height="90">
+      {/* Title — generous box, vertical centering, auto-shrunk */}
+      <foreignObject x="62" y="100" width="176" height="170">
         <div
-          
+          xmlns="http://www.w3.org/1999/xhtml"
           style={{
             width: "100%",
             height: "100%",
@@ -72,53 +95,69 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
             alignItems: "center",
             justifyContent: "center",
             textAlign: "center",
-            fontFamily: "'Amiri','Lora',serif",
+            fontFamily: "'Amiri','Lora','Noto Sans Malayalam',serif",
             fontWeight: 800,
             fontSize: `${titleSize}px`,
-            lineHeight: 1.1,
+            lineHeight: 1.15,
             color: "#111",
             wordBreak: "break-word",
-            padding: "0 6px",
+            overflowWrap: "anywhere",
+            hyphens: "auto",
+            padding: "0 2px",
           }}
         >
-          {display}
+          <span>{displayTitle}</span>
         </div>
       </foreignObject>
 
       {/* Author */}
-      {author && (
-        <foreignObject x="30" y="260" width="240" height="40">
+      {displayAuthor && (
+        <foreignObject x="30" y="278" width="240" height="56">
           <div
-            
+            xmlns="http://www.w3.org/1999/xhtml"
             style={{
               width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               textAlign: "center",
               fontFamily: "'Montserrat',sans-serif",
               fontWeight: 700,
-              fontSize: "18px",
+              fontSize: `${authorSize}px`,
+              lineHeight: 1.15,
               color: "#c0392b",
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
+              padding: "0 6px",
             }}
           >
-            {author}
+            <span>{displayAuthor}</span>
           </div>
         </foreignObject>
       )}
 
       {/* Publication */}
-      {publication && (
+      {displayPub && (
         <foreignObject x="20" y="355" width="260" height="36">
           <div
-            
+            xmlns="http://www.w3.org/1999/xhtml"
             style={{
               width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               textAlign: "center",
               fontFamily: "'Montserrat',sans-serif",
               fontWeight: 700,
-              fontSize: "15px",
+              fontSize: "14px",
               color: "#111",
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
             }}
           >
-            {publication}
+            <span>{displayPub}</span>
           </div>
         </foreignObject>
       )}
