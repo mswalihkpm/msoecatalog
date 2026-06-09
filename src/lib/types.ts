@@ -49,14 +49,16 @@ export interface BookRequest {
   requesterClass: string;
   requestDate: string;
   returnDate?: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "manager_pending" | "manager_rejected";
 }
 
 export interface AdminSettings {
   username: string;
   password: string;
   libraryOpenDay: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
-  libraryOpenDate?: string; // specific date string e.g. "2026-04-13"
+  libraryOpenDate?: string;
+  managerPassword: string;
+  novelNotice: string;
 }
 
 export type Category = 

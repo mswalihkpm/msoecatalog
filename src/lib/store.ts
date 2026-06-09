@@ -528,7 +528,10 @@ export const getPendingRequestCount = async (bookId: string): Promise<number> =>
   return count || 0;
 };
 
-export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestDate" | "status">): Promise<BookRequest | null> => {
+export const addBookRequest = async (
+  request: Omit<BookRequest, "id" | "requestDate" | "status">,
+  initialStatus: BookRequest["status"] = "pending"
+): Promise<BookRequest | null> => {
   const insertData: Record<string, unknown> = {
     book_id: request.bookId,
     book_title: request.bookTitle,
@@ -536,6 +539,7 @@ export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestD
     book_volume: request.bookVolume,
     requester_name: request.requesterName,
     requester_class: request.requesterClass,
+    status: initialStatus,
   };
   if (request.returnDate) {
     insertData.return_date = request.returnDate;
@@ -561,7 +565,7 @@ export const addBookRequest = async (request: Omit<BookRequest, "id" | "requestD
     requesterClass: data.requester_class,
     requestDate: data.request_date,
     returnDate: (data as any).return_date || undefined,
-    status: data.status as "pending" | "approved" | "rejected",
+    status: data.status as BookRequest["status"],
   };
 };
 
@@ -594,7 +598,13 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
 
   if (error || !data) {
     console.error("Error fetching admin settings:", error);
-    return { username: "msoelib", password: "alif", libraryOpenDay: 0 };
+    return {
+      username: "msoelib",
+      password: "alif",
+      libraryOpenDay: 0,
+      managerPassword: "123123",
+      novelNotice: "Novel category books require manager approval before borrowing. Your request will first be reviewed by the manager. Click Next to continue.",
+    };
   }
 
   return {
@@ -602,6 +612,8 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
     password: data.password,
     libraryOpenDay: data.library_open_day ?? 0,
     libraryOpenDate: (data as any).library_open_date || undefined,
+    managerPassword: (data as any).manager_password || "123123",
+    novelNotice: (data as any).novel_notice || "",
   };
 };
 
@@ -610,10 +622,7 @@ export const updateLibraryOpenDay = async (day: number) => {
     .from("admin_settings")
     .update({ library_open_day: day } as any)
     .eq("username", "msoelib");
-
-  if (error) {
-    console.error("Error updating library open day:", error);
-  }
+  if (error) console.error("Error updating library open day:", error);
 };
 
 export const updateLibraryOpenDate = async (date: string) => {
@@ -621,10 +630,7 @@ export const updateLibraryOpenDate = async (date: string) => {
     .from("admin_settings")
     .update({ library_open_date: date } as any)
     .eq("username", "msoelib");
-
-  if (error) {
-    console.error("Error updating library open date:", error);
-  }
+  if (error) console.error("Error updating library open date:", error);
 };
 
 export const updateAdminPassword = async (newPassword: string) => {
@@ -632,15 +638,33 @@ export const updateAdminPassword = async (newPassword: string) => {
     .from("admin_settings")
     .update({ password: newPassword })
     .eq("username", "msoelib");
+  if (error) console.error("Error updating admin password:", error);
+};
 
-  if (error) {
-    console.error("Error updating admin password:", error);
-  }
+export const updateManagerPassword = async (newPassword: string) => {
+  const { error } = await supabase
+    .from("admin_settings")
+    .update({ manager_password: newPassword } as any)
+    .eq("username", "msoelib");
+  if (error) console.error("Error updating manager password:", error);
+};
+
+export const updateNovelNotice = async (notice: string) => {
+  const { error } = await supabase
+    .from("admin_settings")
+    .update({ novel_notice: notice } as any)
+    .eq("username", "msoelib");
+  if (error) console.error("Error updating novel notice:", error);
 };
 
 export const validateAdmin = async (username: string, password: string): Promise<boolean> => {
   const settings = await getAdminSettings();
   return settings.username === username && settings.password === password;
+};
+
+export const validateManager = async (username: string, password: string): Promise<boolean> => {
+  const settings = await getAdminSettings();
+  return username === "usthad" && settings.managerPassword === password;
 };
 
 // Students
