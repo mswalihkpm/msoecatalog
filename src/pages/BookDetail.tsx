@@ -499,6 +499,33 @@ const BookDetail = () => {
           </div>
         </div>
 
+        {/* Novel category notice (admin-editable) */}
+        <Dialog open={showNovelNotice} onOpenChange={setShowNovelNotice}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-serif">Notice</DialogTitle>
+              <DialogDescription className="text-foreground whitespace-pre-wrap pt-2">
+                {novelNotice || "Novel category books require manager approval before borrowing."}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setShowNovelNotice(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => {
+                  setShowNovelNotice(false);
+                  setIsRequestDialogOpen(true);
+                }}
+              >
+                Next
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+
         <Separator className="my-12" />
 
         {/* Reviews Section */}
