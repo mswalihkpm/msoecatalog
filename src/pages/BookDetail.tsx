@@ -374,12 +374,19 @@ const BookDetail = () => {
                   </Card>
                 ) : (
                   <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold">
-                        <BookOpen className="h-5 w-5" />
-                        Request Book ({slotsLeft} slot{slotsLeft !== 1 ? 's' : ''} left)
-                      </Button>
-                    </DialogTrigger>
+                    <Button
+                      onClick={() => {
+                        if (book.category?.toLowerCase() === "novel") {
+                          setShowNovelNotice(true);
+                        } else {
+                          setIsRequestDialogOpen(true);
+                        }
+                      }}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold"
+                    >
+                      <BookOpen className="h-5 w-5" />
+                      Request Book ({slotsLeft} slot{slotsLeft !== 1 ? 's' : ''} left)
+                    </Button>
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle className="font-serif">Request Book</DialogTitle>
