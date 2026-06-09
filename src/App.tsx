@@ -52,18 +52,9 @@ const AppContent = () => {
           <Route path="/categories" element={<Categories />} />
           <Route path="/store" element={<Store />} />
           <Route path="/admin" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="books" element={<BooksManagement />} />
-              <Route path="students" element={<StudentsManagement />} />
-              <Route path="reviews" element={<ReviewsManagement />} />
-              <Route path="borrows" element={<BorrowsManagement />} />
-              <Route path="settings" element={<AdminSettings />} />
-              <Route path="posters" element={<PostersManagement />} />
-              <Route path="store" element={<StoreManagement />} />
-            </Route>
-            <Route path="/manager" element={<ManagerLogin />} />
-            <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="books" element={<BooksManagement />} />
             <Route path="students" element={<StudentsManagement />} />
             <Route path="reviews" element={<ReviewsManagement />} />
             <Route path="borrows" element={<BorrowsManagement />} />
@@ -71,6 +62,8 @@ const AppContent = () => {
             <Route path="posters" element={<PostersManagement />} />
             <Route path="store" element={<StoreManagement />} />
           </Route>
+          <Route path="/manager" element={<ManagerLogin />} />
+          <Route path="/manager/dashboard" element={<ManagerDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
