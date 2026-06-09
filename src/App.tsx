@@ -23,6 +23,8 @@ import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import PostersManagement from "./pages/admin/PostersManagement";
 import StoreManagement from "./pages/admin/StoreManagement";
+import ManagerLogin from "./pages/ManagerLogin";
+import ManagerDashboard from "./pages/manager/ManagerDashboard";
 import Store from "./pages/Store";
 import NotFound from "./pages/NotFound";
 
@@ -60,6 +62,8 @@ const AppContent = () => {
             <Route path="posters" element={<PostersManagement />} />
             <Route path="store" element={<StoreManagement />} />
           </Route>
+          <Route path="/manager" element={<ManagerLogin />} />
+          <Route path="/manager/dashboard" element={<ManagerDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

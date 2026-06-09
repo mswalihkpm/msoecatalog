@@ -287,6 +287,7 @@ const BorrowsManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Only show requests that are pending for admin (exclude manager_pending/rejected — those belong to manager panel)
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
   const getBookSiNumber = (bookId: string) => {
