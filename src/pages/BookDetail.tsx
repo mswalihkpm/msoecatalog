@@ -44,6 +44,8 @@ const BookDetail = () => {
   const [existingRequestId, setExistingRequestId] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [novelNotice, setNovelNotice] = useState<string>("");
+  const [showNovelNotice, setShowNovelNotice] = useState(false);
 
   const borrowDate = useMemo(() => {
     if (!libraryOpenDate) return null;
@@ -63,6 +65,7 @@ const BookDetail = () => {
     if (settings.libraryOpenDate) {
       setLibraryOpenDate(new Date(settings.libraryOpenDate + "T00:00:00"));
     }
+    setNovelNotice(settings.novelNotice || "");
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
@@ -139,22 +142,30 @@ const BookDetail = () => {
 
     setIsSubmitting(true);
     try {
-      await addBookRequest({
-        bookId: book.id,
-        bookTitle: book.title,
-        bookNumberCode: book.numberCode,
-        bookVolume: book.volume,
-        requesterName: selectedStudent.name,
-        requesterClass: selectedStudent.class,
-        returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
-      });
+      const isNovel = book.category?.toLowerCase() === "novel";
+      await addBookRequest(
+        {
+          bookId: book.id,
+          bookTitle: book.title,
+          bookNumberCode: book.numberCode,
+          bookVolume: book.volume,
+          requesterName: selectedStudent.name,
+          requesterClass: selectedStudent.class,
+          returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
+        },
+        isNovel ? "manager_pending" : "pending"
+      );
 
       const newPosition = pendingCount + 1;
       setUserQueuePosition(newPosition);
       setPendingCount(newPosition);
       setStudentPendingCount(prev => prev + 1);
       setAlreadyRequestedSameBook(true);
-      toast.success(`Request submitted successfully! You are person #${newPosition} in the queue.`);
+      if (isNovel) {
+        toast.success("Request sent to manager for approval.");
+      } else {
+        toast.success(`Request submitted! You are person #${newPosition} in the queue.`);
+      }
       setIsRequestDialogOpen(false);
       setSelectedStudent(null);
       setDaysToReturn("");
