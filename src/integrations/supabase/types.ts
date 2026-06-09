@@ -20,6 +20,8 @@ export type Database = {
           id: string
           library_open_date: string | null
           library_open_day: number
+          manager_password: string
+          novel_notice: string
           password: string
           updated_at: string
           username: string
@@ -29,6 +31,8 @@ export type Database = {
           id?: string
           library_open_date?: string | null
           library_open_day?: number
+          manager_password?: string
+          novel_notice?: string
           password?: string
           updated_at?: string
           username?: string
@@ -38,6 +42,8 @@ export type Database = {
           id?: string
           library_open_date?: string | null
           library_open_day?: number
+          manager_password?: string
+          novel_notice?: string
           password?: string
           updated_at?: string
           username?: string
