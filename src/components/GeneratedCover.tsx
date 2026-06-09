@@ -87,7 +87,7 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
       {/* Title — generous box, vertical centering, auto-shrunk */}
       <foreignObject x="62" y="100" width="176" height="170">
         <div
-          xmlns="http://www.w3.org/1999/xhtml"
+          {...({ xmlns: "http://www.w3.org/1999/xhtml" } as any)}
           style={{
             width: "100%",
             height: "100%",
@@ -114,7 +114,7 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
       {displayAuthor && (
         <foreignObject x="30" y="278" width="240" height="56">
           <div
-            xmlns="http://www.w3.org/1999/xhtml"
+            {...({ xmlns: "http://www.w3.org/1999/xhtml" } as any)}
             style={{
               width: "100%",
               height: "100%",
@@ -141,7 +141,7 @@ export const GeneratedCover = ({ title, author, publication, className }: Genera
       {displayPub && (
         <foreignObject x="20" y="355" width="260" height="36">
           <div
-            xmlns="http://www.w3.org/1999/xhtml"
+            {...({ xmlns: "http://www.w3.org/1999/xhtml" } as any)}
             style={{
               width: "100%",
               height: "100%",
