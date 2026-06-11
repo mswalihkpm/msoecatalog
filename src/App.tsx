@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { initializeData } from "@/lib/store";
 import { SplashScreen } from "@/components/SplashScreen";
 import { MobileFooter } from "@/components/MobileFooter";
@@ -81,6 +82,7 @@ const App = () => (
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>
+      <SpeedInsights />
     </TooltipProvider>
   </QueryClientProvider>
 );
