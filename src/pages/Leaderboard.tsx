@@ -113,6 +113,19 @@ const Leaderboard = () => {
           </h1>
         </div>
 
+        <div className="mb-6 p-4 rounded-lg border border-primary/30 bg-primary/5 flex gap-3">
+          <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-foreground/90 space-y-1">
+            <p className="font-semibold">How the leaderboard works</p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>Readers who wrote a review for a book are ranked first — a review is proof of actual reading.</li>
+              <li>Among reviewers, those with more reviews and more returned books rank higher.</li>
+              <li>Only returned books count toward the read count; currently-borrowed books are shown separately.</li>
+              <li>Tap any reader to see their full reading history and current book.</li>
+            </ul>
+          </div>
+        </div>
+
         {loading ? (
           <p className="text-muted-foreground text-center py-12">Loading leaderboard…</p>
         ) : stats.length === 0 ? (
