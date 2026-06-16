@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { getBorrowRecords } from "@/lib/store";
-import { BorrowRecord } from "@/lib/types";
-import { Trophy, BookOpen, Medal, Crown, Award } from "lucide-react";
+import { getBorrowRecords, getReviews } from "@/lib/store";
+import { BorrowRecord, Review } from "@/lib/types";
+import { Trophy, BookOpen, Medal, Crown, Award, Info, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
