@@ -47,6 +47,14 @@ export const Header = () => {
           </span>
         </div>
 
+        {/* Mobile leaderboard quick action */}
+        <Link to="/leaderboard" className="md:hidden ml-auto mr-1">
+          <Button variant="ghost" size="icon" title="Leaderboard">
+            <Trophy className="h-5 w-5" />
+          </Button>
+        </Link>
+
+
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
@@ -60,6 +68,11 @@ export const Header = () => {
               {link.label}
             </Link>
           ))}
+          <Link to="/leaderboard">
+            <Button variant="ghost" size="icon" title="Leaderboard">
+              <Trophy className="h-5 w-5" />
+            </Button>
+          </Link>
           <Link to="/settings">
             <Button variant="ghost" size="icon" title="Settings">
               <Settings className="h-5 w-5" />
