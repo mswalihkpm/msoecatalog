@@ -20,20 +20,34 @@ type ReaderStat = {
   readCount: number;
   read: BorrowRecord[];
   current: BorrowRecord[];
+  reviewCount: number;
+  hasReview: boolean;
 };
 
 const Leaderboard = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ReaderStat | null>(null);
 
   useEffect(() => {
-    getBorrowRecords()
-      .then((r) => setRecords(r))
+    Promise.all([getBorrowRecords(), getReviews()])
+      .then(([r, rv]) => {
+        setRecords(r);
+        setReviews(rv);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const stats = useMemo<ReaderStat[]>(() => {
+    // Count reviews per normalized user name
+    const reviewMap = new Map<string, number>();
+    for (const rv of reviews) {
+      const key = (rv.userName || "").trim().toLowerCase();
+      if (!key) continue;
+      reviewMap.set(key, (reviewMap.get(key) || 0) + 1);
+    }
+
     const map = new Map<string, ReaderStat>();
     for (const r of records) {
       const key = r.borrowerName.trim();
@@ -44,6 +58,8 @@ const Leaderboard = () => {
         readCount: 0,
         read: [],
         current: [],
+        reviewCount: 0,
+        hasReview: false,
       };
       if (r.isReturned) {
         existing.readCount += 1;
@@ -54,10 +70,25 @@ const Leaderboard = () => {
       if (!existing.className && r.borrowerClass) existing.className = r.borrowerClass;
       map.set(key, existing);
     }
+
+    // Attach review counts
+    for (const stat of map.values()) {
+      const rc = reviewMap.get(stat.name.toLowerCase()) || 0;
+      stat.reviewCount = rc;
+      stat.hasReview = rc > 0;
+    }
+
     return Array.from(map.values())
       .filter((s) => s.readCount > 0 || s.current.length > 0)
-      .sort((a, b) => b.readCount - a.readCount || a.name.localeCompare(b.name));
-  }, [records]);
+      .sort(
+        (a, b) =>
+          // Reviewers come first (proof of reading)
+          Number(b.hasReview) - Number(a.hasReview) ||
+          b.reviewCount - a.reviewCount ||
+          b.readCount - a.readCount ||
+          a.name.localeCompare(b.name),
+      );
+  }, [records, reviews]);
 
   const top3 = stats.slice(0, 3);
   const rest = stats.slice(3);
