@@ -26,6 +26,7 @@ import StoreManagement from "./pages/admin/StoreManagement";
 import ManagerLogin from "./pages/ManagerLogin";
 import ManagerDashboard from "./pages/manager/ManagerDashboard";
 import Store from "./pages/Store";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const AppContent = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/store" element={<Store />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />

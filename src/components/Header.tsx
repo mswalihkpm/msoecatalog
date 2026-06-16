@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Settings } from "lucide-react";
+import { Menu, Settings, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/logo.png";
@@ -18,6 +18,7 @@ export const Header = () => {
     { path: "/", label: "Catalog" },
     { path: "/categories", label: "Categories" },
     { path: "/store", label: "Store" },
+    { path: "/leaderboard", label: "Leaderboard" },
   ];
 
   const handleLogoTap = () => {
