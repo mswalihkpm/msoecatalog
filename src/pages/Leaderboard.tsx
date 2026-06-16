@@ -187,7 +187,12 @@ const Leaderboard = () => {
                       {i + 4}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">{reader.name}</p>
+                      <p className="font-semibold text-foreground truncate flex items-center gap-1.5">
+                        {reader.name}
+                        {reader.hasReview && (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0" aria-label="Verified by review" />
+                        )}
+                      </p>
                       {reader.className && (
                         <p className="text-xs text-muted-foreground">{reader.className}</p>
                       )}
