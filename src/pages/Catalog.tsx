@@ -69,6 +69,7 @@ const Catalog = () => {
   const [currentPage, setCurrentPage] = useState(() => initialBrowseStateRef.current?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingBookIds, setPendingBookIds] = useState<Set<string>>(new Set());
+  const [requestCounts, setRequestCounts] = useState<Map<string, number>>(new Map());
   const [nextOpenDate, setNextOpenDate] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -134,6 +135,9 @@ const Catalog = () => {
       const [booksData, requestsData] = await Promise.all([getBooks(), getBookRequests()]);
       setBooks(booksData);
       setPendingBookIds(new Set(requestsData.filter(r => r.status === "pending").map(r => r.bookId)));
+      const counts = new Map<string, number>();
+      for (const r of requestsData) counts.set(r.bookId, (counts.get(r.bookId) ?? 0) + 1);
+      setRequestCounts(counts);
       setIsLoading(false);
     };
     loadBooks();
@@ -165,18 +169,43 @@ const Catalog = () => {
       return matchesSearch && matchesCategory && matchesAvailability;
     });
 
+    const categoryOrder: Record<string, number> = {
+      Islamic: 0,
+      Novel: 1,
+      History: 2,
+      Biography: 3,
+      General: 4,
+      Poem: 5,
+      Science: 6,
+      Language: 7,
+      English: 8,
+      Others: 10,
+    };
+    const catIndex = (c: string) => (c in categoryOrder ? categoryOrder[c] : 9);
+
     return filtered.sort((a, b) => {
-      // Push EN-coded books to the end
-      const aIsEN = a.numberCode.toUpperCase().startsWith("EN") ? 1 : 0;
-      const bIsEN = b.numberCode.toUpperCase().startsWith("EN") ? 1 : 0;
-      if (aIsEN !== bIsEN) return aIsEN - bIsEN;
-      // Sort by number of reviews first (more reviews = higher priority)
+      // 1. Top reviewed (most reviews)
       if (b.totalReviews !== a.totalReviews) return b.totalReviews - a.totalReviews;
-      // Then by average rating
+      // 2. Top rated
       if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
+      // 3. Top requested
+      const ra = requestCounts.get(a.id) ?? 0;
+      const rb = requestCounts.get(b.id) ?? 0;
+      if (rb !== ra) return rb - ra;
+      // 4. Books with cover image come first
+      const ac = a.coverImage ? 0 : 1;
+      const bc = b.coverImage ? 0 : 1;
+      if (ac !== bc) return ac - bc;
+      // 5. Category priority (EN-coded books pushed to near-end)
+      const aIsEN = a.numberCode.toUpperCase().startsWith("EN");
+      const bIsEN = b.numberCode.toUpperCase().startsWith("EN");
+      const aCat = aIsEN ? 9.5 : catIndex(a.category);
+      const bCat = bIsEN ? 9.5 : catIndex(b.category);
+      if (aCat !== bCat) return aCat - bCat;
+      // 6. Alphabetical
       return a.title.localeCompare(b.title);
     });
-  }, [books, searchQuery, selectedCategory, availabilityFilter]);
+  }, [books, searchQuery, selectedCategory, availabilityFilter, requestCounts]);
 
   // Reset to page 1 when filters change
   useEffect(() => {

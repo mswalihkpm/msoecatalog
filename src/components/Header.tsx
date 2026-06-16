@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Settings } from "lucide-react";
+import { Menu, Settings, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/logo.png";
@@ -18,6 +18,7 @@ export const Header = () => {
     { path: "/", label: "Catalog" },
     { path: "/categories", label: "Categories" },
     { path: "/store", label: "Store" },
+    { path: "/leaderboard", label: "Leaderboard" },
   ];
 
   const handleLogoTap = () => {
@@ -46,6 +47,14 @@ export const Header = () => {
           </span>
         </div>
 
+        {/* Mobile leaderboard quick action */}
+        <Link to="/leaderboard" className="md:hidden ml-auto mr-1">
+          <Button variant="ghost" size="icon" title="Leaderboard">
+            <Trophy className="h-5 w-5" />
+          </Button>
+        </Link>
+
+
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
@@ -59,6 +68,11 @@ export const Header = () => {
               {link.label}
             </Link>
           ))}
+          <Link to="/leaderboard">
+            <Button variant="ghost" size="icon" title="Leaderboard">
+              <Trophy className="h-5 w-5" />
+            </Button>
+          </Link>
           <Link to="/settings">
             <Button variant="ghost" size="icon" title="Settings">
               <Settings className="h-5 w-5" />
