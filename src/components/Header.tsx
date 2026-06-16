@@ -18,7 +18,6 @@ export const Header = () => {
     { path: "/", label: "Catalog" },
     { path: "/categories", label: "Categories" },
     { path: "/store", label: "Store" },
-    { path: "/leaderboard", label: "Leaderboard" },
   ];
 
   const handleLogoTap = () => {

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { getBorrowRecords } from "@/lib/store";
-import { BorrowRecord } from "@/lib/types";
-import { Trophy, BookOpen, Medal, Crown, Award } from "lucide-react";
+import { getBorrowRecords, getReviews } from "@/lib/store";
+import { BorrowRecord, Review } from "@/lib/types";
+import { Trophy, BookOpen, Medal, Crown, Award, Info, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -20,20 +20,34 @@ type ReaderStat = {
   readCount: number;
   read: BorrowRecord[];
   current: BorrowRecord[];
+  reviewCount: number;
+  hasReview: boolean;
 };
 
 const Leaderboard = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ReaderStat | null>(null);
 
   useEffect(() => {
-    getBorrowRecords()
-      .then((r) => setRecords(r))
+    Promise.all([getBorrowRecords(), getReviews()])
+      .then(([r, rv]) => {
+        setRecords(r);
+        setReviews(rv);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const stats = useMemo<ReaderStat[]>(() => {
+    // Count reviews per normalized user name
+    const reviewMap = new Map<string, number>();
+    for (const rv of reviews) {
+      const key = (rv.userName || "").trim().toLowerCase();
+      if (!key) continue;
+      reviewMap.set(key, (reviewMap.get(key) || 0) + 1);
+    }
+
     const map = new Map<string, ReaderStat>();
     for (const r of records) {
       const key = r.borrowerName.trim();
@@ -44,6 +58,8 @@ const Leaderboard = () => {
         readCount: 0,
         read: [],
         current: [],
+        reviewCount: 0,
+        hasReview: false,
       };
       if (r.isReturned) {
         existing.readCount += 1;
@@ -54,10 +70,25 @@ const Leaderboard = () => {
       if (!existing.className && r.borrowerClass) existing.className = r.borrowerClass;
       map.set(key, existing);
     }
+
+    // Attach review counts
+    for (const stat of map.values()) {
+      const rc = reviewMap.get(stat.name.toLowerCase()) || 0;
+      stat.reviewCount = rc;
+      stat.hasReview = rc > 0;
+    }
+
     return Array.from(map.values())
       .filter((s) => s.readCount > 0 || s.current.length > 0)
-      .sort((a, b) => b.readCount - a.readCount || a.name.localeCompare(b.name));
-  }, [records]);
+      .sort(
+        (a, b) =>
+          // Reviewers come first (proof of reading)
+          Number(b.hasReview) - Number(a.hasReview) ||
+          b.reviewCount - a.reviewCount ||
+          b.readCount - a.readCount ||
+          a.name.localeCompare(b.name),
+      );
+  }, [records, reviews]);
 
   const top3 = stats.slice(0, 3);
   const rest = stats.slice(3);
@@ -80,6 +111,19 @@ const Leaderboard = () => {
           <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Top Readers
           </h1>
+        </div>
+
+        <div className="mb-6 p-4 rounded-lg border border-primary/30 bg-primary/5 flex gap-3">
+          <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-foreground/90 space-y-1">
+            <p className="font-semibold">How the leaderboard works</p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>Readers who wrote a review for a book are ranked first — a review is proof of actual reading.</li>
+              <li>Among reviewers, those with more reviews and more returned books rank higher.</li>
+              <li>Only returned books count toward the read count; currently-borrowed books are shown separately.</li>
+              <li>Tap any reader to see their full reading history and current book.</li>
+            </ul>
+          </div>
         </div>
 
         {loading ? (
@@ -143,7 +187,12 @@ const Leaderboard = () => {
                       {i + 4}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">{reader.name}</p>
+                      <p className="font-semibold text-foreground truncate flex items-center gap-1.5">
+                        {reader.name}
+                        {reader.hasReview && (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0" aria-label="Verified by review" />
+                        )}
+                      </p>
                       {reader.className && (
                         <p className="text-xs text-muted-foreground">{reader.className}</p>
                       )}
