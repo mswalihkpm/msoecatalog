@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { getBorrowRecords, getReviews } from "@/lib/store";
-import { BorrowRecord, Review } from "@/lib/types";
-import { Trophy, BookOpen, Medal, Crown, Award, Info, CheckCircle2 } from "lucide-react";
+import { getBorrowRecords, getReviews, getBooks } from "@/lib/store";
+import { Book, BorrowRecord, Review } from "@/lib/types";
+import { Trophy, BookOpen, Medal, Crown, Award, HelpCircle, CheckCircle2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -11,7 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
 type ReaderStat = {
@@ -22,30 +30,69 @@ type ReaderStat = {
   current: BorrowRecord[];
   reviewCount: number;
   hasReview: boolean;
+  points: number;
+};
+
+// Scoring rules (per returned book by the same user)
+const REVIEWED_POINTS: Record<string, number> = {
+  Islamic: 10,
+  General: 8,
+  Biography: 7,
+  History: 6,
+  Science: 5,
+  Language: 4,
+  English: 4,
+  Poem: 4,
+  Novel: 3,
+  Others: 3,
+};
+const NON_REVIEWED_POINTS: Record<string, number> = {
+  Islamic: 2,
+  General: 2,
+  History: 2,
+  Science: 2,
+  Biography: 2,
+  Novel: 1,
+  English: 1,
+  Language: 1,
+  Poem: 1,
+  Others: 1,
+};
+
+const pointsFor = (category: string | undefined, reviewed: boolean) => {
+  const cat = category || "Others";
+  if (reviewed) return REVIEWED_POINTS[cat] ?? REVIEWED_POINTS.Others;
+  return NON_REVIEWED_POINTS[cat] ?? NON_REVIEWED_POINTS.Others;
 };
 
 const Leaderboard = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ReaderStat | null>(null);
 
   useEffect(() => {
-    Promise.all([getBorrowRecords(), getReviews()])
-      .then(([r, rv]) => {
+    Promise.all([getBorrowRecords(), getReviews(), getBooks()])
+      .then(([r, rv, bk]) => {
         setRecords(r);
         setReviews(rv);
+        setBooks(bk);
       })
       .finally(() => setLoading(false));
   }, []);
 
   const stats = useMemo<ReaderStat[]>(() => {
-    // Count reviews per normalized user name
-    const reviewMap = new Map<string, number>();
+    const bookMap = new Map(books.map((b) => [b.id, b]));
+
+    // reviewSet: key = `${userNameLower}::${bookId}` -> true
+    const reviewSet = new Set<string>();
+    const reviewCountByUser = new Map<string, number>();
     for (const rv of reviews) {
-      const key = (rv.userName || "").trim().toLowerCase();
-      if (!key) continue;
-      reviewMap.set(key, (reviewMap.get(key) || 0) + 1);
+      const u = (rv.userName || "").trim().toLowerCase();
+      if (!u) continue;
+      reviewSet.add(`${u}::${rv.bookId}`);
+      reviewCountByUser.set(u, (reviewCountByUser.get(u) || 0) + 1);
     }
 
     const map = new Map<string, ReaderStat>();
@@ -60,10 +107,14 @@ const Leaderboard = () => {
         current: [],
         reviewCount: 0,
         hasReview: false,
+        points: 0,
       };
       if (r.isReturned) {
         existing.readCount += 1;
         existing.read.push(r);
+        const book = bookMap.get(r.bookId);
+        const reviewed = reviewSet.has(`${key.toLowerCase()}::${r.bookId}`);
+        existing.points += pointsFor(book?.category, reviewed);
       } else {
         existing.current.push(r);
       }
@@ -71,9 +122,8 @@ const Leaderboard = () => {
       map.set(key, existing);
     }
 
-    // Attach review counts
     for (const stat of map.values()) {
-      const rc = reviewMap.get(stat.name.toLowerCase()) || 0;
+      const rc = reviewCountByUser.get(stat.name.toLowerCase()) || 0;
       stat.reviewCount = rc;
       stat.hasReview = rc > 0;
     }
@@ -82,18 +132,16 @@ const Leaderboard = () => {
       .filter((s) => s.readCount > 0 || s.current.length > 0)
       .sort(
         (a, b) =>
-          // Reviewers come first (proof of reading)
-          Number(b.hasReview) - Number(a.hasReview) ||
+          b.points - a.points ||
           b.reviewCount - a.reviewCount ||
           b.readCount - a.readCount ||
           a.name.localeCompare(b.name),
       );
-  }, [records, reviews]);
+  }, [records, reviews, books]);
 
   const top3 = stats.slice(0, 3);
   const rest = stats.slice(3);
 
-  // Podium order: 2, 1, 3
   const podium = [top3[1], top3[0], top3[2]];
   const podiumMeta = [
     { rank: 2, height: "h-28", color: "from-slate-300 to-slate-500", Icon: Medal, iconColor: "text-slate-200" },
@@ -101,29 +149,82 @@ const Leaderboard = () => {
     { rank: 3, height: "h-20", color: "from-orange-300 to-orange-600", Icon: Award, iconColor: "text-orange-100" },
   ];
 
+  const InstructionContent = () => (
+    <div className="space-y-5 text-sm">
+      <section>
+        <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" /> How ranking works
+        </h3>
+        <p className="text-muted-foreground">
+          Every reader earns points each time they <strong>request → borrow → return</strong> a book.
+          Writing a <strong>review</strong> after returning multiplies the reward, because a review is
+          proof of real reading.
+        </p>
+      </section>
+
+      <section>
+        <h3 className="font-semibold text-foreground mb-2">Points when you write a review</h3>
+        <ul className="space-y-1 text-muted-foreground">
+          <li className="flex justify-between border-b border-border/50 pb-1"><span>Islamic</span><span className="font-mono text-foreground">10</span></li>
+          <li className="flex justify-between border-b border-border/50 pb-1"><span>General</span><span className="font-mono text-foreground">8</span></li>
+          <li className="flex justify-between border-b border-border/50 pb-1"><span>Biography</span><span className="font-mono text-foreground">7</span></li>
+          <li className="flex justify-between border-b border-border/50 pb-1"><span>History</span><span className="font-mono text-foreground">6</span></li>
+          <li className="flex justify-between border-b border-border/50 pb-1"><span>Science</span><span className="font-mono text-foreground">5</span></li>
+          <li className="flex justify-between border-b border-border/50 pb-1"><span>Language / English / Poem</span><span className="font-mono text-foreground">4</span></li>
+          <li className="flex justify-between"><span>Novel / Others</span><span className="font-mono text-foreground">3</span></li>
+        </ul>
+      </section>
+
+      <section>
+        <h3 className="font-semibold text-foreground mb-2">Points without a review</h3>
+        <ul className="space-y-1 text-muted-foreground">
+          <li className="flex justify-between border-b border-border/50 pb-1"><span>Islamic / General / History / Science / Biography</span><span className="font-mono text-foreground">2</span></li>
+          <li className="flex justify-between"><span>Novel / English / Language / Poem / Others</span><span className="font-mono text-foreground">1</span></li>
+        </ul>
+      </section>
+
+      <section className="rounded-md border border-primary/30 bg-primary/5 p-3 text-muted-foreground">
+        <p className="font-semibold text-foreground mb-1">Notes</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>Only <strong>returned</strong> books earn points. Currently-borrowed books do not count yet.</li>
+          <li>A review counts only when the same reader reviewed the same book they returned.</li>
+          <li>Ties break by total reviews, then by total books read.</li>
+          <li>Tap any reader to see their reading history.</li>
+        </ul>
+      </section>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background relative">
       <AnimatedBackground />
       <Header />
       <main className="relative z-10 container px-4 py-8">
-        <div className="flex items-center gap-3 mb-6">
-          <Trophy className="h-7 w-7 text-primary" />
-          <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-            Top Readers
-          </h1>
-        </div>
-
-        <div className="mb-6 p-4 rounded-lg border border-primary/30 bg-primary/5 flex gap-3">
-          <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-foreground/90 space-y-1">
-            <p className="font-semibold">How the leaderboard works</p>
-            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-              <li>Readers who wrote a review for a book are ranked first — a review is proof of actual reading.</li>
-              <li>Among reviewers, those with more reviews and more returned books rank higher.</li>
-              <li>Only returned books count toward the read count; currently-borrowed books are shown separately.</li>
-              <li>Tap any reader to see their full reading history and current book.</li>
-            </ul>
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <Trophy className="h-7 w-7 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Top Readers
+            </h1>
           </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="Scoring instructions">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  Leaderboard Scoring
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-5">
+                <InstructionContent />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
         {loading ? (
@@ -164,7 +265,8 @@ const Leaderboard = () => {
                       className={`w-full ${meta.height} rounded-t-xl bg-gradient-to-b ${meta.color} flex flex-col items-center justify-center text-white shadow-lg group-hover:scale-[1.02] transition-transform`}
                     >
                       <span className="text-3xl font-black drop-shadow">{meta.rank}</span>
-                      <span className="text-xs font-medium opacity-90">{reader.readCount} books</span>
+                      <span className="text-xs font-semibold opacity-95">{reader.points} pts</span>
+                      <span className="text-[10px] font-medium opacity-80">{reader.readCount} books</span>
                     </div>
                   </motion.button>
                 );
@@ -197,10 +299,16 @@ const Leaderboard = () => {
                         <p className="text-xs text-muted-foreground">{reader.className}</p>
                       )}
                     </div>
-                    <Badge variant="secondary" className="gap-1">
-                      <BookOpen className="h-3 w-3" />
-                      {reader.readCount}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Trophy className="h-3 w-3" />
+                        {reader.points} pts
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <BookOpen className="h-3 w-3" />
+                        {reader.readCount}
+                      </span>
+                    </div>
                   </motion.button>
                 ))}
               </div>
@@ -222,6 +330,17 @@ const Leaderboard = () => {
 
             {selected && (
               <div className="space-y-5 mt-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Badge className="bg-primary text-primary-foreground">{selected.points} points</Badge>
+                  <Badge variant="secondary">{selected.readCount} read</Badge>
+                  {selected.hasReview && (
+                    <Badge variant="outline" className="gap-1">
+                      <CheckCircle2 className="h-3 w-3 text-primary" />
+                      {selected.reviewCount} review{selected.reviewCount > 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                </div>
+
                 {selected.current.length > 0 && (
                   <section>
                     <h3 className="text-sm font-semibold mb-2 text-primary">
