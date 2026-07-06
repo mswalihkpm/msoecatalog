@@ -172,16 +172,21 @@ const Catalog = () => {
     const categoryOrder: Record<string, number> = {
       Islamic: 0,
       Novel: 1,
-      History: 2,
-      Biography: 3,
-      General: 4,
-      Poem: 5,
-      Science: 6,
-      Language: 7,
-      English: 8,
-      Others: 10,
+      "English Novel": 2,
+      Story: 3,
+      History: 4,
+      Biography: 5,
+      General: 6,
+      Travelogue: 7,
+      Poem: 8,
+      Science: 9,
+      Language: 10,
+      English: 11,
+      Arabic: 12,
+      Others: 14,
     };
-    const catIndex = (c: string) => (c in categoryOrder ? categoryOrder[c] : 9);
+    const catIndex = (c: string) => (c in categoryOrder ? categoryOrder[c] : 13);
+
 
     return filtered.sort((a, b) => {
       // 1. Top reviewed (most reviews)
@@ -199,9 +204,10 @@ const Catalog = () => {
       // 5. Category priority (EN-coded books pushed to near-end)
       const aIsEN = a.numberCode.toUpperCase().startsWith("EN");
       const bIsEN = b.numberCode.toUpperCase().startsWith("EN");
-      const aCat = aIsEN ? 9.5 : catIndex(a.category);
-      const bCat = bIsEN ? 9.5 : catIndex(b.category);
+      const aCat = aIsEN ? 12.5 : catIndex(a.category);
+      const bCat = bIsEN ? 12.5 : catIndex(b.category);
       if (aCat !== bCat) return aCat - bCat;
+
       // 6. Alphabetical
       return a.title.localeCompare(b.title);
     });
@@ -339,7 +345,7 @@ const Catalog = () => {
           <PromoBanner />
         </section>
 
-        {/* Catalog Section */}
+        {/* Catalogue Section */}
         <section className="container px-4 py-10">
           {/* Search and Filters */}
           <div className="mb-8">

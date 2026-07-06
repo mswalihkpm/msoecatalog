@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student } from "./types";
+import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student, LeaderboardSnapshot, ReadStatus } from "./types";
+
 
 // Initialize data - now just ensures dark mode
 export const initializeData = () => {
@@ -367,7 +368,7 @@ export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
     return [];
   }
 
-  return data.map((record) => ({
+  return data.map((record: any) => ({
     id: record.id,
     bookId: record.book_id,
     bookTitle: record.book_title,
@@ -377,8 +378,11 @@ export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
     borrowedDate: record.borrowed_date,
     returnDate: record.return_date,
     isReturned: record.is_returned,
+    readStatus: (record.read_status as ReadStatus) || "not_read",
+    reviewConducted: !!record.review_conducted,
   }));
 };
+
 
 export const addBorrowRecord = async (record: Omit<BorrowRecord, "id">): Promise<BorrowRecord | null> => {
   const { data, error } = await supabase
@@ -419,8 +423,11 @@ export const addBorrowRecord = async (record: Omit<BorrowRecord, "id">): Promise
     borrowedDate: data.borrowed_date,
     returnDate: data.return_date,
     isReturned: data.is_returned,
+    readStatus: ((data as any).read_status as ReadStatus) || "not_read",
+    reviewConducted: !!(data as any).review_conducted,
   };
 };
+
 
 export const updateBorrowRecord = async (id: string, updates: Partial<BorrowRecord>) => {
   const dbUpdates: Record<string, unknown> = {};
@@ -430,8 +437,10 @@ export const updateBorrowRecord = async (id: string, updates: Partial<BorrowReco
   if (updates.borrowedDate !== undefined) dbUpdates.borrowed_date = updates.borrowedDate;
   if (updates.returnDate !== undefined) dbUpdates.return_date = updates.returnDate;
   if (updates.isReturned !== undefined) dbUpdates.is_returned = updates.isReturned;
+  if ((updates as any).readStatus !== undefined) dbUpdates.read_status = (updates as any).readStatus;
+  if ((updates as any).reviewConducted !== undefined) dbUpdates.review_conducted = (updates as any).reviewConducted;
 
-  const { data: record, error: fetchError } = await supabase
+  const { data: record } = await supabase
     .from("borrow_records")
     .select("book_id")
     .eq("id", id)
@@ -453,6 +462,7 @@ export const updateBorrowRecord = async (id: string, updates: Partial<BorrowReco
     });
   }
 };
+
 
 export const deleteBorrowRecord = async (id: string) => {
   const { data: record, error: fetchError } = await supabase
@@ -501,6 +511,7 @@ export const getBookRequests = async (): Promise<BookRequest[]> => {
     status: request.status as "pending" | "approved" | "rejected",
   }));
 };
+
 
 export const getStudentPendingRequestCount = async (studentName: string): Promise<number> => {
   const { count, error } = await supabase
@@ -602,8 +613,8 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
       username: "msoelib",
       password: "alif",
       libraryOpenDay: 0,
-      managerPassword: "123123",
-      novelNotice: "Novel category books require manager approval before borrowing. Your request will first be reviewed by the manager. Click Next to continue.",
+      leaderboardNotice: "",
+      leaderboardVisible: true,
     };
   }
 
@@ -612,8 +623,10 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
     password: data.password,
     libraryOpenDay: data.library_open_day ?? 0,
     libraryOpenDate: (data as any).library_open_date || undefined,
-    managerPassword: (data as any).manager_password || "123123",
-    novelNotice: (data as any).novel_notice || "",
+    leaderboardNotice: (data as any).leaderboard_notice || "",
+    leaderboardVisible: (data as any).leaderboard_visible ?? true,
+    leaderboardVisibleUntil: (data as any).leaderboard_visible_until || undefined,
+    leaderboardFromDate: (data as any).leaderboard_from_date || undefined,
   };
 };
 
@@ -641,20 +654,16 @@ export const updateAdminPassword = async (newPassword: string) => {
   if (error) console.error("Error updating admin password:", error);
 };
 
-export const updateManagerPassword = async (newPassword: string) => {
-  const { error } = await supabase
-    .from("admin_settings")
-    .update({ manager_password: newPassword } as any)
-    .eq("username", "msoelib");
-  if (error) console.error("Error updating manager password:", error);
-};
-
-export const updateNovelNotice = async (notice: string) => {
-  const { error } = await supabase
-    .from("admin_settings")
-    .update({ novel_notice: notice } as any)
-    .eq("username", "msoelib");
-  if (error) console.error("Error updating novel notice:", error);
+export const updateLeaderboardSettings = async (
+  updates: Partial<Pick<AdminSettings, "leaderboardNotice" | "leaderboardVisible" | "leaderboardVisibleUntil" | "leaderboardFromDate">>,
+) => {
+  const db: Record<string, unknown> = {};
+  if (updates.leaderboardNotice !== undefined) db.leaderboard_notice = updates.leaderboardNotice;
+  if (updates.leaderboardVisible !== undefined) db.leaderboard_visible = updates.leaderboardVisible;
+  if (updates.leaderboardVisibleUntil !== undefined) db.leaderboard_visible_until = updates.leaderboardVisibleUntil || null;
+  if (updates.leaderboardFromDate !== undefined) db.leaderboard_from_date = updates.leaderboardFromDate || null;
+  const { error } = await supabase.from("admin_settings").update(db as any).eq("username", "msoelib");
+  if (error) console.error("Error updating leaderboard settings:", error);
 };
 
 export const validateAdmin = async (username: string, password: string): Promise<boolean> => {
@@ -662,10 +671,40 @@ export const validateAdmin = async (username: string, password: string): Promise
   return settings.username === username && settings.password === password;
 };
 
-export const validateManager = async (username: string, password: string): Promise<boolean> => {
-  const settings = await getAdminSettings();
-  return username === "usthad" && settings.managerPassword === password;
+// Leaderboard snapshots
+export const getLeaderboardSnapshots = async (): Promise<LeaderboardSnapshot[]> => {
+  const { data, error } = await supabase
+    .from("leaderboard_snapshots" as any)
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as any[]).map((s) => ({
+    id: s.id,
+    name: s.name,
+    fromDate: s.from_date || undefined,
+    untilDate: s.until_date || undefined,
+    notice: s.notice || "",
+    entries: Array.isArray(s.entries) ? s.entries : [],
+    createdAt: s.created_at,
+  }));
 };
+
+export const addLeaderboardSnapshot = async (snap: Omit<LeaderboardSnapshot, "id" | "createdAt">) => {
+  const { error } = await supabase.from("leaderboard_snapshots" as any).insert({
+    name: snap.name,
+    from_date: snap.fromDate || null,
+    until_date: snap.untilDate || null,
+    notice: snap.notice || "",
+    entries: snap.entries as any,
+  });
+  if (error) console.error("Error saving snapshot:", error);
+};
+
+export const deleteLeaderboardSnapshot = async (id: string) => {
+  const { error } = await supabase.from("leaderboard_snapshots" as any).delete().eq("id", id);
+  if (error) console.error("Error deleting snapshot:", error);
+};
+
 
 // Students
 export const getStudents = async (): Promise<Student[]> => {

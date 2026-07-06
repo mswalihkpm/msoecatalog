@@ -44,8 +44,8 @@ const BookDetail = () => {
   const [existingRequestId, setExistingRequestId] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [novelNotice, setNovelNotice] = useState<string>("");
-  const [showNovelNotice, setShowNovelNotice] = useState(false);
+
+
 
   const borrowDate = useMemo(() => {
     if (!libraryOpenDate) return null;
@@ -65,7 +65,7 @@ const BookDetail = () => {
     if (settings.libraryOpenDate) {
       setLibraryOpenDate(new Date(settings.libraryOpenDate + "T00:00:00"));
     }
-    setNovelNotice(settings.novelNotice || "");
+
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
@@ -142,30 +142,22 @@ const BookDetail = () => {
 
     setIsSubmitting(true);
     try {
-      const isNovel = book.category?.toLowerCase() === "novel";
-      await addBookRequest(
-        {
-          bookId: book.id,
-          bookTitle: book.title,
-          bookNumberCode: book.numberCode,
-          bookVolume: book.volume,
-          requesterName: selectedStudent.name,
-          requesterClass: selectedStudent.class,
-          returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
-        },
-        isNovel ? "manager_pending" : "pending"
-      );
+      await addBookRequest({
+        bookId: book.id,
+        bookTitle: book.title,
+        bookNumberCode: book.numberCode,
+        bookVolume: book.volume,
+        requesterName: selectedStudent.name,
+        requesterClass: selectedStudent.class,
+        returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
+      });
 
       const newPosition = pendingCount + 1;
       setUserQueuePosition(newPosition);
       setPendingCount(newPosition);
       setStudentPendingCount(prev => prev + 1);
       setAlreadyRequestedSameBook(true);
-      if (isNovel) {
-        toast.success("Request sent to manager for approval.");
-      } else {
-        toast.success(`Request submitted! You are person #${newPosition} in the queue.`);
-      }
+      toast.success(`Request submitted! You are person #${newPosition} in the queue.`);
       setIsRequestDialogOpen(false);
       setSelectedStudent(null);
       setDaysToReturn("");
@@ -173,6 +165,7 @@ const BookDetail = () => {
       setIsSubmitting(false);
     }
   };
+
 
   if (!book) {
     return (
@@ -186,7 +179,7 @@ const BookDetail = () => {
               Book not found
             </h3>
             <Link to="/">
-              <Button variant="outline">Back to Catalog</Button>
+              <Button variant="outline">Back to Catalogue</Button>
             </Link>
           </div>
         </main>
@@ -375,15 +368,10 @@ const BookDetail = () => {
                 ) : (
                   <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
                     <Button
-                      onClick={() => {
-                        if (book.category?.toLowerCase() === "novel") {
-                          setShowNovelNotice(true);
-                        } else {
-                          setIsRequestDialogOpen(true);
-                        }
-                      }}
+                      onClick={() => setIsRequestDialogOpen(true)}
                       className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold"
                     >
+
                       <BookOpen className="h-5 w-5" />
                       Request Book ({slotsLeft} slot{slotsLeft !== 1 ? 's' : ''} left)
                     </Button>
@@ -499,31 +487,7 @@ const BookDetail = () => {
           </div>
         </div>
 
-        {/* Novel category notice (admin-editable) */}
-        <Dialog open={showNovelNotice} onOpenChange={setShowNovelNotice}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-serif">Notice</DialogTitle>
-              <DialogDescription className="text-foreground whitespace-pre-wrap pt-2">
-                {novelNotice || "Novel category books require manager approval before borrowing."}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setShowNovelNotice(false)}>
-                Cancel
-              </Button>
-              <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => {
-                  setShowNovelNotice(false);
-                  setIsRequestDialogOpen(true);
-                }}
-              >
-                Next
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
 
 
         <Separator className="my-12" />

@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Menu, Settings, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -8,43 +8,24 @@ import logo from "@/assets/logo.png";
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<number | null>(null);
 
   const isActive = (path: string) => location.pathname === path;
 
   const navLinks = [
-    { path: "/", label: "Catalog" },
+    { path: "/", label: "Catalogue" },
     { path: "/categories", label: "Categories" },
     { path: "/store", label: "Store" },
   ];
 
-  const handleLogoTap = () => {
-    tapCountRef.current += 1;
-    if (tapTimerRef.current) window.clearTimeout(tapTimerRef.current);
-    tapTimerRef.current = window.setTimeout(() => {
-      tapCountRef.current = 0;
-    }, 1500);
-    if (tapCountRef.current >= 5) {
-      tapCountRef.current = 0;
-      if (tapTimerRef.current) window.clearTimeout(tapTimerRef.current);
-      navigate("/manager");
-    }
-  };
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between px-4">
-        <div
-          className="flex items-center gap-2 sm:gap-3 select-none min-w-0 cursor-pointer"
-          onClick={handleLogoTap}
-        >
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 select-none min-w-0">
           <img src={logo} alt="Library Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain flex-shrink-0" />
           <span className="text-base sm:text-xl font-bold text-foreground truncate" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Imthiyaaz Library
           </span>
-        </div>
+        </Link>
 
         {/* Mobile leaderboard quick action */}
         <Link to="/leaderboard" className="md:hidden ml-auto mr-1">
@@ -52,7 +33,6 @@ export const Header = () => {
             <Trophy className="h-5 w-5" />
           </Button>
         </Link>
-
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
@@ -112,3 +92,4 @@ export const Header = () => {
     </header>
   );
 };
+

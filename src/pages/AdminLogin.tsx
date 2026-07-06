@@ -38,7 +38,8 @@ const AdminLogin = () => {
       <div className="w-full max-w-md animate-fade-in">
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors">
           <ArrowLeft className="h-4 w-4" />
-          Back to Catalog
+          Back to Catalogue
+
         </Link>
 
         <Card className="border-border shadow-card">
@@ -48,7 +49,7 @@ const AdminLogin = () => {
             </div>
             <CardTitle className="font-serif text-2xl">Admin Panel</CardTitle>
             <CardDescription>
-              Sign in to manage the library catalog
+              Sign in to manage the library catalogue
             </CardDescription>
           </CardHeader>
           <CardContent>

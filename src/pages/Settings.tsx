@@ -48,7 +48,7 @@ const Settings = () => {
   const faqItems = [
     {
       question: "How do I search for a book?",
-      answer: "Use the search bar on the Catalog page to look up books by title, author, book code, or publication. You can also tap Categories from the bottom navigation to browse by topic or publisher.",
+      answer: "Use the search bar on the Catalogue page to look up books by title, author, book code, or publication. You can also tap Categories from the bottom navigation to browse by topic or publisher.",
     },
     {
       question: "How do I request a book?",

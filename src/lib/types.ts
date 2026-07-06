@@ -37,7 +37,10 @@ export interface BorrowRecord {
   borrowedDate: string;
   returnDate: string;
   isReturned: boolean;
+  readStatus?: ReadStatus;
+  reviewConducted?: boolean;
 }
+
 
 export interface BookRequest {
   id: string;
@@ -49,7 +52,7 @@ export interface BookRequest {
   requesterClass: string;
   requestDate: string;
   returnDate?: string;
-  status: "pending" | "approved" | "rejected" | "manager_pending" | "manager_rejected";
+  status: "pending" | "approved" | "rejected";
 }
 
 export interface AdminSettings {
@@ -57,19 +60,25 @@ export interface AdminSettings {
   password: string;
   libraryOpenDay: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
   libraryOpenDate?: string;
-  managerPassword: string;
-  novelNotice: string;
+  leaderboardNotice: string;
+  leaderboardVisible: boolean;
+  leaderboardVisibleUntil?: string;
+  leaderboardFromDate?: string;
 }
 
-export type Category = 
+export type Category =
   | "Islamic"
   | "Novel"
+  | "English Novel"
+  | "Story"
   | "Biography"
   | "Science"
   | "English"
+  | "Arabic"
   | "Language"
   | "History"
   | "General"
+  | "Travelogue"
   | "Poem"
   | "Others";
 
@@ -81,3 +90,25 @@ export interface Student {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ReadStatus = "not_read" | "half_read" | "full_read";
+
+export interface LeaderboardEntry {
+  name: string;
+  className?: string;
+  points: number;
+  fullRead: number;
+  halfRead: number;
+  reviewCount: number;
+}
+
+export interface LeaderboardSnapshot {
+  id: string;
+  name: string;
+  fromDate?: string;
+  untilDate?: string;
+  notice?: string;
+  entries: LeaderboardEntry[];
+  createdAt: string;
+}
+

@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Lock, Eye, EyeOff, CalendarDays, ShieldCheck, MessageSquare } from "lucide-react";
+import { Lock, Eye, EyeOff, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,8 +10,6 @@ import {
   updateAdminPassword,
   getAdminSettings,
   updateLibraryOpenDate,
-  updateManagerPassword,
-  updateNovelNotice,
 } from "@/lib/store";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -27,57 +24,33 @@ const AdminSettings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [storedPassword, setStoredPassword] = useState("");
   const [libraryOpenDate, setLibraryOpenDate] = useState<Date | undefined>(undefined);
-  const [managerPassword, setManagerPasswordValue] = useState("");
-  const [novelNotice, setNovelNoticeValue] = useState("");
 
   useEffect(() => {
-    const loadSettings = async () => {
-      const settings = await getAdminSettings();
+    getAdminSettings().then((settings) => {
       setStoredPassword(settings.password);
       if (settings.libraryOpenDate) {
         setLibraryOpenDate(new Date(settings.libraryOpenDate + "T00:00:00"));
       }
-      setManagerPasswordValue(settings.managerPassword || "");
-      setNovelNoticeValue(settings.novelNotice || "");
-    };
-    loadSettings();
+    });
   }, []);
-
-  const handleSaveManagerPassword = async () => {
-    if (!managerPassword || managerPassword.length < 4) {
-      toast.error("Manager password must be at least 4 characters");
-      return;
-    }
-    await updateManagerPassword(managerPassword);
-    toast.success("Manager password updated");
-  };
-
-  const handleSaveNovelNotice = async () => {
-    await updateNovelNotice(novelNotice);
-    toast.success("Novel notice saved");
-  };
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast.error("Please fill in all password fields");
       return;
     }
-
     if (currentPassword !== storedPassword) {
       toast.error("Current password is incorrect");
       return;
     }
-
     if (newPassword.length < 4) {
       toast.error("New password must be at least 4 characters");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       toast.error("New passwords do not match");
       return;
     }
-
     await updateAdminPassword(newPassword);
     setStoredPassword(newPassword);
     toast.success("Password updated successfully");
@@ -121,7 +94,7 @@ const AdminSettings = () => {
                   variant="outline"
                   className={cn(
                     "w-full max-w-xs justify-start text-left font-normal",
-                    !libraryOpenDate && "text-muted-foreground"
+                    !libraryOpenDate && "text-muted-foreground",
                   )}
                 >
                   <CalendarDays className="mr-2 h-4 w-4" />
@@ -147,60 +120,7 @@ const AdminSettings = () => {
         </CardContent>
       </Card>
 
-      {/* Publication Logos */}
       <PublicationLogosManager />
-
-      {/* Manager Password */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="font-serif flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" />
-            Manager Password
-          </CardTitle>
-          <CardDescription>
-            Set the password used by the manager (username: usthad) to access the manager panel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <Label htmlFor="mgrPwd">Manager Password</Label>
-            <Input
-              id="mgrPwd"
-              type="text"
-              value={managerPassword}
-              onChange={(e) => setManagerPasswordValue(e.target.value)}
-              placeholder="Manager password"
-            />
-          </div>
-          <Button onClick={handleSaveManagerPassword} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Save Manager Password
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Novel Notice */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="font-serif flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Novel Request Notice
-          </CardTitle>
-          <CardDescription>
-            This message is shown to students before they request a Novel-category book. They must tap "Next" to proceed.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Textarea
-            value={novelNotice}
-            onChange={(e) => setNovelNoticeValue(e.target.value)}
-            rows={5}
-            placeholder="Write the notice shown before novel requests..."
-          />
-          <Button onClick={handleSaveNovelNotice} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Save Notice
-          </Button>
-        </CardContent>
-      </Card>
 
       {/* Change Password */}
       <Card className="bg-card border-border">
@@ -209,9 +129,7 @@ const AdminSettings = () => {
             <Lock className="h-5 w-5" />
             Change Password
           </CardTitle>
-          <CardDescription>
-            Update your admin account password
-          </CardDescription>
+          <CardDescription>Update your admin account password</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -261,10 +179,7 @@ const AdminSettings = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
-          <Button
-            onClick={handlePasswordChange}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
+          <Button onClick={handlePasswordChange} className="bg-primary text-primary-foreground hover:bg-primary/90">
             Update Password
           </Button>
         </CardContent>
