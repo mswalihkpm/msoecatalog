@@ -37,7 +37,10 @@ export interface BorrowRecord {
   borrowedDate: string;
   returnDate: string;
   isReturned: boolean;
+  readStatus?: ReadStatus;
+  reviewConducted?: boolean;
 }
+
 
 export interface BookRequest {
   id: string;
