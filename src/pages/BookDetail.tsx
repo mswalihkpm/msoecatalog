@@ -368,15 +368,10 @@ const BookDetail = () => {
                 ) : (
                   <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
                     <Button
-                      onClick={() => {
-                        if (book.category?.toLowerCase() === "novel") {
-                          setShowNovelNotice(true);
-                        } else {
-                          setIsRequestDialogOpen(true);
-                        }
-                      }}
+                      onClick={() => setIsRequestDialogOpen(true)}
                       className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 px-8 py-6 text-base font-semibold"
                     >
+
                       <BookOpen className="h-5 w-5" />
                       Request Book ({slotsLeft} slot{slotsLeft !== 1 ? 's' : ''} left)
                     </Button>
@@ -492,31 +487,7 @@ const BookDetail = () => {
           </div>
         </div>
 
-        {/* Novel category notice (admin-editable) */}
-        <Dialog open={showNovelNotice} onOpenChange={setShowNovelNotice}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-serif">Notice</DialogTitle>
-              <DialogDescription className="text-foreground whitespace-pre-wrap pt-2">
-                {novelNotice || "Novel category books require manager approval before borrowing."}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setShowNovelNotice(false)}>
-                Cancel
-              </Button>
-              <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => {
-                  setShowNovelNotice(false);
-                  setIsRequestDialogOpen(true);
-                }}
-              >
-                Next
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
 
 
         <Separator className="my-12" />
