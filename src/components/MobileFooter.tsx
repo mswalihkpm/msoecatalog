@@ -9,7 +9,7 @@ export const MobileFooter = () => {
   };
 
   const items = [
-    { to: "/", label: "Catalog", icon: Library, active: location.pathname === "/" },
+    { to: "/", label: "Catalogue", icon: Library, active: location.pathname === "/" },
     { to: "/categories", label: "Categories", icon: FolderTree, active: location.pathname === "/categories" && !location.hash },
     { to: "/categories#publications", label: "Publications", icon: Building2, active: location.hash === "#publications" },
     { to: "/store", label: "Store", icon: StoreIcon, active: location.pathname === "/store" },

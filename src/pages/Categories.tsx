@@ -11,25 +11,31 @@ import { GeneratedCover } from "@/components/GeneratedCover";
 import {
   BookOpen, Scroll, User, FlaskConical, Languages, BookText,
   History, Layers, Feather, MoreHorizontal, ArrowLeft, Star, Building2,
+  Plane, NotebookPen, GraduationCap, Globe,
 } from "lucide-react";
 
 const categoryIcons: Record<Category, React.ReactNode> = {
   Islamic: <Scroll className="h-8 w-8" />,
   Novel: <BookOpen className="h-8 w-8" />,
+  "English Novel": <BookOpen className="h-8 w-8" />,
+  Story: <NotebookPen className="h-8 w-8" />,
   Biography: <User className="h-8 w-8" />,
   Science: <FlaskConical className="h-8 w-8" />,
   English: <Languages className="h-8 w-8" />,
+  Arabic: <Globe className="h-8 w-8" />,
   Language: <BookText className="h-8 w-8" />,
   History: <History className="h-8 w-8" />,
   General: <Layers className="h-8 w-8" />,
+  Travelogue: <Plane className="h-8 w-8" />,
   Poem: <Feather className="h-8 w-8" />,
   Others: <MoreHorizontal className="h-8 w-8" />,
 };
 
 const allCategories: Category[] = [
-  "Islamic", "Novel", "Biography", "Science", "English",
-  "Language", "History", "General", "Poem", "Others",
+  "Islamic", "Novel", "English Novel", "Story", "Biography", "Science",
+  "English", "Arabic", "Language", "History", "General", "Travelogue", "Poem", "Others",
 ];
+
 
 const STATE_KEY = "categoriesBrowseState";
 

@@ -11,7 +11,9 @@ import {
   Star,
   Megaphone,
   Store as StoreIcon,
+  Trophy,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
@@ -41,10 +43,12 @@ const AdminLayout = () => {
     { path: "/admin/students", label: "Students", icon: Users },
     { path: "/admin/reviews", label: "Reviews", icon: Star },
     { path: "/admin/borrows", label: "Borrows", icon: Library },
+    { path: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
     { path: "/admin/posters", label: "Posters", icon: Megaphone },
     { path: "/admin/store", label: "Store", icon: StoreIcon },
     { path: "/admin/settings", label: "Settings", icon: Settings },
   ];
+
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -83,7 +87,7 @@ const AdminLayout = () => {
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           <Library className="h-5 w-5" />
-          View Catalog
+          View Catalogue
         </Link>
         <button
           onClick={handleLogout}

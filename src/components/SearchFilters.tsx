@@ -14,15 +14,20 @@ import { Category } from "@/lib/types";
 const categories: Category[] = [
   "Islamic",
   "Novel",
+  "English Novel",
+  "Story",
   "Biography",
   "Science",
   "English",
+  "Arabic",
   "Language",
   "History",
   "General",
+  "Travelogue",
   "Poem",
   "Others",
 ];
+
 
 interface SearchFiltersProps {
   searchQuery: string;
