@@ -49,7 +49,7 @@ const AdminLogin = () => {
             </div>
             <CardTitle className="font-serif text-2xl">Admin Panel</CardTitle>
             <CardDescription>
-              Sign in to manage the library catalog
+              Sign in to manage the library catalogue
             </CardDescription>
           </CardHeader>
           <CardContent>

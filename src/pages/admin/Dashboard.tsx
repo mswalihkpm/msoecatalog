@@ -103,11 +103,11 @@ const Dashboard = () => {
     }
 
     setIsExporting(true);
-    toast.info("Preparing catalog export with cover images...");
+    toast.info("preparing catalogue export with cover images...");
 
     try {
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Catalog");
+      const worksheet = workbook.addWorksheet("Catalogue");
 
       const headers = [
         "SI No", "Title", "Author", "Category", "Number Code",
@@ -198,10 +198,10 @@ const Dashboard = () => {
       a.click();
       URL.revokeObjectURL(url);
 
-      toast.success("Catalog exported with cover images!");
+      toast.success("Catalogue exported with cover images!");
     } catch (error) {
       console.error("Export error:", error);
-      toast.error("Failed to export catalog");
+      toast.error("Failed to export catalogue");
     } finally {
       setIsExporting(false);
     }
@@ -278,7 +278,7 @@ const Dashboard = () => {
           ) : (
             <>
               <FileSpreadsheet className="h-4 w-4" />
-              Export Catalog
+              Export Catalogue
             </>
           )}
         </Button>
@@ -347,7 +347,7 @@ const Dashboard = () => {
             <p>• Use the Books section to add, edit, or delete books</p>
             <p>• Bulk upload books using an Excel file for faster data entry</p>
             <p>• Track all borrow records and requests in the Borrows section</p>
-            <p>• Export your entire catalog to Excel using the button above</p>
+            <p>• Export your entire catalogue to Excel using the button above</p>
             <p>• Change your admin password in Settings</p>
           </CardContent>
         </Card>

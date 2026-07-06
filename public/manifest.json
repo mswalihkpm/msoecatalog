@@ -1,11 +1,11 @@
 {
-  "name": "MSOE Catalog",
+  "name": "MSOE Catalogue",
   "short_name": "MSOE",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#dc2626",
-  "description": "MSOE Catalog App",
+  "description": "MSOE Catalogue App",
   "icons": [
     {
       "src": "/icon-192.png",
