@@ -18,6 +18,10 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          leaderboard_from_date: string | null
+          leaderboard_notice: string | null
+          leaderboard_visible: boolean
+          leaderboard_visible_until: string | null
           library_open_date: string | null
           library_open_day: number
           manager_password: string
@@ -29,6 +33,10 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          leaderboard_from_date?: string | null
+          leaderboard_notice?: string | null
+          leaderboard_visible?: boolean
+          leaderboard_visible_until?: string | null
           library_open_date?: string | null
           library_open_day?: number
           manager_password?: string
@@ -40,6 +48,10 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          leaderboard_from_date?: string | null
+          leaderboard_notice?: string | null
+          leaderboard_visible?: boolean
+          leaderboard_visible_until?: string | null
           library_open_date?: string | null
           library_open_day?: number
           manager_password?: string
@@ -177,7 +189,9 @@ export type Database = {
           created_at: string
           id: string
           is_returned: boolean
+          read_status: string
           return_date: string
+          review_conducted: boolean
         }
         Insert: {
           book_id: string
@@ -189,7 +203,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_returned?: boolean
+          read_status?: string
           return_date: string
+          review_conducted?: boolean
         }
         Update: {
           book_id?: string
@@ -201,7 +217,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_returned?: boolean
+          read_status?: string
           return_date?: string
+          review_conducted?: boolean
         }
         Relationships: [
           {
@@ -212,6 +230,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leaderboard_snapshots: {
+        Row: {
+          created_at: string
+          entries: Json
+          from_date: string | null
+          id: string
+          name: string
+          notice: string | null
+          until_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entries?: Json
+          from_date?: string | null
+          id?: string
+          name: string
+          notice?: string | null
+          until_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entries?: Json
+          from_date?: string | null
+          id?: string
+          name?: string
+          notice?: string | null
+          until_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       promotional_posters: {
         Row: {
