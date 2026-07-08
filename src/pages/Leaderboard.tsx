@@ -7,17 +7,15 @@ import {
   getBooks,
   getAdminSettings,
   getLeaderboardSnapshots,
+  DEFAULT_SCORING_TABLE,
+  pointsForBook,
 } from "@/lib/store";
-import { Book, BorrowRecord, Review, LeaderboardEntry, LeaderboardSnapshot, AdminSettings } from "@/lib/types";
+import { Book, BorrowRecord, Review, LeaderboardEntry, LeaderboardSnapshot, AdminSettings, ScoringTable, PAGE_TIER_LABELS, PageTier } from "@/lib/types";
 import { computeEntries } from "@/pages/admin/LeaderboardAdmin";
 import { Trophy, BookOpen, Medal, Crown, Award, HelpCircle, CalendarDays, Info, CheckCircle2, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +23,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek, startOfMonth, startOfYear, isAfter, parseISO } from "date-fns";
 
 type TimeFilter = "all" | "week" | "month" | "year" | "from";
+const PAGE_TIERS: PageTier[] = ["b50", "b100", "b150", "b200", "b250", "b300", "a300"];
 
 const Leaderboard = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
@@ -38,17 +37,17 @@ const Leaderboard = () => {
 
   useEffect(() => {
     Promise.all([getBorrowRecords(), getReviews(), getBooks(), getAdminSettings(), getLeaderboardSnapshots()])
-      .then(([r, rv, bk, st, sn]) => {
-        setRecords(r);
-        setReviews(rv);
-        setBooks(bk);
-        setSettings(st);
-        setSnapshots(sn);
-      })
+      .then(([r, rv, bk, st, sn]) => { setRecords(r); setReviews(rv); setBooks(bk); setSettings(st); setSnapshots(sn); })
       .finally(() => setLoading(false));
   }, []);
 
-  // Visibility gate
+  const scoringTable: ScoringTable = settings?.scoringTable && Object.keys(settings.scoringTable).length > 0
+    ? settings.scoringTable
+    : DEFAULT_SCORING_TABLE;
+  const reviewPts = settings?.reviewPointsDefault ?? 10;
+
+  const bookMap = useMemo(() => new Map(books.map((b) => [b.id, b])), [books]);
+
   const isVisible = useMemo(() => {
     if (!settings) return true;
     if (!settings.leaderboardVisible) return false;
@@ -65,9 +64,7 @@ const Leaderboard = () => {
     if (timeFilter === "week") from = startOfWeek(now, { weekStartsOn: 1 });
     else if (timeFilter === "month") from = startOfMonth(now);
     else if (timeFilter === "year") from = startOfYear(now);
-    else if (timeFilter === "from" && settings?.leaderboardFromDate) {
-      from = parseISO(settings.leaderboardFromDate);
-    }
+    else if (timeFilter === "from" && settings?.leaderboardFromDate) from = parseISO(settings.leaderboardFromDate);
     if (!from) return records;
     return records.filter((r) => {
       const d = r.borrowedDate ? new Date(r.borrowedDate) : null;
@@ -75,11 +72,13 @@ const Leaderboard = () => {
     });
   }, [records, timeFilter, settings]);
 
-  const entries = useMemo(() => computeEntries(filteredRecords, books), [filteredRecords, books]);
+  const entries = useMemo(
+    () => computeEntries(filteredRecords, books, scoringTable, reviewPts),
+    [filteredRecords, books, scoringTable, reviewPts],
+  );
 
   const currentFromDate = settings?.leaderboardFromDate;
 
-  // Reader detail data
   const openReader = (entry: LeaderboardEntry) => setSelected(entry);
   const readerHistory = useMemo(() => {
     if (!selected) return { read: [], reviews: [] as Review[] };
@@ -95,34 +94,41 @@ const Leaderboard = () => {
           <Info className="h-4 w-4 text-primary" /> How scoring works
         </h3>
         <p className="text-muted-foreground">
-          The admin marks each borrowed book as <strong>Full read</strong>, <strong>Half read</strong> or <strong>Not read</strong>.
-          Different categories give different points. When the admin also marks
-          <strong> "Review conducted"</strong> for a fully-read book, that book's points are doubled.
+          Every borrowed book is marked by the admin as <strong>Full read</strong>, <strong>Half read</strong> or <strong>Not read</strong>.
+          Points depend on both the book's <strong>category</strong> and its <strong>page count</strong>.
+          Half read = half of the full-read points (rounded). Not read = 0.
+          When the admin marks <strong>"Review conducted"</strong>, you get an extra <strong>+{reviewPts}</strong> bonus points (awarded manually — no doubling).
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-foreground mb-2">Full read points</h3>
-        <ul className="space-y-1 text-muted-foreground">
-          <li className="flex justify-between border-b border-border/50 pb-1"><span>Islamic</span><span className="font-mono text-foreground">10 → 20</span></li>
-          <li className="flex justify-between border-b border-border/50 pb-1"><span>Science, History, General, Biography</span><span className="font-mono text-foreground">8 → 16</span></li>
-          <li className="flex justify-between border-b border-border/50 pb-1"><span>Travelogue, English, Language, Arabic</span><span className="font-mono text-foreground">7 → 14</span></li>
-          <li className="flex justify-between"><span>Story, Novel, English Novel, Poem</span><span className="font-mono text-foreground">4 → 8</span></li>
-        </ul>
-      </section>
-
-      <section>
-        <h3 className="font-semibold text-foreground mb-2">Half read points</h3>
-        <ul className="space-y-1 text-muted-foreground">
-          <li className="flex justify-between border-b border-border/50 pb-1"><span>Islamic</span><span className="font-mono text-foreground">4</span></li>
-          <li className="flex justify-between border-b border-border/50 pb-1"><span>Science, History, General, Biography</span><span className="font-mono text-foreground">3</span></li>
-          <li className="flex justify-between border-b border-border/50 pb-1"><span>Travelogue, English, Language, Arabic</span><span className="font-mono text-foreground">2</span></li>
-          <li className="flex justify-between"><span>Story, Novel, English Novel, Poem</span><span className="font-mono text-foreground">1</span></li>
-        </ul>
+        <h3 className="font-semibold text-foreground mb-2">Full-read points table</h3>
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full text-xs">
+            <thead className="bg-primary/10">
+              <tr>
+                <th className="text-left p-1.5">Category</th>
+                {PAGE_TIERS.map((t) => (
+                  <th key={t} className="p-1.5 whitespace-nowrap">{PAGE_TIER_LABELS[t]}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(scoringTable).map((cat) => (
+                <tr key={cat} className="border-t border-border">
+                  <td className="p-1.5 font-medium">{cat}</td>
+                  {PAGE_TIERS.map((t) => (
+                    <td key={t} className="p-1.5 text-center font-mono">{scoringTable[cat]?.[t] ?? 0}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <p className="text-xs text-muted-foreground">
-        Not-read books give no points. The arrow "→" shows the doubled score when a review is conducted.
+        The admin can update this table at any time; the instructions update automatically.
       </p>
     </div>
   );
@@ -323,19 +329,34 @@ const Leaderboard = () => {
                     <p className="text-xs text-muted-foreground">No read books yet.</p>
                   ) : (
                     <ul className="space-y-2">
-                      {readerHistory.read.map((b) => (
-                        <li key={b.id} className="p-2 rounded-md bg-card border border-border">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="font-medium text-sm text-foreground">{b.bookTitle}</p>
-                            <Badge variant="outline" className="text-[10px]">
-                              {b.readStatus === "full_read" ? "Full" : "Half"}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Borrowed {format(new Date(b.borrowedDate), "MMM d, yyyy")}
-                          </p>
-                        </li>
-                      ))}
+                      {readerHistory.read.map((b) => {
+                        const bk = bookMap.get(b.bookId);
+                        const pts = pointsForBook(scoringTable, bk?.category, bk?.pages);
+                        const awarded = b.readStatus === "full_read" ? pts : Math.round(pts / 2);
+                        return (
+                          <li key={b.id} className="p-2 rounded-md bg-card border border-border">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-medium text-sm text-foreground truncate">{b.bookTitle}</p>
+                              <Badge variant="outline" className="text-[10px] shrink-0">
+                                {b.readStatus === "full_read" ? "Full" : "Half"}
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              <Badge variant="secondary" className="text-[10px]">{bk?.category || "—"}</Badge>
+                              <Badge variant="secondary" className="text-[10px]">{bk?.pages || "?"} pages</Badge>
+                              <Badge className="text-[10px] bg-primary text-primary-foreground">+{awarded} pts</Badge>
+                              {b.reviewConducted && (
+                                <Badge className="text-[10px] gap-1 bg-primary/80 text-primary-foreground">
+                                  <CheckCircle2 className="h-3 w-3" /> Review +{reviewPts}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Borrowed {format(new Date(b.borrowedDate), "MMM d, yyyy")}
+                            </p>
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </section>
@@ -347,9 +368,9 @@ const Leaderboard = () => {
                     </h3>
                     <ul className="space-y-2">
                       {readerHistory.reviews.map((rv) => (
-                        <li key={rv.id} className="p-2 rounded-md bg-primary/5 border border-primary/20">
-                          <p className="text-sm text-foreground">{rv.comment || <em className="text-muted-foreground">No comment</em>}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">Rating: {rv.rating}★ · {format(new Date(rv.createdAt), "MMM d, yyyy")}</p>
+                        <li key={rv.id} className="p-2 rounded-md bg-card border border-border text-xs">
+                          <p className="text-muted-foreground line-clamp-3">{rv.comment || "—"}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">{format(new Date(rv.createdAt), "MMM d, yyyy")}</p>
                         </li>
                       ))}
                     </ul>
