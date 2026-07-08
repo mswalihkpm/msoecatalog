@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student, LeaderboardSnapshot, ReadStatus } from "./types";
+import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student, LeaderboardSnapshot, ReadStatus, ScoringTable, CreativeWork } from "./types";
 
 
 // Initialize data - now just ensures dark mode
@@ -627,6 +627,8 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
     leaderboardVisible: (data as any).leaderboard_visible ?? true,
     leaderboardVisibleUntil: (data as any).leaderboard_visible_until || undefined,
     leaderboardFromDate: (data as any).leaderboard_from_date || undefined,
+    scoringTable: (data as any).scoring_table || undefined,
+    reviewPointsDefault: (data as any).review_points_default ?? 10,
   };
 };
 
@@ -707,25 +709,25 @@ export const deleteLeaderboardSnapshot = async (id: string) => {
 
 
 // Students
+const mapStudent = (student: any): Student => ({
+  id: student.id,
+  name: student.name,
+  class: student.class,
+  code: student.code || '000',
+  houseName: student.house_name || undefined,
+  fatherName: student.father_name || undefined,
+  dateOfBirth: student.date_of_birth || undefined,
+  createdAt: student.created_at,
+  updatedAt: student.updated_at,
+});
+
 export const getStudents = async (): Promise<Student[]> => {
   const { data, error } = await supabase
     .from("students")
     .select("*")
     .order("name", { ascending: true });
-
-  if (error) {
-    console.error("Error fetching students:", error);
-    return [];
-  }
-
-  return data.map((student: any) => ({
-    id: student.id,
-    name: student.name,
-    class: student.class,
-    code: student.code || '000',
-    createdAt: student.created_at,
-    updatedAt: student.updated_at,
-  }));
+  if (error) { console.error("Error fetching students:", error); return []; }
+  return data.map(mapStudent);
 };
 
 export const addStudent = async (student: Omit<Student, "id" | "createdAt" | "updatedAt">): Promise<Student | null> => {
@@ -734,59 +736,37 @@ export const addStudent = async (student: Omit<Student, "id" | "createdAt" | "up
     .insert({
       name: student.name,
       class: student.class,
-      code: (student as any).code || '000',
-    })
+      code: student.code || '000',
+      house_name: student.houseName || null,
+      father_name: student.fatherName || null,
+      date_of_birth: student.dateOfBirth || null,
+    } as any)
     .select()
     .single();
-
-  if (error || !data) {
-    console.error("Error adding student:", error);
-    return null;
-  }
-
-  return {
-    id: data.id,
-    name: data.name,
-    class: data.class,
-    code: (data as any).code || '000',
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+  if (error || !data) { console.error("Error adding student:", error); return null; }
+  return mapStudent(data);
 };
 
 export const bulkAddStudents = async (students: Omit<Student, "id" | "createdAt" | "updatedAt">[]): Promise<number> => {
   if (!students || students.length === 0) return 0;
-
   const CHUNK_SIZE = 500;
   let insertedCount = 0;
-
   try {
     for (let i = 0; i < students.length; i += CHUNK_SIZE) {
       const chunk = students.slice(i, i + CHUNK_SIZE);
-
       const dbStudents = chunk.map((student) => ({
         name: student.name,
         class: student.class,
-        code: (student as any).code || '000',
+        code: student.code || '000',
+        house_name: student.houseName || null,
+        father_name: student.fatherName || null,
+        date_of_birth: student.dateOfBirth || null,
       }));
-
-      const { data, error } = await supabase.from("students").insert(dbStudents).select();
-
-      if (error) {
-        console.error("Error bulk adding students (chunk):", error);
-        break;
-      }
-
-      if (Array.isArray(data)) {
-        insertedCount += data.length;
-      } else {
-        insertedCount += dbStudents.length;
-      }
+      const { data, error } = await supabase.from("students").insert(dbStudents as any).select();
+      if (error) { console.error("Error bulk adding students (chunk):", error); break; }
+      insertedCount += Array.isArray(data) ? data.length : dbStudents.length;
     }
-  } catch (err) {
-    console.error("Unexpected error in bulkAddStudents:", err);
-  }
-
+  } catch (err) { console.error("Unexpected error in bulkAddStudents:", err); }
   return insertedCount;
 };
 
@@ -795,30 +775,22 @@ export const updateStudent = async (id: string, updates: Partial<Omit<Student, "
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.class !== undefined) dbUpdates.class = updates.class;
   if (updates.code !== undefined) dbUpdates.code = updates.code;
-
+  if (updates.houseName !== undefined) dbUpdates.house_name = updates.houseName || null;
+  if (updates.fatherName !== undefined) dbUpdates.father_name = updates.fatherName || null;
+  if (updates.dateOfBirth !== undefined) dbUpdates.date_of_birth = updates.dateOfBirth || null;
   const { error } = await supabase.from("students").update(dbUpdates).eq("id", id);
-  if (error) {
-    console.error("Error updating student:", error);
-  }
+  if (error) console.error("Error updating student:", error);
 };
 
 export const deleteStudent = async (id: string) => {
   const { error } = await supabase.from("students").delete().eq("id", id);
-  if (error) {
-    console.error("Error deleting student:", error);
-  }
+  if (error) console.error("Error deleting student:", error);
 };
 
 export const bulkDeleteStudents = async (ids: string[]): Promise<number> => {
   if (ids.length === 0) return 0;
-
   const { error } = await supabase.from("students").delete().in("id", ids);
-
-  if (error) {
-    console.error("Error bulk deleting students:", error);
-    return 0;
-  }
-
+  if (error) { console.error("Error bulk deleting students:", error); return 0; }
   return ids.length;
 };
 
@@ -829,11 +801,7 @@ export const hasStudentRequestedBook = async (studentName: string, bookId: strin
     .eq("requester_name", studentName)
     .eq("book_id", bookId)
     .eq("status", "pending");
-
-  if (error) {
-    console.error("Error checking student book request:", error);
-    return false;
-  }
+  if (error) { console.error("Error checking student book request:", error); return false; }
   return (count ?? 0) > 0;
 };
 
@@ -844,20 +812,29 @@ export const searchStudents = async (query: string): Promise<Student[]> => {
     .or(`name.ilike.%${query}%,class.ilike.%${query}%`)
     .order("name", { ascending: true })
     .limit(20);
+  if (error) { console.error("Error searching students:", error); return []; }
+  return data.map(mapStudent);
+};
 
-  if (error) {
-    console.error("Error searching students:", error);
-    return [];
-  }
+const norm = (s?: string | null) => (s || "").trim().toUpperCase();
 
-  return data.map((student: any) => ({
-    id: student.id,
-    name: student.name,
-    class: student.class,
-    code: student.code || '000',
-    createdAt: student.created_at,
-    updatedAt: student.updated_at,
-  }));
+/** Look up a student's code using profile fields (forgot-passcode flow). */
+export const lookupStudentPasscode = async (
+  name: string,
+  houseName: string,
+  fatherName: string,
+  dateOfBirth: string,
+): Promise<string | null> => {
+  const { data, error } = await supabase.from("students").select("*");
+  if (error || !data) return null;
+  const match = (data as any[]).find(
+    (s) =>
+      norm(s.name) === norm(name) &&
+      norm(s.house_name) === norm(houseName) &&
+      norm(s.father_name) === norm(fatherName) &&
+      norm(s.date_of_birth) === norm(dateOfBirth),
+  );
+  return match ? (match.code || "000") : null;
 };
 
 // Publication Logos
@@ -872,10 +849,7 @@ export const getPublicationLogos = async (): Promise<PublicationLogo[]> => {
     .from("publication_logos" as any)
     .select("*")
     .order("publication_name", { ascending: true });
-  if (error || !data) {
-    console.error("Error fetching publication logos:", error);
-    return [];
-  }
+  if (error || !data) { console.error("Error fetching publication logos:", error); return []; }
   return (data as any[]).map((d) => ({
     id: d.id,
     publicationName: d.publication_name,
@@ -901,7 +875,159 @@ export const verifyStudentCode = async (studentId: string, code: string): Promis
     .select("code")
     .eq("id", studentId)
     .maybeSingle();
-
   if (error || !data) return false;
   return (data as any).code === code;
 };
+
+// ============================================================
+// Scoring Table (editable 14x7 grid stored in admin_settings)
+// ============================================================
+export const DEFAULT_SCORING_TABLE: ScoringTable = {
+  Islamic:        { b50: 10, b100: 15, b150: 20, b200: 25, b250: 30, b300: 35, a300: 50 },
+  General:        { b50: 8,  b100: 13, b150: 18, b200: 23, b250: 28, b300: 33, a300: 48 },
+  Science:        { b50: 8,  b100: 13, b150: 17, b200: 22, b250: 27, b300: 32, a300: 47 },
+  History:        { b50: 8,  b100: 13, b150: 17, b200: 22, b250: 27, b300: 32, a300: 47 },
+  English:        { b50: 7,  b100: 12, b150: 17, b200: 22, b250: 27, b300: 32, a300: 47 },
+  Autobiography:  { b50: 7,  b100: 12, b150: 17, b200: 23, b250: 28, b300: 33, a300: 48 },
+  Biography:      { b50: 7,  b100: 12, b150: 17, b200: 23, b250: 28, b300: 33, a300: 48 },
+  Travelogue:     { b50: 6,  b100: 11, b150: 16, b200: 21, b250: 26, b300: 31, a300: 46 },
+  Arabic:         { b50: 6,  b100: 11, b150: 16, b200: 22, b250: 27, b300: 32, a300: 47 },
+  Poem:           { b50: 5,  b100: 10, b150: 15, b200: 20, b250: 25, b300: 30, a300: 45 },
+  "English Novel":{ b50: 5,  b100: 10, b150: 15, b200: 20, b250: 26, b300: 33, a300: 48 },
+  Story:          { b50: 4,  b100: 9,  b150: 14, b200: 22, b250: 25, b300: 31, a300: 46 },
+  Novel:          { b50: 4,  b100: 9,  b150: 14, b200: 22, b250: 25, b300: 32, a300: 47 },
+  "English Story":{ b50: 3,  b100: 6,  b150: 10, b200: 15, b250: 24, b300: 35, a300: 40 },
+  Language:       { b50: 6,  b100: 11, b150: 16, b200: 22, b250: 27, b300: 32, a300: 47 },
+  Others:         { b50: 3,  b100: 6,  b150: 10, b200: 15, b250: 20, b300: 25, a300: 35 },
+};
+
+export const updateScoringTable = async (table: ScoringTable) => {
+  const { error } = await supabase
+    .from("admin_settings")
+    .update({ scoring_table: table } as any)
+    .eq("username", "msoelib");
+  if (error) console.error("Error updating scoring table:", error);
+};
+
+export const updateReviewPointsDefault = async (points: number) => {
+  const { error } = await supabase
+    .from("admin_settings")
+    .update({ review_points_default: points } as any)
+    .eq("username", "msoelib");
+  if (error) console.error("Error updating review points default:", error);
+};
+
+/** Return points for a book given its category and page count using a scoring table. */
+export const pointsForBook = (
+  table: ScoringTable,
+  category: string | undefined,
+  pages: string | number | undefined,
+): number => {
+  const catRow = table[category || "Others"] || table.Others || {};
+  const n = typeof pages === "number" ? pages : parseInt(String(pages || "0").replace(/[^\d]/g, ""), 10) || 0;
+  let tier: keyof typeof catRow;
+  if (n < 50) tier = "b50";
+  else if (n < 100) tier = "b100";
+  else if (n < 150) tier = "b150";
+  else if (n < 200) tier = "b200";
+  else if (n < 250) tier = "b250";
+  else if (n <= 300) tier = "b300";
+  else tier = "a300";
+  return catRow[tier] ?? 0;
+};
+
+// ============================================================
+// Creative Works (Creativity Hub)
+// ============================================================
+const CREATIVE_BUCKET = "creative-works";
+
+const mapCreative = (row: any): CreativeWork => ({
+  id: row.id,
+  title: row.title,
+  writer: row.writer || undefined,
+  media: row.media || undefined,
+  workDate: row.work_date,
+  fileUrl: row.file_url,
+  fileType: row.file_type,
+  coverUrl: row.cover_url || undefined,
+  createdAt: row.created_at,
+});
+
+export const getCreativeWorks = async (): Promise<CreativeWork[]> => {
+  const { data, error } = await supabase
+    .from("creative_works" as any)
+    .select("*")
+    .order("work_date", { ascending: false });
+  if (error || !data) { console.error("Error fetching creative works:", error); return []; }
+  return (data as any[]).map(mapCreative);
+};
+
+/** Upload a file with progress; onProgress reports 0..100. */
+export const uploadCreativeFile = async (
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<string | null> => {
+  try {
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    // supabase-js v2 does not expose upload progress; simulate to keep UI responsive.
+    let fake = 5;
+    const timer = onProgress
+      ? setInterval(() => {
+          fake = Math.min(90, fake + Math.random() * 10);
+          onProgress(fake);
+        }, 250)
+      : null;
+    const { error } = await supabase.storage.from(CREATIVE_BUCKET).upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
+    if (timer) clearInterval(timer);
+    if (error) { console.error("Upload error:", error); return null; }
+    // Try public URL first; fall back to signed URL for private buckets.
+    const pub = supabase.storage.from(CREATIVE_BUCKET).getPublicUrl(path).data.publicUrl;
+    let url: string = pub;
+    if (!pub || pub.endsWith("/")) {
+      const { data } = await supabase.storage
+        .from(CREATIVE_BUCKET)
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      url = data?.signedUrl || pub;
+    } else {
+      // Test if public URL is accessible; if bucket is private, fall back to signed URL.
+      const { data } = await supabase.storage
+        .from(CREATIVE_BUCKET)
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (data?.signedUrl) url = data.signedUrl;
+    }
+    onProgress?.(100);
+    return url;
+  } catch (err) {
+    console.error("uploadCreativeFile failed:", err);
+    return null;
+  }
+};
+
+export const addCreativeWork = async (work: Omit<CreativeWork, "id" | "createdAt">): Promise<CreativeWork | null> => {
+  const { data, error } = await supabase
+    .from("creative_works" as any)
+    .insert({
+      title: work.title,
+      writer: work.writer || null,
+      media: work.media || null,
+      work_date: work.workDate,
+      file_url: work.fileUrl,
+      file_type: work.fileType,
+      cover_url: work.coverUrl || null,
+    })
+    .select()
+    .single();
+  if (error || !data) { console.error("addCreativeWork error:", error); return null; }
+  return mapCreative(data);
+};
+
+export const deleteCreativeWork = async (id: string) => {
+  const { error } = await supabase.from("creative_works" as any).delete().eq("id", id);
+  if (error) console.error("deleteCreativeWork error:", error);
+};
+
