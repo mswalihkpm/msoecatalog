@@ -51,14 +51,20 @@ import { supabase } from "@/integrations/supabase/client";
 
 const categories: Category[] = [
   "Islamic",
-  "Novel",
-  "Biography",
-  "Science",
-  "English",
-  "Language",
-  "History",
   "General",
+  "Science",
+  "History",
+  "English",
+  "Autobiography",
+  "Biography",
+  "Travelogue",
+  "Arabic",
   "Poem",
+  "English Novel",
+  "Story",
+  "Novel",
+  "English Story",
+  "Language",
   "Others",
 ];
 

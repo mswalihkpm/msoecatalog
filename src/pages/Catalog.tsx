@@ -171,21 +171,23 @@ const Catalog = () => {
 
     const categoryOrder: Record<string, number> = {
       Islamic: 0,
-      Novel: 1,
-      "English Novel": 2,
-      Story: 3,
-      History: 4,
-      Biography: 5,
-      General: 6,
+      General: 1,
+      Science: 2,
+      History: 3,
+      English: 4,
+      Autobiography: 5,
+      Biography: 6,
       Travelogue: 7,
-      Poem: 8,
-      Science: 9,
-      Language: 10,
-      English: 11,
-      Arabic: 12,
-      Others: 14,
+      Arabic: 8,
+      Poem: 9,
+      "English Novel": 10,
+      Story: 11,
+      Novel: 12,
+      "English Story": 13,
+      Language: 14,
+      Others: 16,
     };
-    const catIndex = (c: string) => (c in categoryOrder ? categoryOrder[c] : 13);
+    const catIndex = (c: string) => (c in categoryOrder ? categoryOrder[c] : 15);
 
 
     return filtered.sort((a, b) => {
