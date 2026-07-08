@@ -7,7 +7,7 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PromoBanner } from "@/components/PromoBanner";
 import { getBooks, initializeData, getBookRequests, getAdminSettings } from "@/lib/store";
 import { Book } from "@/lib/types";
-import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight, CalendarDays, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -285,11 +285,17 @@ const Catalog = () => {
                   Discover your next great read. Browse our curated collection, 
                   leave reviews, and request books with ease.
                 </p>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-3">
                   <Link to="/categories">
                     <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-base px-6">
                       Browse Categories
                       <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/creativity">
+                    <Button size="lg" variant="outline" className="gap-2 text-base px-6 border-primary/40 hover:border-primary hover:bg-primary/5">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Creativity
                     </Button>
                   </Link>
                 </div>
