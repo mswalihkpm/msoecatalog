@@ -349,8 +349,20 @@ const Catalog = () => {
           </div>
         </section>
         {/* Promo Banner - mobile only */}
-        <section className="container px-4 pt-6 lg:hidden">
+        <section className="container px-4 pt-6 lg:hidden space-y-3">
           <PromoBanner />
+          <div className="flex gap-2">
+            <Link to="/categories" className="flex-1">
+              <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                Browse Categories <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/creativity" className="flex-1">
+              <Button variant="outline" className="w-full gap-2 border-primary/40 hover:border-primary">
+                <Sparkles className="h-4 w-4 text-primary" /> Creativity
+              </Button>
+            </Link>
+          </div>
         </section>
 
         {/* Catalogue Section */}
