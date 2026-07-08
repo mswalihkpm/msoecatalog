@@ -923,9 +923,9 @@ export const pointsForBook = (
   category: string | undefined,
   pages: string | number | undefined,
 ): number => {
-  const catRow = table[category || "Others"] || table.Others || {};
+  const catRow = (table[category || "Others"] || table.Others || {}) as Record<string, number>;
   const n = typeof pages === "number" ? pages : parseInt(String(pages || "0").replace(/[^\d]/g, ""), 10) || 0;
-  let tier: keyof typeof catRow;
+  let tier: string;
   if (n < 50) tier = "b50";
   else if (n < 100) tier = "b100";
   else if (n < 150) tier = "b150";
