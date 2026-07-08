@@ -12,6 +12,7 @@ import {
   Megaphone,
   Store as StoreIcon,
   Trophy,
+  Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ const AdminLayout = () => {
     { path: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
     { path: "/admin/posters", label: "Posters", icon: Megaphone },
     { path: "/admin/store", label: "Store", icon: StoreIcon },
+    { path: "/admin/creativity", label: "Creativity", icon: Sparkles },
     { path: "/admin/settings", label: "Settings", icon: Settings },
   ];
 

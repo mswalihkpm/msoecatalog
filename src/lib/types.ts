@@ -55,31 +55,49 @@ export interface BookRequest {
   status: "pending" | "approved" | "rejected";
 }
 
+/** Editable 14x7 scoring table. Keys are categories, values map page-range -> points. */
+export type PageTier = "b50" | "b100" | "b150" | "b200" | "b250" | "b300" | "a300";
+export type ScoringTable = Record<string, Record<PageTier, number>>;
+
+export const PAGE_TIER_LABELS: Record<PageTier, string> = {
+  b50: "Below 50",
+  b100: "Below 100",
+  b150: "Below 150",
+  b200: "Below 200",
+  b250: "Below 250",
+  b300: "Below 300",
+  a300: "Above 300",
+};
+
 export interface AdminSettings {
   username: string;
   password: string;
-  libraryOpenDay: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  libraryOpenDay: number;
   libraryOpenDate?: string;
   leaderboardNotice: string;
   leaderboardVisible: boolean;
   leaderboardVisibleUntil?: string;
   leaderboardFromDate?: string;
+  scoringTable?: ScoringTable;
+  reviewPointsDefault?: number;
 }
 
 export type Category =
   | "Islamic"
-  | "Novel"
+  | "General"
+  | "Science"
+  | "History"
+  | "English"
+  | "Autobiography"
+  | "Biography"
+  | "Travelogue"
+  | "Arabic"
+  | "Poem"
   | "English Novel"
   | "Story"
-  | "Biography"
-  | "Science"
-  | "English"
-  | "Arabic"
+  | "Novel"
+  | "English Story"
   | "Language"
-  | "History"
-  | "General"
-  | "Travelogue"
-  | "Poem"
   | "Others";
 
 export interface Student {
@@ -87,6 +105,9 @@ export interface Student {
   name: string;
   class: string;
   code: string;
+  houseName?: string;
+  fatherName?: string;
+  dateOfBirth?: string; // stored as DD/MM/YYYY
   createdAt: string;
   updatedAt: string;
 }
@@ -112,3 +133,14 @@ export interface LeaderboardSnapshot {
   createdAt: string;
 }
 
+export interface CreativeWork {
+  id: string;
+  title: string;
+  writer?: string;
+  media?: string;
+  workDate: string; // yyyy-MM-dd
+  fileUrl: string;
+  fileType: "image" | "pdf" | "video";
+  coverUrl?: string;
+  createdAt: string;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Trophy, Save, Trash2, Eye, EyeOff, CalendarDays, RefreshCw, MessageSquare, CheckCircle2, Info } from "lucide-react";
+import { Trophy, Save, Trash2, Eye, EyeOff, CalendarDays, RefreshCw, MessageSquare, CheckCircle2, Info, Grid3x3 } from "lucide-react";
 import {
   getBorrowRecords,
   updateBorrowRecord,
@@ -10,8 +10,12 @@ import {
   addLeaderboardSnapshot,
   deleteLeaderboardSnapshot,
   getBooks,
+  DEFAULT_SCORING_TABLE,
+  updateScoringTable,
+  updateReviewPointsDefault,
+  pointsForBook,
 } from "@/lib/store";
-import { BorrowRecord, Book, LeaderboardEntry, LeaderboardSnapshot, ReadStatus, AdminSettings as AdminSettingsT } from "@/lib/types";
+import { BorrowRecord, Book, LeaderboardEntry, LeaderboardSnapshot, ReadStatus, AdminSettings as AdminSettingsT, ScoringTable, PAGE_TIER_LABELS, PageTier } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,23 +34,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// Scoring
-const FULL_POINTS: Record<string, number> = {
-  Islamic: 10,
-  Science: 8, History: 8, General: 8, Biography: 8,
-  Travelogue: 7, English: 7, Language: 7, Arabic: 7,
-  Story: 4, Novel: 4, "English Novel": 4, Poem: 4,
-};
-const HALF_POINTS: Record<string, number> = {
-  Islamic: 4,
-  Science: 3, History: 3, General: 3, Biography: 3,
-  Travelogue: 2, English: 2, Language: 2, Arabic: 2,
-  Story: 1, Novel: 1, "English Novel": 1, Poem: 1,
-};
-const fullPointsFor = (cat?: string) => (cat && FULL_POINTS[cat] != null ? FULL_POINTS[cat] : 3);
-const halfPointsFor = (cat?: string) => (cat && HALF_POINTS[cat] != null ? HALF_POINTS[cat] : 1);
+const PAGE_TIERS: PageTier[] = ["b50", "b100", "b150", "b200", "b250", "b300", "a300"];
 
-export function computeEntries(records: BorrowRecord[], books: Book[]): LeaderboardEntry[] {
+/** Compute leaderboard entries using the editable scoring table + book pages. */
+export function computeEntries(
+  records: BorrowRecord[],
+  books: Book[],
+  scoringTable: ScoringTable,
+  reviewPointsDefault: number,
+): LeaderboardEntry[] {
   const bookMap = new Map(books.map((b) => [b.id, b]));
   const map = new Map<string, LeaderboardEntry>();
   for (const r of records) {
@@ -62,18 +58,17 @@ export function computeEntries(records: BorrowRecord[], books: Book[]): Leaderbo
     };
     if (!entry.className && r.borrowerClass) entry.className = r.borrowerClass;
     const book = bookMap.get(r.bookId);
-    const cat = book?.category;
+    const fullPts = pointsForBook(scoringTable, book?.category, book?.pages);
     if (r.readStatus === "full_read") {
       entry.fullRead += 1;
-      let p = fullPointsFor(cat);
-      if (r.reviewConducted) {
-        p = p * 2;
-        entry.reviewCount += 1;
-      }
-      entry.points += p;
+      entry.points += fullPts;
     } else if (r.readStatus === "half_read") {
       entry.halfRead += 1;
-      entry.points += halfPointsFor(cat);
+      entry.points += Math.round(fullPts / 2);
+    }
+    if (r.reviewConducted) {
+      entry.reviewCount += 1;
+      entry.points += reviewPointsDefault; // manual bonus, not doubled
     }
     map.set(key, entry);
   }
@@ -87,6 +82,8 @@ const LeaderboardAdmin = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [settings, setSettings] = useState<AdminSettingsT | null>(null);
   const [snapshots, setSnapshots] = useState<LeaderboardSnapshot[]>([]);
+  const [scoringTable, setScoringTable] = useState<ScoringTable>(DEFAULT_SCORING_TABLE);
+  const [reviewPts, setReviewPts] = useState<number>(10);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -102,17 +99,15 @@ const LeaderboardAdmin = () => {
     setBooks(bs);
     setSettings(st);
     setSnapshots(sn);
+    setScoringTable(st.scoringTable && Object.keys(st.scoringTable).length > 0 ? st.scoringTable : DEFAULT_SCORING_TABLE);
+    setReviewPts(st.reviewPointsDefault ?? 10);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
   const bookMap = useMemo(() => new Map(books.map((b) => [b.id, b])), [books]);
-  const categories = useMemo(() => {
-    const s = new Set<string>();
-    books.forEach((b) => b.category && s.add(b.category));
-    return Array.from(s).sort();
-  }, [books]);
+  const categories = useMemo(() => Object.keys(scoringTable).sort(), [scoringTable]);
 
   const filtered = useMemo(() => {
     return records.filter((r) => {
@@ -127,7 +122,10 @@ const LeaderboardAdmin = () => {
     });
   }, [records, bookMap, search, categoryFilter, statusFilter]);
 
-  const entries = useMemo(() => computeEntries(records, books), [records, books]);
+  const entries = useMemo(
+    () => computeEntries(records, books, scoringTable, reviewPts),
+    [records, books, scoringTable, reviewPts],
+  );
 
   const handleUpdateStatus = async (id: string, readStatus: ReadStatus) => {
     setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, readStatus } : r)));
@@ -138,6 +136,7 @@ const LeaderboardAdmin = () => {
   const handleToggleReview = async (id: string, val: boolean) => {
     setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, reviewConducted: val } : r)));
     await updateBorrowRecord(id, { reviewConducted: val } as any);
+    toast.success(val ? `+${reviewPts} review points awarded` : "Review bonus removed");
   };
 
   const handleSaveSnapshot = async () => {
@@ -155,7 +154,6 @@ const LeaderboardAdmin = () => {
   };
 
   const handleStartNew = async () => {
-    // Set from-date to today, snapshot is already saved separately
     const today = format(new Date(), "yyyy-MM-dd");
     await updateLeaderboardSettings({ leaderboardFromDate: today });
     setSettings((s) => (s ? { ...s, leaderboardFromDate: today } : s));
@@ -169,19 +167,39 @@ const LeaderboardAdmin = () => {
     await updateLeaderboardSettings(patch as any);
   };
 
+  const updateCell = (cat: string, tier: PageTier, val: string) => {
+    const num = parseInt(val, 10);
+    setScoringTable((prev) => ({
+      ...prev,
+      [cat]: { ...(prev[cat] || {}), [tier]: isNaN(num) ? 0 : num } as any,
+    }));
+  };
+
+  const saveTable = async () => {
+    await updateScoringTable(scoringTable);
+    await updateReviewPointsDefault(reviewPts);
+    toast.success("Scoring table saved");
+  };
+
+  const resetTable = () => {
+    setScoringTable(DEFAULT_SCORING_TABLE);
+    toast.info("Reset to defaults (not saved yet)");
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
         <Trophy className="h-7 w-7 text-primary" />
         <div>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold">Leaderboard Management</h1>
-          <p className="text-muted-foreground text-sm">Score borrow records and manage snapshots.</p>
+          <p className="text-muted-foreground text-sm">Score borrow records, edit the points table, and manage snapshots.</p>
         </div>
       </div>
 
       <Tabs defaultValue="records">
         <TabsList className="flex flex-wrap gap-1">
           <TabsTrigger value="records">Borrow Records</TabsTrigger>
+          <TabsTrigger value="table"><Grid3x3 className="h-4 w-4 mr-1" />Scoring Table</TabsTrigger>
           <TabsTrigger value="preview">Live Preview</TabsTrigger>
           <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
           <TabsTrigger value="settings">Visibility & Notice</TabsTrigger>
@@ -221,6 +239,7 @@ const LeaderboardAdmin = () => {
               {filtered.map((r) => {
                 const b = bookMap.get(r.bookId);
                 const status = r.readStatus || "not_read";
+                const pts = pointsForBook(scoringTable, b?.category, b?.pages);
                 return (
                   <Card key={r.id}>
                     <CardContent className="p-3 grid gap-3 md:grid-cols-[1fr_auto] items-start">
@@ -228,6 +247,10 @@ const LeaderboardAdmin = () => {
                         <p className="font-semibold text-foreground">{r.bookTitle}{r.bookVolume ? ` (Vol. ${r.bookVolume})` : ""}</p>
                         <p className="text-xs text-muted-foreground">
                           <Badge variant="outline" className="mr-1">{b?.category || "—"}</Badge>
+                          <Badge variant="outline" className="mr-1">{b?.pages || "? pages"}</Badge>
+                          <span className="text-primary font-mono">{pts}pt full / {Math.round(pts / 2)}pt half</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
                           Borrower: <span className="text-foreground font-medium">{r.borrowerName}</span>
                           {r.borrowerClass && <> · {r.borrowerClass}</>}
                         </p>
@@ -247,7 +270,7 @@ const LeaderboardAdmin = () => {
                         </Select>
                         <label className="flex items-center gap-2 text-xs">
                           <Switch checked={!!r.reviewConducted} onCheckedChange={(v) => handleToggleReview(r.id, v)} />
-                          Review conducted
+                          Review conducted (+{reviewPts})
                         </label>
                       </div>
                     </CardContent>
@@ -256,6 +279,66 @@ const LeaderboardAdmin = () => {
               })}
             </div>
           )}
+        </TabsContent>
+
+        {/* SCORING TABLE */}
+        <TabsContent value="table" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-serif text-base flex items-center gap-2"><Grid3x3 className="h-4 w-4" />Editable scoring table</CardTitle>
+              <CardDescription>
+                Full-read points per category × page range. Half-read = half of full-read (rounded).
+                Users see the updated instructions automatically.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Review-conducted bonus</Label>
+                  <Input
+                    type="number"
+                    className="w-32"
+                    value={reviewPts}
+                    onChange={(e) => setReviewPts(parseInt(e.target.value, 10) || 0)}
+                  />
+                </div>
+                <Button onClick={saveTable} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+                  <Save className="h-4 w-4" /> Save table
+                </Button>
+                <Button variant="outline" onClick={resetTable}>Reset to defaults</Button>
+              </div>
+
+              <div className="overflow-x-auto rounded-md border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-primary/10">
+                    <tr>
+                      <th className="text-left p-2 sticky left-0 bg-primary/10">Category</th>
+                      {PAGE_TIERS.map((t) => (
+                        <th key={t} className="p-2 text-xs font-semibold">{PAGE_TIER_LABELS[t]}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys(scoringTable).map((cat) => (
+                      <tr key={cat} className="border-t border-border">
+                        <td className="p-2 font-medium sticky left-0 bg-card">{cat}</td>
+                        {PAGE_TIERS.map((t) => (
+                          <td key={t} className="p-1">
+                            <Input
+                              type="number"
+                              className="h-8 w-16 text-center"
+                              value={scoringTable[cat]?.[t] ?? 0}
+                              onChange={(e) => updateCell(cat, t, e.target.value)}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* PREVIEW */}
@@ -303,7 +386,6 @@ const LeaderboardAdmin = () => {
                   <RefreshCw className="h-4 w-4" /> Start new
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">"Start new" sets today as the new leaderboard's start date. Save a snapshot first if you want to keep the old scores.</p>
             </CardContent>
           </Card>
 
@@ -359,7 +441,6 @@ const LeaderboardAdmin = () => {
                 {settings?.leaderboardVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 Visibility
               </CardTitle>
-              <CardDescription>Show or hide the leaderboard to users. Optionally set an end date.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
@@ -395,27 +476,6 @@ const LeaderboardAdmin = () => {
                   </Button>
                 )}
               </div>
-
-              <div className="space-y-2">
-                <Label>Current leaderboard "from" date (optional)</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full max-w-xs justify-start", !settings?.leaderboardFromDate && "text-muted-foreground")}>
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {settings?.leaderboardFromDate ? format(new Date(settings.leaderboardFromDate), "MMMM d, yyyy") : "Not set"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={settings?.leaderboardFromDate ? new Date(settings.leaderboardFromDate) : undefined}
-                      onSelect={(d) => d && handleSettingChange({ leaderboardFromDate: format(d, "yyyy-MM-dd") })}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
             </CardContent>
           </Card>
 
@@ -437,18 +497,6 @@ const LeaderboardAdmin = () => {
               >
                 Save notice
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif text-base flex items-center gap-2"><Info className="h-4 w-4" /> Scoring rules</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm space-y-2 text-muted-foreground">
-              <p><strong className="text-foreground">Full read</strong>: Islamic 10 · Science/History/General/Biography 8 · Travelogue/English/Language/Arabic 7 · Story/Novel/English Novel/Poem 4.</p>
-              <p><strong className="text-foreground">Half read</strong>: Islamic 4 · Science/History/General/Biography 3 · Travelogue/English/Language/Arabic 2 · Story/Novel/English Novel/Poem 1.</p>
-              <p><strong className="text-foreground">Not read</strong>: 0.</p>
-              <p><strong className="text-foreground">Review conducted</strong> (only combined with Full read): doubles the full-read points.</p>
             </CardContent>
           </Card>
         </TabsContent>

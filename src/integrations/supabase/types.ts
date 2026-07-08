@@ -27,6 +27,8 @@ export type Database = {
           manager_password: string
           novel_notice: string
           password: string
+          review_points_default: number | null
+          scoring_table: Json | null
           updated_at: string
           username: string
         }
@@ -42,6 +44,8 @@ export type Database = {
           manager_password?: string
           novel_notice?: string
           password?: string
+          review_points_default?: number | null
+          scoring_table?: Json | null
           updated_at?: string
           username?: string
         }
@@ -57,6 +61,8 @@ export type Database = {
           manager_password?: string
           novel_notice?: string
           password?: string
+          review_points_default?: number | null
+          scoring_table?: Json | null
           updated_at?: string
           username?: string
         }
@@ -230,6 +236,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      creative_works: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          file_type: string
+          file_url: string
+          id: string
+          media: string | null
+          title: string
+          updated_at: string
+          work_date: string
+          writer: string | null
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          file_type: string
+          file_url: string
+          id?: string
+          media?: string | null
+          title: string
+          updated_at?: string
+          work_date?: string
+          writer?: string | null
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          media?: string | null
+          title?: string
+          updated_at?: string
+          work_date?: string
+          writer?: string | null
+        }
+        Relationships: []
       }
       leaderboard_snapshots: {
         Row: {
@@ -447,6 +492,9 @@ export type Database = {
           class: string
           code: string
           created_at: string
+          date_of_birth: string | null
+          father_name: string | null
+          house_name: string | null
           id: string
           name: string
           updated_at: string
@@ -455,6 +503,9 @@ export type Database = {
           class: string
           code?: string
           created_at?: string
+          date_of_birth?: string | null
+          father_name?: string | null
+          house_name?: string | null
           id?: string
           name: string
           updated_at?: string
@@ -463,6 +514,9 @@ export type Database = {
           class?: string
           code?: string
           created_at?: string
+          date_of_birth?: string | null
+          father_name?: string | null
+          house_name?: string | null
           id?: string
           name?: string
           updated_at?: string

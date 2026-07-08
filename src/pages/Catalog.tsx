@@ -7,7 +7,7 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PromoBanner } from "@/components/PromoBanner";
 import { getBooks, initializeData, getBookRequests, getAdminSettings } from "@/lib/store";
 import { Book } from "@/lib/types";
-import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight, CalendarDays, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -171,21 +171,23 @@ const Catalog = () => {
 
     const categoryOrder: Record<string, number> = {
       Islamic: 0,
-      Novel: 1,
-      "English Novel": 2,
-      Story: 3,
-      History: 4,
-      Biography: 5,
-      General: 6,
+      General: 1,
+      Science: 2,
+      History: 3,
+      English: 4,
+      Autobiography: 5,
+      Biography: 6,
       Travelogue: 7,
-      Poem: 8,
-      Science: 9,
-      Language: 10,
-      English: 11,
-      Arabic: 12,
-      Others: 14,
+      Arabic: 8,
+      Poem: 9,
+      "English Novel": 10,
+      Story: 11,
+      Novel: 12,
+      "English Story": 13,
+      Language: 14,
+      Others: 16,
     };
-    const catIndex = (c: string) => (c in categoryOrder ? categoryOrder[c] : 13);
+    const catIndex = (c: string) => (c in categoryOrder ? categoryOrder[c] : 15);
 
 
     return filtered.sort((a, b) => {
@@ -283,11 +285,17 @@ const Catalog = () => {
                   Discover your next great read. Browse our curated collection, 
                   leave reviews, and request books with ease.
                 </p>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-3">
                   <Link to="/categories">
                     <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-base px-6">
                       Browse Categories
                       <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/creativity">
+                    <Button size="lg" variant="outline" className="gap-2 text-base px-6 border-primary/40 hover:border-primary hover:bg-primary/5">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Creativity
                     </Button>
                   </Link>
                 </div>
@@ -341,8 +349,20 @@ const Catalog = () => {
           </div>
         </section>
         {/* Promo Banner - mobile only */}
-        <section className="container px-4 pt-6 lg:hidden">
+        <section className="container px-4 pt-6 lg:hidden space-y-3">
           <PromoBanner />
+          <div className="flex gap-2">
+            <Link to="/categories" className="flex-1">
+              <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                Browse Categories <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/creativity" className="flex-1">
+              <Button variant="outline" className="w-full gap-2 border-primary/40 hover:border-primary">
+                <Sparkles className="h-4 w-4 text-primary" /> Creativity
+              </Button>
+            </Link>
+          </div>
         </section>
 
         {/* Catalogue Section */}
