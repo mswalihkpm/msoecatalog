@@ -43,10 +43,19 @@ const StudentsManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "" });
+  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
   const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", class: "", code: "" });
+  const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+
+  // House / Father names must be entered WITHOUT spaces.
+  const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
+  const formatDob = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 8);
+    if (d.length <= 2) return d;
+    if (d.length <= 4) return `${d.slice(0,2)}/${d.slice(2)}`;
+    return `${d.slice(0,2)}/${d.slice(2,4)}/${d.slice(4)}`;
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -67,10 +76,21 @@ const StudentsManagement = () => {
       toast.error("Please enter a valid 3-digit code");
       return;
     }
+    if (/\s/.test(newStudent.houseName) || /\s/.test(newStudent.fatherName)) {
+      toast.error("House Name and Father's Name must be entered WITHOUT any space");
+      return;
+    }
 
-    await addStudent({ name: newStudent.name, class: newStudent.class, code: newStudent.code });
+    await addStudent({
+      name: newStudent.name,
+      class: newStudent.class,
+      code: newStudent.code,
+      houseName: newStudent.houseName || undefined,
+      fatherName: newStudent.fatherName || undefined,
+      dateOfBirth: newStudent.dateOfBirth || undefined,
+    });
     toast.success("Student added successfully");
-    setNewStudent({ name: "", class: "", code: "" });
+    setNewStudent({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
     setIsAddDialogOpen(false);
     loadStudents();
   };
@@ -85,8 +105,19 @@ const StudentsManagement = () => {
       toast.error("Please enter a valid 3-digit code");
       return;
     }
+    if (/\s/.test(editForm.houseName) || /\s/.test(editForm.fatherName)) {
+      toast.error("House Name and Father's Name must be entered WITHOUT any space");
+      return;
+    }
 
-    await updateStudent(editStudent.id, { name: editForm.name, class: editForm.class, code: editForm.code });
+    await updateStudent(editStudent.id, {
+      name: editForm.name,
+      class: editForm.class,
+      code: editForm.code,
+      houseName: editForm.houseName || undefined,
+      fatherName: editForm.fatherName || undefined,
+      dateOfBirth: editForm.dateOfBirth || undefined,
+    });
     toast.success("Student updated successfully");
     setEditStudent(null);
     loadStudents();
@@ -117,14 +148,24 @@ const StudentsManagement = () => {
           const name = String(row["Name"] || row["name"] || row["Student Name"] || row["student_name"] || "").trim();
           const studentClass = String(row["Class"] || row["class"] || row["Student Class"] || row["student_class"] || "").trim();
           const code = String(row["Code"] || row["code"] || row["Secret Code"] || row["secret_code"] || "000").trim();
+          const houseName = noSpace(String(row["House"] || row["HouseName"] || row["House Name"] || row["house_name"] || ""));
+          const fatherName = noSpace(String(row["Father"] || row["FatherName"] || row["Father Name"] || row["father_name"] || ""));
+          const dateOfBirth = formatDob(String(row["DOB"] || row["DateOfBirth"] || row["Date of Birth"] || row["date_of_birth"] || ""));
 
           if (name && studentClass) {
-            studentsToAdd.push({ name, class: studentClass, code: /^\d{3}$/.test(code) ? code : "000" });
+            studentsToAdd.push({
+              name,
+              class: studentClass,
+              code: /^\d{3}$/.test(code) ? code : "000",
+              houseName: houseName || undefined,
+              fatherName: fatherName || undefined,
+              dateOfBirth: dateOfBirth.length === 10 ? dateOfBirth : undefined,
+            });
           }
         }
 
         if (studentsToAdd.length === 0) {
-          toast.error("No valid students found. Ensure columns: Name, Class, Code");
+          toast.error("No valid students found. Ensure columns: Name, Class, Code (House, Father, DOB optional)");
           return;
         }
 
@@ -266,7 +307,32 @@ const StudentsManagement = () => {
                      maxLength={3}
                    />
                  </div>
-                <Button onClick={handleAddStudent} className="w-full">
+                 <div className="space-y-2">
+                   <Label>House Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+                   <Input
+                     placeholder="e.g. ALAMEEN"
+                     value={newStudent.houseName}
+                     onChange={(e) => setNewStudent({ ...newStudent, houseName: noSpace(e.target.value) })}
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label>Father's Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+                   <Input
+                     placeholder="e.g. ABDULLAH"
+                     value={newStudent.fatherName}
+                     onChange={(e) => setNewStudent({ ...newStudent, fatherName: noSpace(e.target.value) })}
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label>Date of Birth (DD/MM/YYYY)</Label>
+                   <Input
+                     placeholder="12/03/2009"
+                     value={newStudent.dateOfBirth}
+                     onChange={(e) => setNewStudent({ ...newStudent, dateOfBirth: formatDob(e.target.value) })}
+                     maxLength={10}
+                   />
+                 </div>
+                 <Button onClick={handleAddStudent} className="w-full">
                   Add Student
                 </Button>
               </div>
@@ -310,6 +376,31 @@ const StudentsManagement = () => {
                 maxLength={3}
               />
             </div>
+            <div className="space-y-2">
+              <Label>House Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+              <Input
+                placeholder="e.g. ALAMEEN"
+                value={editForm.houseName}
+                onChange={(e) => setEditForm({ ...editForm, houseName: noSpace(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Father's Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+              <Input
+                placeholder="e.g. ABDULLAH"
+                value={editForm.fatherName}
+                onChange={(e) => setEditForm({ ...editForm, fatherName: noSpace(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Date of Birth (DD/MM/YYYY)</Label>
+              <Input
+                placeholder="12/03/2009"
+                value={editForm.dateOfBirth}
+                onChange={(e) => setEditForm({ ...editForm, dateOfBirth: formatDob(e.target.value) })}
+                maxLength={10}
+              />
+            </div>
             <Button onClick={handleEditStudent} className="w-full">
               Save Changes
             </Button>
@@ -344,7 +435,7 @@ const StudentsManagement = () => {
           <Card className="mb-4 bg-muted/50">
             <CardContent className="py-3">
                <p className="text-sm text-muted-foreground">
-                 <strong>Bulk Upload Format:</strong> Excel file with columns: <Badge variant="secondary">Name</Badge>, <Badge variant="secondary">Class</Badge> and <Badge variant="secondary">Code</Badge>
+                 <strong>Bulk Upload Format:</strong> Excel columns: <Badge variant="secondary">Name</Badge>, <Badge variant="secondary">Class</Badge>, <Badge variant="secondary">Code</Badge> and optionally <Badge variant="secondary">House</Badge>, <Badge variant="secondary">Father</Badge>, <Badge variant="secondary">DOB</Badge> (DD/MM/YYYY). House & Father names must be entered <strong>without space</strong>.
                </p>
             </CardContent>
           </Card>
@@ -402,7 +493,14 @@ const StudentsManagement = () => {
                             size="sm"
                             onClick={() => {
                               setEditStudent(student);
-                              setEditForm({ name: student.name, class: student.class, code: student.code });
+                              setEditForm({
+                                name: student.name,
+                                class: student.class,
+                                code: student.code,
+                                houseName: student.houseName || "",
+                                fatherName: student.fatherName || "",
+                                dateOfBirth: student.dateOfBirth || "",
+                              });
                             }}
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
