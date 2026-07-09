@@ -331,7 +331,8 @@ const StudentsManagement = () => {
                      onChange={(e) => setNewStudent({ ...newStudent, dateOfBirth: formatDob(e.target.value) })}
                      maxLength={10}
                    />
-                <Button onClick={handleAddStudent} className="w-full">
+                 </div>
+                 <Button onClick={handleAddStudent} className="w-full">
                   Add Student
                 </Button>
               </div>
