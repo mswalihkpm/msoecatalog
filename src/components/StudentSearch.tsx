@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { searchStudents, verifyStudentCode } from "@/lib/store";
+import { ForgotPasscodeDialog } from "@/components/ForgotPasscodeDialog";
 import { Student } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -128,6 +129,26 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
             >
               {isVerifying ? "..." : "Verify"}
             </button>
+          </div>
+          <div className="flex justify-end">
+            <ForgotPasscodeDialog
+              defaultName={pendingStudent.name}
+              onContinue={(code) => {
+                setCodeInput(code);
+                // Auto-verify with the recovered / new code
+                setTimeout(() => {
+                  if (pendingStudent) {
+                    verifyStudentCode(pendingStudent.id, code).then((ok) => {
+                      if (ok) {
+                        onSelect(pendingStudent);
+                        setPendingStudent(null);
+                        setCodeInput("");
+                      }
+                    });
+                  }
+                }, 100);
+              }}
+            />
           </div>
         </div>
       ) : (
