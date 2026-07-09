@@ -76,10 +76,21 @@ const StudentsManagement = () => {
       toast.error("Please enter a valid 3-digit code");
       return;
     }
+    if (/\s/.test(newStudent.houseName) || /\s/.test(newStudent.fatherName)) {
+      toast.error("House Name and Father's Name must be entered WITHOUT any space");
+      return;
+    }
 
-    await addStudent({ name: newStudent.name, class: newStudent.class, code: newStudent.code });
+    await addStudent({
+      name: newStudent.name,
+      class: newStudent.class,
+      code: newStudent.code,
+      houseName: newStudent.houseName || undefined,
+      fatherName: newStudent.fatherName || undefined,
+      dateOfBirth: newStudent.dateOfBirth || undefined,
+    });
     toast.success("Student added successfully");
-    setNewStudent({ name: "", class: "", code: "" });
+    setNewStudent({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
     setIsAddDialogOpen(false);
     loadStudents();
   };
@@ -94,8 +105,19 @@ const StudentsManagement = () => {
       toast.error("Please enter a valid 3-digit code");
       return;
     }
+    if (/\s/.test(editForm.houseName) || /\s/.test(editForm.fatherName)) {
+      toast.error("House Name and Father's Name must be entered WITHOUT any space");
+      return;
+    }
 
-    await updateStudent(editStudent.id, { name: editForm.name, class: editForm.class, code: editForm.code });
+    await updateStudent(editStudent.id, {
+      name: editForm.name,
+      class: editForm.class,
+      code: editForm.code,
+      houseName: editForm.houseName || undefined,
+      fatherName: editForm.fatherName || undefined,
+      dateOfBirth: editForm.dateOfBirth || undefined,
+    });
     toast.success("Student updated successfully");
     setEditStudent(null);
     loadStudents();
@@ -126,14 +148,24 @@ const StudentsManagement = () => {
           const name = String(row["Name"] || row["name"] || row["Student Name"] || row["student_name"] || "").trim();
           const studentClass = String(row["Class"] || row["class"] || row["Student Class"] || row["student_class"] || "").trim();
           const code = String(row["Code"] || row["code"] || row["Secret Code"] || row["secret_code"] || "000").trim();
+          const houseName = noSpace(String(row["House"] || row["HouseName"] || row["House Name"] || row["house_name"] || ""));
+          const fatherName = noSpace(String(row["Father"] || row["FatherName"] || row["Father Name"] || row["father_name"] || ""));
+          const dateOfBirth = formatDob(String(row["DOB"] || row["DateOfBirth"] || row["Date of Birth"] || row["date_of_birth"] || ""));
 
           if (name && studentClass) {
-            studentsToAdd.push({ name, class: studentClass, code: /^\d{3}$/.test(code) ? code : "000" });
+            studentsToAdd.push({
+              name,
+              class: studentClass,
+              code: /^\d{3}$/.test(code) ? code : "000",
+              houseName: houseName || undefined,
+              fatherName: fatherName || undefined,
+              dateOfBirth: dateOfBirth.length === 10 ? dateOfBirth : undefined,
+            });
           }
         }
 
         if (studentsToAdd.length === 0) {
-          toast.error("No valid students found. Ensure columns: Name, Class, Code");
+          toast.error("No valid students found. Ensure columns: Name, Class, Code (House, Father, DOB optional)");
           return;
         }
 
