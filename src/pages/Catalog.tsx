@@ -7,11 +7,12 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PromoBanner } from "@/components/PromoBanner";
 import { getBooks, initializeData, getBookRequests, getAdminSettings } from "@/lib/store";
 import { Book } from "@/lib/types";
-import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight, CalendarDays, Sparkles } from "lucide-react";
+import { Library, BookOpen, TrendingUp, Star, ArrowRight, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import creativityLogo from "@/assets/creativity-logo.png.asset.json";
 
 const BOOKS_PER_PAGE = 40;
 const CATALOG_BROWSE_STATE_KEY = "catalogBrowseState";
@@ -294,7 +295,7 @@ const Catalog = () => {
                   </Link>
                   <Link to="/creativity">
                     <Button size="lg" variant="outline" className="gap-2 text-base px-6 border-primary/40 hover:border-primary hover:bg-primary/5">
-                      <Sparkles className="h-4 w-4 text-primary" />
+                      <img src={creativityLogo.url} alt="Creativity" className="h-5 w-5 object-contain" />
                       Creativity
                     </Button>
                   </Link>
@@ -359,7 +360,7 @@ const Catalog = () => {
             </Link>
             <Link to="/creativity" className="flex-1">
               <Button variant="outline" className="w-full gap-2 border-primary/40 hover:border-primary">
-                <Sparkles className="h-4 w-4 text-primary" /> Creativity
+                <img src={creativityLogo.url} alt="Creativity" className="h-5 w-5 object-contain" /> Creativity
               </Button>
             </Link>
           </div>
