@@ -43,10 +43,19 @@ const StudentsManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "" });
+  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
   const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", class: "", code: "" });
+  const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+
+  // House / Father names must be entered WITHOUT spaces.
+  const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
+  const formatDob = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 8);
+    if (d.length <= 2) return d;
+    if (d.length <= 4) return `${d.slice(0,2)}/${d.slice(2)}`;
+    return `${d.slice(0,2)}/${d.slice(2,4)}/${d.slice(4)}`;
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
