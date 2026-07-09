@@ -307,6 +307,30 @@ const StudentsManagement = () => {
                      maxLength={3}
                    />
                  </div>
+                 <div className="space-y-2">
+                   <Label>House Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+                   <Input
+                     placeholder="e.g. ALAMEEN"
+                     value={newStudent.houseName}
+                     onChange={(e) => setNewStudent({ ...newStudent, houseName: noSpace(e.target.value) })}
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label>Father's Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+                   <Input
+                     placeholder="e.g. ABDULLAH"
+                     value={newStudent.fatherName}
+                     onChange={(e) => setNewStudent({ ...newStudent, fatherName: noSpace(e.target.value) })}
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label>Date of Birth (DD/MM/YYYY)</Label>
+                   <Input
+                     placeholder="12/03/2009"
+                     value={newStudent.dateOfBirth}
+                     onChange={(e) => setNewStudent({ ...newStudent, dateOfBirth: formatDob(e.target.value) })}
+                     maxLength={10}
+                   />
                 <Button onClick={handleAddStudent} className="w-full">
                   Add Student
                 </Button>
@@ -370,6 +394,30 @@ const StudentsManagement = () => {
                 {students.length} students registered
               </CardDescription>
             </div>
+            <div className="space-y-2">
+              <Label>House Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+              <Input
+                placeholder="e.g. ALAMEEN"
+                value={editForm.houseName}
+                onChange={(e) => setEditForm({ ...editForm, houseName: noSpace(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Father's Name <span className="text-xs text-muted-foreground">(without space)</span></Label>
+              <Input
+                placeholder="e.g. ABDULLAH"
+                value={editForm.fatherName}
+                onChange={(e) => setEditForm({ ...editForm, fatherName: noSpace(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Date of Birth (DD/MM/YYYY)</Label>
+              <Input
+                placeholder="12/03/2009"
+                value={editForm.dateOfBirth}
+                onChange={(e) => setEditForm({ ...editForm, dateOfBirth: formatDob(e.target.value) })}
+                maxLength={10}
+              />
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -385,7 +433,7 @@ const StudentsManagement = () => {
           <Card className="mb-4 bg-muted/50">
             <CardContent className="py-3">
                <p className="text-sm text-muted-foreground">
-                 <strong>Bulk Upload Format:</strong> Excel file with columns: <Badge variant="secondary">Name</Badge>, <Badge variant="secondary">Class</Badge> and <Badge variant="secondary">Code</Badge>
+                 <strong>Bulk Upload Format:</strong> Excel columns: <Badge variant="secondary">Name</Badge>, <Badge variant="secondary">Class</Badge>, <Badge variant="secondary">Code</Badge> and optionally <Badge variant="secondary">House</Badge>, <Badge variant="secondary">Father</Badge>, <Badge variant="secondary">DOB</Badge> (DD/MM/YYYY). House & Father names must be entered <strong>without space</strong>.
                </p>
             </CardContent>
           </Card>
@@ -443,7 +491,14 @@ const StudentsManagement = () => {
                             size="sm"
                             onClick={() => {
                               setEditStudent(student);
-                              setEditForm({ name: student.name, class: student.class, code: student.code });
+                              setEditForm({
+                                name: student.name,
+                                class: student.class,
+                                code: student.code,
+                                houseName: student.houseName || "",
+                                fatherName: student.fatherName || "",
+                                dateOfBirth: student.dateOfBirth || "",
+                              });
                             }}
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
