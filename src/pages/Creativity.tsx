@@ -12,6 +12,7 @@ import { format, startOfDay, startOfWeek, startOfMonth, startOfYear, isAfter, pa
 import { getCreativeWorks } from "@/lib/store";
 import { CreativeWork } from "@/lib/types";
 import { Link } from "react-router-dom";
+import creativityLogo from "@/assets/creativity-logo.png.asset.json";
 
 type TimeFilter = "all" | "day" | "week" | "month" | "year";
 
@@ -82,7 +83,7 @@ const Creativity = () => {
             <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
           </Link>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10 text-primary"><Sparkles className="h-6 w-6" /></div>
+            <img src={creativityLogo.url} alt="Creativity" className="h-12 w-12 object-contain" />
             <div>
               <h1 className="font-serif text-2xl md:text-3xl font-bold text-foreground">Creativity Hub</h1>
               <p className="text-sm text-muted-foreground">Creative publications from our community</p>
