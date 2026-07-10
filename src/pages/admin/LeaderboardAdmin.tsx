@@ -30,6 +30,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,7 @@ export function computeEntries(
     }
     if (r.reviewConducted) {
       entry.reviewCount += 1;
-      entry.points += reviewPointsDefault; // manual bonus, not doubled
+      entry.points += (r.reviewPoints ?? reviewPointsDefault); // manual per-record bonus, not doubled
     }
     map.set(key, entry);
   }
@@ -89,6 +90,8 @@ const LeaderboardAdmin = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [snapName, setSnapName] = useState("");
+  const [reviewingRecord, setReviewingRecord] = useState<BorrowRecord | null>(null);
+  const [reviewPointInput, setReviewPointInput] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
@@ -133,10 +136,25 @@ const LeaderboardAdmin = () => {
     toast.success("Updated");
   };
 
-  const handleToggleReview = async (id: string, val: boolean) => {
-    setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, reviewConducted: val } : r)));
-    await updateBorrowRecord(id, { reviewConducted: val } as any);
-    toast.success(val ? `+${reviewPts} review points awarded` : "Review bonus removed");
+  const openReviewDialog = (r: BorrowRecord) => {
+    setReviewingRecord(r);
+    setReviewPointInput(String(r.reviewPoints ?? reviewPts));
+  };
+
+  const handleSaveReview = async () => {
+    if (!reviewingRecord) return;
+    const pts = parseInt(reviewPointInput, 10);
+    if (isNaN(pts) || pts < 0) { toast.error("Enter a valid points number"); return; }
+    setRecords((prev) => prev.map((r) => (r.id === reviewingRecord.id ? { ...r, reviewConducted: true, reviewPoints: pts } : r)));
+    await updateBorrowRecord(reviewingRecord.id, { reviewConducted: true, reviewPoints: pts } as any);
+    toast.success(`+${pts} review points awarded`);
+    setReviewingRecord(null);
+  };
+
+  const handleRemoveReview = async (id: string) => {
+    setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, reviewConducted: false, reviewPoints: undefined } : r)));
+    await updateBorrowRecord(id, { reviewConducted: false, reviewPoints: null } as any);
+    toast.success("Review bonus removed");
   };
 
   const handleSaveSnapshot = async () => {
@@ -268,10 +286,19 @@ const LeaderboardAdmin = () => {
                             <SelectItem value="full_read">Full read</SelectItem>
                           </SelectContent>
                         </Select>
-                        <label className="flex items-center gap-2 text-xs">
-                          <Switch checked={!!r.reviewConducted} onCheckedChange={(v) => handleToggleReview(r.id, v)} />
-                          Review conducted (+{reviewPts})
-                        </label>
+                        {r.reviewConducted ? (
+                          <div className="flex items-center gap-1">
+                            <Badge className="bg-primary text-primary-foreground gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> +{r.reviewPoints ?? reviewPts} pts
+                            </Badge>
+                            <Button size="sm" variant="ghost" onClick={() => openReviewDialog(r)} className="text-xs h-7 px-2">Edit</Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleRemoveReview(r.id)} className="text-xs h-7 px-2 text-destructive">Remove</Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => openReviewDialog(r)} className="gap-1 h-9">
+                            <MessageSquare className="h-3.5 w-3.5" /> Review conducted…
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -451,30 +478,47 @@ const LeaderboardAdmin = () => {
                 <Label className="cursor-pointer">Leaderboard visible to users</Label>
               </div>
 
-              <div className="space-y-2">
-                <Label>Show until date (optional)</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full max-w-xs justify-start", !settings?.leaderboardVisibleUntil && "text-muted-foreground")}>
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {settings?.leaderboardVisibleUntil ? format(new Date(settings.leaderboardVisibleUntil), "MMMM d, yyyy") : "No end date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={settings?.leaderboardVisibleUntil ? new Date(settings.leaderboardVisibleUntil) : undefined}
-                      onSelect={(d) => d && handleSettingChange({ leaderboardVisibleUntil: format(d, "yyyy-MM-dd") })}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                {settings?.leaderboardVisibleUntil && (
-                  <Button size="sm" variant="ghost" onClick={() => handleSettingChange({ leaderboardVisibleUntil: "" })}>
-                    Clear end date
-                  </Button>
-                )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Show from date (optional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start", !settings?.leaderboardVisibleFrom && "text-muted-foreground")}>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {settings?.leaderboardVisibleFrom ? format(new Date(settings.leaderboardVisibleFrom), "MMMM d, yyyy") : "No start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single"
+                        selected={settings?.leaderboardVisibleFrom ? new Date(settings.leaderboardVisibleFrom) : undefined}
+                        onSelect={(d) => d && handleSettingChange({ leaderboardVisibleFrom: format(d, "yyyy-MM-dd") })}
+                        initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                  {settings?.leaderboardVisibleFrom && (
+                    <Button size="sm" variant="ghost" onClick={() => handleSettingChange({ leaderboardVisibleFrom: "" })}>Clear start date</Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Show until date (optional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start", !settings?.leaderboardVisibleUntil && "text-muted-foreground")}>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {settings?.leaderboardVisibleUntil ? format(new Date(settings.leaderboardVisibleUntil), "MMMM d, yyyy") : "No end date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single"
+                        selected={settings?.leaderboardVisibleUntil ? new Date(settings.leaderboardVisibleUntil) : undefined}
+                        onSelect={(d) => d && handleSettingChange({ leaderboardVisibleUntil: format(d, "yyyy-MM-dd") })}
+                        initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                  {settings?.leaderboardVisibleUntil && (
+                    <Button size="sm" variant="ghost" onClick={() => handleSettingChange({ leaderboardVisibleUntil: "" })}>Clear end date</Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -501,6 +545,36 @@ const LeaderboardAdmin = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!reviewingRecord} onOpenChange={(o) => !o && setReviewingRecord(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Award review points</DialogTitle>
+          </DialogHeader>
+          {reviewingRecord && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">{reviewingRecord.borrowerName}</strong> — {reviewingRecord.bookTitle}
+              </p>
+              <div className="space-y-1.5">
+                <Label>Points to award</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={reviewPointInput}
+                  onChange={(e) => setReviewPointInput(e.target.value)}
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground">Default is {reviewPts}. Set any number the admin decides.</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewingRecord(null)}>Cancel</Button>
+            <Button onClick={handleSaveReview} className="bg-primary text-primary-foreground hover:bg-primary/90">Award points</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

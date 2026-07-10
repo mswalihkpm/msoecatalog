@@ -12,9 +12,11 @@ interface StudentSearchProps {
   onSelect: (student: Student) => void;
   placeholder?: string;
   selectedStudent?: Student | null;
+  /** When true, skip the passcode verification step (admin contexts). */
+  skipCodeVerify?: boolean;
 }
 
-export const StudentSearch = ({ onSelect, placeholder = "Search student...", selectedStudent }: StudentSearchProps) => {
+export const StudentSearch = ({ onSelect, placeholder = "Search student...", selectedStudent, skipCodeVerify = false }: StudentSearchProps) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Student[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -30,29 +32,28 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
         setIsOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
     const fetchResults = async () => {
-      if (query.trim().length < 1) {
-        setResults([]);
-        return;
-      }
-
+      if (query.trim().length < 1) { setResults([]); return; }
       setIsLoading(true);
       const students = await searchStudents(query);
       setResults(students);
       setIsLoading(false);
     };
-
     const debounce = setTimeout(fetchResults, 300);
     return () => clearTimeout(debounce);
   }, [query]);
 
   const handleSelect = (student: Student) => {
+    if (skipCodeVerify) {
+      onSelect(student);
+      setQuery(""); setResults([]); setIsOpen(false);
+      return;
+    }
     setPendingStudent(student);
     setCodeInput("");
     setQuery("");
@@ -62,21 +63,19 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
 
   const handleVerifyCode = async () => {
     if (!pendingStudent) return;
-    if (!/^\d{3}$/.test(codeInput)) {
-      toast.error("Please enter a valid 3-digit code");
+    if (!/^\d+$/.test(codeInput) || codeInput.length < 1) {
+      toast.error("Please enter your passcode");
       return;
     }
-
     setIsVerifying(true);
     const valid = await verifyStudentCode(pendingStudent.id, codeInput);
     setIsVerifying(false);
-
     if (valid) {
       onSelect(pendingStudent);
       setPendingStudent(null);
       setCodeInput("");
     } else {
-      toast.error("Invalid secret code. Please try again.");
+      toast.error("Invalid passcode. Please try again.");
     }
   };
 
@@ -87,11 +86,7 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
           <ShieldCheck className="h-4 w-4 text-primary" />
           <span className="font-medium">{selectedStudent.name}</span>
           <Badge variant="secondary" className="ml-auto">{selectedStudent.class}</Badge>
-          <button
-            type="button"
-            onClick={() => onSelect(null as unknown as Student)}
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
+          <button type="button" onClick={() => onSelect(null as unknown as Student)} className="text-xs text-muted-foreground hover:text-foreground">
             Change
           </button>
         </div>
@@ -101,11 +96,7 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
             <User className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">{pendingStudent.name}</span>
             <Badge variant="secondary" className="ml-auto">{pendingStudent.class}</Badge>
-            <button
-              type="button"
-              onClick={() => setPendingStudent(null)}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
+            <button type="button" onClick={() => setPendingStudent(null)} className="text-xs text-muted-foreground hover:text-foreground">
               Change
             </button>
           </div>
@@ -114,17 +105,16 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
               type="password"
               inputMode="numeric"
               autoComplete="one-time-code"
-              placeholder="•••"
+              placeholder="Enter your passcode"
               value={codeInput}
-              onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 3))}
-              maxLength={3}
-              className="flex-1 font-mono text-center text-2xl tracking-[0.5em]"
+              onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, ''))}
+              className="flex-1 font-mono text-center text-lg tracking-widest"
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleVerifyCode(); } }}
             />
             <button
               type="button"
               onClick={handleVerifyCode}
-              disabled={isVerifying || codeInput.length !== 3}
+              disabled={isVerifying || codeInput.length < 1}
               className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
             >
               {isVerifying ? "..." : "Verify"}
@@ -135,15 +125,10 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
               defaultName={pendingStudent.name}
               onContinue={(code) => {
                 setCodeInput(code);
-                // Auto-verify with the recovered / new code
                 setTimeout(() => {
                   if (pendingStudent) {
                     verifyStudentCode(pendingStudent.id, code).then((ok) => {
-                      if (ok) {
-                        onSelect(pendingStudent);
-                        setPendingStudent(null);
-                        setCodeInput("");
-                      }
+                      if (ok) { onSelect(pendingStudent); setPendingStudent(null); setCodeInput(""); }
                     });
                   }
                 }, 100);
@@ -158,21 +143,15 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
             <Input
               placeholder={placeholder}
               value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setIsOpen(true);
-              }}
+              onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
               onFocus={() => setIsOpen(true)}
               className="pl-10"
             />
           </div>
-
           {isOpen && (query.length > 0) && (
             <Card className="absolute z-50 w-full mt-1 max-h-60 overflow-auto shadow-lg">
               {isLoading ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  Searching...
-                </div>
+                <div className="p-4 text-center text-muted-foreground">Searching...</div>
               ) : results.length > 0 ? (
                 <div className="p-1">
                   {results.map((student) => (
@@ -192,7 +171,7 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
                 </div>
               ) : (
                 <div className="p-4 text-center text-muted-foreground">
-                  No students found. Make sure students are added in admin panel.
+                  No students found.
                 </div>
               )}
             </Card>

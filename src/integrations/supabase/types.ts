@@ -17,10 +17,12 @@ export type Database = {
       admin_settings: {
         Row: {
           created_at: string
+          creativity_categories: Json
           id: string
           leaderboard_from_date: string | null
           leaderboard_notice: string | null
           leaderboard_visible: boolean
+          leaderboard_visible_from: string | null
           leaderboard_visible_until: string | null
           library_open_date: string | null
           library_open_day: number
@@ -34,10 +36,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          creativity_categories?: Json
           id?: string
           leaderboard_from_date?: string | null
           leaderboard_notice?: string | null
           leaderboard_visible?: boolean
+          leaderboard_visible_from?: string | null
           leaderboard_visible_until?: string | null
           library_open_date?: string | null
           library_open_day?: number
@@ -51,10 +55,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          creativity_categories?: Json
           id?: string
           leaderboard_from_date?: string | null
           leaderboard_notice?: string | null
           leaderboard_visible?: boolean
+          leaderboard_visible_from?: string | null
           leaderboard_visible_until?: string | null
           library_open_date?: string | null
           library_open_day?: number
@@ -198,6 +204,7 @@ export type Database = {
           read_status: string
           return_date: string
           review_conducted: boolean
+          review_points: number | null
         }
         Insert: {
           book_id: string
@@ -212,6 +219,7 @@ export type Database = {
           read_status?: string
           return_date: string
           review_conducted?: boolean
+          review_points?: number | null
         }
         Update: {
           book_id?: string
@@ -226,6 +234,7 @@ export type Database = {
           read_status?: string
           return_date?: string
           review_conducted?: boolean
+          review_points?: number | null
         }
         Relationships: [
           {
@@ -239,6 +248,7 @@ export type Database = {
       }
       creative_works: {
         Row: {
+          category: string | null
           cover_url: string | null
           created_at: string
           file_type: string
@@ -251,6 +261,7 @@ export type Database = {
           writer: string | null
         }
         Insert: {
+          category?: string | null
           cover_url?: string | null
           created_at?: string
           file_type: string
@@ -263,6 +274,7 @@ export type Database = {
           writer?: string | null
         }
         Update: {
+          category?: string | null
           cover_url?: string | null
           created_at?: string
           file_type?: string
@@ -496,7 +508,9 @@ export type Database = {
           father_name: string | null
           house_name: string | null
           id: string
+          migrated_from: string | null
           name: string
+          student_type: string
           updated_at: string
         }
         Insert: {
@@ -507,7 +521,9 @@ export type Database = {
           father_name?: string | null
           house_name?: string | null
           id?: string
+          migrated_from?: string | null
           name: string
+          student_type?: string
           updated_at?: string
         }
         Update: {
@@ -518,7 +534,9 @@ export type Database = {
           father_name?: string | null
           house_name?: string | null
           id?: string
+          migrated_from?: string | null
           name?: string
+          student_type?: string
           updated_at?: string
         }
         Relationships: []
@@ -528,7 +546,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      migrate_student: {
+        Args: { new_id: string; old_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

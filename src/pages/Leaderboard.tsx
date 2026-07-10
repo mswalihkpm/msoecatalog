@@ -51,9 +51,14 @@ const Leaderboard = () => {
   const isVisible = useMemo(() => {
     if (!settings) return true;
     if (!settings.leaderboardVisible) return false;
+    const now = new Date();
+    if (settings.leaderboardVisibleFrom) {
+      const from = parseISO(settings.leaderboardVisibleFrom);
+      if (now < from) return false;
+    }
     if (settings.leaderboardVisibleUntil) {
       const until = parseISO(settings.leaderboardVisibleUntil);
-      if (isAfter(new Date(), until)) return false;
+      if (isAfter(now, until)) return false;
     }
     return true;
   }, [settings]);

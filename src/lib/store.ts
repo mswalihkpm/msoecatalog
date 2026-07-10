@@ -380,6 +380,7 @@ export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
     isReturned: record.is_returned,
     readStatus: (record.read_status as ReadStatus) || "not_read",
     reviewConducted: !!record.review_conducted,
+    reviewPoints: record.review_points ?? undefined,
   }));
 };
 
@@ -439,6 +440,7 @@ export const updateBorrowRecord = async (id: string, updates: Partial<BorrowReco
   if (updates.isReturned !== undefined) dbUpdates.is_returned = updates.isReturned;
   if ((updates as any).readStatus !== undefined) dbUpdates.read_status = (updates as any).readStatus;
   if ((updates as any).reviewConducted !== undefined) dbUpdates.review_conducted = (updates as any).reviewConducted;
+  if ((updates as any).reviewPoints !== undefined) dbUpdates.review_points = (updates as any).reviewPoints;
 
   const { data: record } = await supabase
     .from("borrow_records")
@@ -626,9 +628,11 @@ export const getAdminSettings = async (): Promise<AdminSettings> => {
     leaderboardNotice: (data as any).leaderboard_notice || "",
     leaderboardVisible: (data as any).leaderboard_visible ?? true,
     leaderboardVisibleUntil: (data as any).leaderboard_visible_until || undefined,
+    leaderboardVisibleFrom: (data as any).leaderboard_visible_from || undefined,
     leaderboardFromDate: (data as any).leaderboard_from_date || undefined,
     scoringTable: (data as any).scoring_table || undefined,
     reviewPointsDefault: (data as any).review_points_default ?? 10,
+    creativityCategories: Array.isArray((data as any).creativity_categories) ? (data as any).creativity_categories : [],
   };
 };
 
@@ -657,15 +661,30 @@ export const updateAdminPassword = async (newPassword: string) => {
 };
 
 export const updateLeaderboardSettings = async (
-  updates: Partial<Pick<AdminSettings, "leaderboardNotice" | "leaderboardVisible" | "leaderboardVisibleUntil" | "leaderboardFromDate">>,
+  updates: Partial<Pick<AdminSettings, "leaderboardNotice" | "leaderboardVisible" | "leaderboardVisibleUntil" | "leaderboardVisibleFrom" | "leaderboardFromDate">>,
 ) => {
   const db: Record<string, unknown> = {};
   if (updates.leaderboardNotice !== undefined) db.leaderboard_notice = updates.leaderboardNotice;
   if (updates.leaderboardVisible !== undefined) db.leaderboard_visible = updates.leaderboardVisible;
   if (updates.leaderboardVisibleUntil !== undefined) db.leaderboard_visible_until = updates.leaderboardVisibleUntil || null;
+  if (updates.leaderboardVisibleFrom !== undefined) db.leaderboard_visible_from = updates.leaderboardVisibleFrom || null;
   if (updates.leaderboardFromDate !== undefined) db.leaderboard_from_date = updates.leaderboardFromDate || null;
   const { error } = await supabase.from("admin_settings").update(db as any).eq("username", "msoelib");
   if (error) console.error("Error updating leaderboard settings:", error);
+};
+
+export const updateCreativityCategories = async (categories: string[]) => {
+  const { error } = await supabase
+    .from("admin_settings")
+    .update({ creativity_categories: categories } as any)
+    .eq("username", "msoelib");
+  if (error) console.error("Error updating creativity categories:", error);
+};
+
+export const migrateStudentAccount = async (oldId: string, newId: string): Promise<{ ok: boolean; error?: string }> => {
+  const { error } = await supabase.rpc("migrate_student" as any, { old_id: oldId, new_id: newId } as any);
+  if (error) { console.error("migrate_student error:", error); return { ok: false, error: error.message }; }
+  return { ok: true };
 };
 
 export const validateAdmin = async (username: string, password: string): Promise<boolean> => {
@@ -713,10 +732,12 @@ const mapStudent = (student: any): Student => ({
   id: student.id,
   name: student.name,
   class: student.class,
-  code: student.code || '000',
+  code: student.code || '',
   houseName: student.house_name || undefined,
   fatherName: student.father_name || undefined,
   dateOfBirth: student.date_of_birth || undefined,
+  studentType: (student.student_type as any) || "new",
+  migratedFrom: student.migrated_from || undefined,
   createdAt: student.created_at,
   updatedAt: student.updated_at,
 });
@@ -946,6 +967,7 @@ const mapCreative = (row: any): CreativeWork => ({
   title: row.title,
   writer: row.writer || undefined,
   media: row.media || undefined,
+  category: row.category || undefined,
   workDate: row.work_date,
   fileUrl: row.file_url,
   fileType: row.file_type,
@@ -1015,6 +1037,7 @@ export const addCreativeWork = async (work: Omit<CreativeWork, "id" | "createdAt
       title: work.title,
       writer: work.writer || null,
       media: work.media || null,
+      category: work.category || null,
       work_date: work.workDate,
       file_url: work.fileUrl,
       file_type: work.fileType,
