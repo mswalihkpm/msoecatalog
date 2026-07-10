@@ -364,7 +364,7 @@ const StudentsManagement = () => {
 
       {/* Edit Student Dialog */}
       <Dialog open={!!editStudent} onOpenChange={(open) => { if (!open) setEditStudent(null); }}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
