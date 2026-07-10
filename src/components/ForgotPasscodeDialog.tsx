@@ -71,7 +71,7 @@ export const ForgotPasscodeDialog = ({ trigger, defaultName, onContinue }: Props
   };
 
   const saveNewCode = async () => {
-    if (!/^\d{3}$/.test(newCode)) { toast.error("Enter a 3-digit code"); return; }
+    if (!/^\d+$/.test(newCode) || newCode.length < 1) { toast.error("Enter a numeric passcode"); return; }
     if (!recovered?.studentId) { toast.error("Can't update — contact admin"); return; }
     setBusy(true);
     await updateStudent(recovered.studentId, { code: newCode });
@@ -156,12 +156,11 @@ export const ForgotPasscodeDialog = ({ trigger, defaultName, onContinue }: Props
         {step === "change" && (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>New passcode (3 digits)</Label>
+              <Label>New passcode (numbers only)</Label>
               <Input
-                placeholder="e.g. 456"
+                placeholder="e.g. 4569"
                 value={newCode}
-                maxLength={3}
-                onChange={(e) => setNewCode(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                onChange={(e) => setNewCode(e.target.value.replace(/\D/g, ""))}
               />
             </div>
             <DialogFooter>
