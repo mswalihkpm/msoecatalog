@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sparkles, Search, ArrowLeft, FileText, Image as ImageIcon, Video, Play, User, CalendarDays } from "lucide-react";
 import { format, startOfDay, startOfWeek, startOfMonth, startOfYear, isAfter, parseISO } from "date-fns";
-import { getCreativeWorks } from "@/lib/store";
+import { getCreativeWorks, getAdminSettings } from "@/lib/store";
 import { CreativeWork } from "@/lib/types";
 import { Link } from "react-router-dom";
 import creativityLogo from "@/assets/creativity-logo.png.asset.json";
@@ -20,6 +20,8 @@ const iconFor = (t: string) => t === "pdf" ? <FileText className="h-5 w-5" /> : 
 
 const Creativity = () => {
   const [works, setWorks] = useState<CreativeWork[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [searchBy, setSearchBy] = useState<"all" | "title" | "writer" | "media" | "date" | "month">("all");
@@ -27,7 +29,11 @@ const Creativity = () => {
   const [mediaFilter, setMediaFilter] = useState<string>("all");
   const [selected, setSelected] = useState<CreativeWork | null>(null);
 
-  useEffect(() => { getCreativeWorks().then(setWorks).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    Promise.all([getCreativeWorks(), getAdminSettings()])
+      .then(([w, s]) => { setWorks(w); setCategories(s.creativityCategories || []); })
+      .finally(() => setLoading(false));
+  }, []);
 
   const mediaOptions = useMemo(() => {
     const s = new Set<string>();
@@ -48,6 +54,7 @@ const Creativity = () => {
       out = out.filter((w) => isAfter(parseISO(w.workDate), from) || parseISO(w.workDate).getTime() === from.getTime());
     }
     if (mediaFilter !== "all") out = out.filter((w) => (w.media || "").toLowerCase() === mediaFilter.toLowerCase());
+    if (categoryFilter !== "all") out = out.filter((w) => (w.category || "") === categoryFilter);
 
     const query = q.trim().toLowerCase();
     if (query) {
@@ -92,7 +99,7 @@ const Creativity = () => {
         </div>
 
         {/* Filters */}
-        <div className="grid gap-3 sm:grid-cols-4 mb-4">
+        <div className="grid gap-3 sm:grid-cols-5 mb-4">
           <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -101,6 +108,13 @@ const Creativity = () => {
               <SelectItem value="week">This week</SelectItem>
               <SelectItem value="month">This month</SelectItem>
               <SelectItem value="year">This year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={mediaFilter} onValueChange={setMediaFilter}>
@@ -160,7 +174,10 @@ const Creativity = () => {
                     <p className="text-xs font-semibold truncate">{w.title}</p>
                     {w.writer && <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1"><User className="h-2.5 w-2.5" />{w.writer}</p>}
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1"><CalendarDays className="h-2.5 w-2.5" />{format(parseISO(w.workDate), "MMM d, yyyy")}</p>
-                    {w.media && <Badge variant="secondary" className="text-[9px] px-1">{w.media}</Badge>}
+                    <div className="flex flex-wrap gap-1">
+                      {w.category && <Badge className="text-[9px] px-1 bg-primary/70 text-primary-foreground">{w.category}</Badge>}
+                      {w.media && <Badge variant="secondary" className="text-[9px] px-1">{w.media}</Badge>}
+                    </div>
                   </CardContent>
                 </Card>
               </button>
