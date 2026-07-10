@@ -124,7 +124,7 @@ const BookDetail = () => {
     }
     if (!book) return;
 
-    const maxSlots = book.isBorrowed ? 4 : 3;
+    const maxSlots = 2;
     if (pendingCount >= maxSlots) {
       toast.error(`Maximum ${maxSlots} requests allowed for this book. Please try later.`);
       return;
@@ -197,9 +197,9 @@ const BookDetail = () => {
           <span>Back to Browse</span>
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-5 lg:grid-cols-3 gap-3 md:gap-8">
           {/* Left Column - Cover Image */}
-          <div className="animate-fade-in">
+          <div className="col-span-2 lg:col-span-1 animate-fade-in">
             <div className="relative rounded-xl overflow-hidden border-2 border-primary/20 shadow-teal">
               {book.coverImage ? (
                 <img
@@ -219,21 +219,21 @@ const BookDetail = () => {
           </div>
 
           {/* Middle Column - Book Info */}
-          <div className="lg:col-span-2 space-y-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <div className="col-span-3 lg:col-span-2 space-y-4 md:space-y-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
             {/* Badges */}
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="bg-primary text-primary-foreground font-semibold uppercase text-xs px-4 py-1.5">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              <Badge className="bg-primary text-primary-foreground font-semibold uppercase text-[10px] md:text-xs px-2 md:px-4 py-1 md:py-1.5">
                 {book.category}
               </Badge>
               {book.volume && (
-                <Badge variant="outline" className="border-primary/30 text-foreground">
-                  Volume {book.volume}
+                <Badge variant="outline" className="border-primary/30 text-foreground text-[10px] md:text-xs">
+                  Vol. {book.volume}
                 </Badge>
               )}
-              <Badge 
-                className={`font-semibold text-xs px-4 py-1.5 ${
-                  book.isBorrowed 
-                    ? "bg-destructive text-destructive-foreground" 
+              <Badge
+                className={`font-semibold text-[10px] md:text-xs px-2 md:px-4 py-1 md:py-1.5 ${
+                  book.isBorrowed
+                    ? "bg-destructive text-destructive-foreground"
                     : "bg-secondary text-secondary-foreground"
                 }`}
               >
@@ -241,72 +241,65 @@ const BookDetail = () => {
               </Badge>
             </div>
 
-            {/* Title & Author */}
-            <div>
+            {/* Title & Author - hidden on mobile, shown below */}
+            <div className="hidden md:block">
               <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-2">
                 {book.title}
               </h1>
               <p className="text-lg text-muted-foreground">by {book.author}</p>
             </div>
 
-            {/* Description */}
-            <div>
-              <h2 className="font-serif text-lg font-semibold mb-2 text-foreground">Description</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {book.description || "No description available for this book."}
-              </p>
-            </div>
-
-            {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Details Grid — 2x2 tiles on all sizes */}
+            <div className="grid grid-cols-2 gap-2 md:gap-4">
               {book.publication && (
                 <Card className="bg-muted/30 border-primary/10">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Building className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Publisher</p>
-                      <p className="font-semibold text-foreground">{book.publication}</p>
+                  <CardContent className="p-2.5 md:p-4 flex items-center gap-2 md:gap-3">
+                    <Building className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-wide">Publisher</p>
+                      <p className="font-semibold text-foreground text-xs md:text-sm truncate">{book.publication}</p>
                     </div>
                   </CardContent>
                 </Card>
               )}
               <Card className="bg-muted/30 border-primary/10">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <Hash className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">ISBN</p>
-                    <p className="font-semibold text-foreground">{book.numberCode}</p>
+                <CardContent className="p-2.5 md:p-4 flex items-center gap-2 md:gap-3">
+                  <Hash className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-wide">ISBN</p>
+                    <p className="font-semibold text-foreground text-xs md:text-sm truncate">{book.numberCode}</p>
                   </div>
                 </CardContent>
               </Card>
               {book.pages && (
                 <Card className="bg-muted/30 border-primary/10">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Pages</p>
-                      <p className="font-semibold text-foreground">{book.pages}</p>
+                  <CardContent className="p-2.5 md:p-4 flex items-center gap-2 md:gap-3">
+                    <FileText className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-wide">Pages</p>
+                      <p className="font-semibold text-foreground text-xs md:text-sm">{book.pages}</p>
                     </div>
                   </CardContent>
                 </Card>
               )}
               <Card className="bg-muted/30 border-primary/10">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <BookOpen className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Copies</p>
-                    <p className="font-semibold text-foreground">1</p>
+                <CardContent className="p-2.5 md:p-4 flex items-center gap-2 md:gap-3">
+                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] md:text-xs text-muted-foreground uppercase tracking-wide">Total Copies</p>
+                    <p className="font-semibold text-foreground text-xs md:text-sm">1</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Tags */}
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">Tags:</span>
-              <Badge variant="outline" className="text-xs">#{book.category.toLowerCase()}</Badge>
-              <Badge variant="outline" className="text-xs">#{book.title.split(' ')[0].toLowerCase()}</Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-muted-foreground text-xs md:text-sm">Tags:</span>
+              <Badge variant="outline" className="text-[10px] md:text-xs">#{book.category.toLowerCase()}</Badge>
+              <Badge variant="outline" className="text-[10px] md:text-xs">#{book.title.split(' ')[0].toLowerCase()}</Badge>
             </div>
+
 
             {/* Request Button */}
             {book.isBorrowed ? (
@@ -354,7 +347,7 @@ const BookDetail = () => {
                 )}
 
                 {(() => {
-                  const maxSlots = book.isBorrowed ? 4 : 3;
+                  const maxSlots = 2;
                   const slotsLeft = Math.max(0, maxSlots - pendingCount);
                   return pendingCount >= maxSlots ? (
                   <Card className="bg-destructive/10 border-destructive/20">
