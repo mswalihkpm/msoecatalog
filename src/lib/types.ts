@@ -39,6 +39,7 @@ export interface BorrowRecord {
   isReturned: boolean;
   readStatus?: ReadStatus;
   reviewConducted?: boolean;
+  reviewPoints?: number;
 }
 
 
@@ -80,6 +81,8 @@ export interface AdminSettings {
   leaderboardFromDate?: string;
   scoringTable?: ScoringTable;
   reviewPointsDefault?: number;
+  leaderboardVisibleFrom?: string;
+  creativityCategories?: string[];
 }
 
 export type Category =
@@ -100,6 +103,8 @@ export type Category =
   | "Language"
   | "Others";
 
+export type StudentType = "old" | "new";
+
 export interface Student {
   id: string;
   name: string;
@@ -108,11 +113,17 @@ export interface Student {
   houseName?: string;
   fatherName?: string;
   dateOfBirth?: string; // stored as DD/MM/YYYY
+  studentType?: StudentType;
+  migratedFrom?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export type ReadStatus = "not_read" | "half_read" | "full_read";
+
+export interface BorrowRecordExtra {
+  reviewPoints?: number; // per-record custom bonus
+}
 
 export interface LeaderboardEntry {
   name: string;
@@ -138,6 +149,7 @@ export interface CreativeWork {
   title: string;
   writer?: string;
   media?: string;
+  category?: string;
   workDate: string; // yyyy-MM-dd
   fileUrl: string;
   fileType: "image" | "pdf" | "video";
