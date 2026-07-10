@@ -545,6 +545,36 @@ const LeaderboardAdmin = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!reviewingRecord} onOpenChange={(o) => !o && setReviewingRecord(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Award review points</DialogTitle>
+          </DialogHeader>
+          {reviewingRecord && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">{reviewingRecord.borrowerName}</strong> — {reviewingRecord.bookTitle}
+              </p>
+              <div className="space-y-1.5">
+                <Label>Points to award</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={reviewPointInput}
+                  onChange={(e) => setReviewPointInput(e.target.value)}
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground">Default is {reviewPts}. Set any number the admin decides.</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewingRecord(null)}>Cancel</Button>
+            <Button onClick={handleSaveReview} className="bg-primary text-primary-foreground hover:bg-primary/90">Award points</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

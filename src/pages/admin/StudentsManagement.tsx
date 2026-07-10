@@ -72,8 +72,8 @@ const StudentsManagement = () => {
       toast.error("Please fill in all fields");
       return;
     }
-    if (!newStudent.code.trim() || !/^\d{3}$/.test(newStudent.code)) {
-      toast.error("Please enter a valid 3-digit code");
+    if (!newStudent.code.trim() || !/^\d+$/.test(newStudent.code)) {
+      toast.error("Please enter a numeric passcode");
       return;
     }
     if (/\s/.test(newStudent.houseName) || /\s/.test(newStudent.fatherName)) {
@@ -101,8 +101,8 @@ const StudentsManagement = () => {
       toast.error("Please fill in all fields");
       return;
     }
-    if (!editForm.code.trim() || !/^\d{3}$/.test(editForm.code)) {
-      toast.error("Please enter a valid 3-digit code");
+    if (!editForm.code.trim() || !/^\d+$/.test(editForm.code)) {
+      toast.error("Please enter a numeric passcode");
       return;
     }
     if (/\s/.test(editForm.houseName) || /\s/.test(editForm.fatherName)) {
@@ -147,7 +147,7 @@ const StudentsManagement = () => {
         for (const row of jsonData as Record<string, unknown>[]) {
           const name = String(row["Name"] || row["name"] || row["Student Name"] || row["student_name"] || "").trim();
           const studentClass = String(row["Class"] || row["class"] || row["Student Class"] || row["student_class"] || "").trim();
-          const code = String(row["Code"] || row["code"] || row["Secret Code"] || row["secret_code"] || "000").trim();
+          const code = String(row["Code"] || row["code"] || row["Secret Code"] || row["secret_code"] || "").trim();
           const houseName = noSpace(String(row["House"] || row["HouseName"] || row["House Name"] || row["house_name"] || ""));
           const fatherName = noSpace(String(row["Father"] || row["FatherName"] || row["Father Name"] || row["father_name"] || ""));
           const dateOfBirth = formatDob(String(row["DOB"] || row["DateOfBirth"] || row["Date of Birth"] || row["date_of_birth"] || ""));
@@ -156,7 +156,7 @@ const StudentsManagement = () => {
             studentsToAdd.push({
               name,
               class: studentClass,
-              code: /^\d{3}$/.test(code) ? code : "000",
+              code: /^\d+$/.test(code) ? code : "0000",
               houseName: houseName || undefined,
               fatherName: fatherName || undefined,
               dateOfBirth: dateOfBirth.length === 10 ? dateOfBirth : undefined,
@@ -295,16 +295,15 @@ const StudentsManagement = () => {
                    />
                  </div>
                  <div className="space-y-2">
-                   <Label htmlFor="code">Secret Code (3 digits)</Label>
+                   <Label htmlFor="code">Passcode (numbers only, any length)</Label>
                    <Input
                      id="code"
-                     placeholder="e.g. 123"
+                     placeholder="e.g. 12345"
                      value={newStudent.code}
                      onChange={(e) => {
-                       const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                       const val = e.target.value.replace(/\D/g, '');
                        setNewStudent({ ...newStudent, code: val });
                      }}
-                     maxLength={3}
                    />
                  </div>
                  <div className="space-y-2">
@@ -365,15 +364,14 @@ const StudentsManagement = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Secret Code (3 digits)</Label>
+              <Label>Passcode (numbers only, any length)</Label>
               <Input
-                placeholder="e.g. 123"
+                placeholder="e.g. 12345"
                 value={editForm.code}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                  const val = e.target.value.replace(/\D/g, '');
                   setEditForm({ ...editForm, code: val });
                 }}
-                maxLength={3}
               />
             </div>
             <div className="space-y-2">
