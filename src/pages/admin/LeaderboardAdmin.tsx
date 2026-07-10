@@ -30,6 +30,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -477,30 +478,47 @@ const LeaderboardAdmin = () => {
                 <Label className="cursor-pointer">Leaderboard visible to users</Label>
               </div>
 
-              <div className="space-y-2">
-                <Label>Show until date (optional)</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full max-w-xs justify-start", !settings?.leaderboardVisibleUntil && "text-muted-foreground")}>
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {settings?.leaderboardVisibleUntil ? format(new Date(settings.leaderboardVisibleUntil), "MMMM d, yyyy") : "No end date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={settings?.leaderboardVisibleUntil ? new Date(settings.leaderboardVisibleUntil) : undefined}
-                      onSelect={(d) => d && handleSettingChange({ leaderboardVisibleUntil: format(d, "yyyy-MM-dd") })}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                {settings?.leaderboardVisibleUntil && (
-                  <Button size="sm" variant="ghost" onClick={() => handleSettingChange({ leaderboardVisibleUntil: "" })}>
-                    Clear end date
-                  </Button>
-                )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Show from date (optional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start", !settings?.leaderboardVisibleFrom && "text-muted-foreground")}>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {settings?.leaderboardVisibleFrom ? format(new Date(settings.leaderboardVisibleFrom), "MMMM d, yyyy") : "No start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single"
+                        selected={settings?.leaderboardVisibleFrom ? new Date(settings.leaderboardVisibleFrom) : undefined}
+                        onSelect={(d) => d && handleSettingChange({ leaderboardVisibleFrom: format(d, "yyyy-MM-dd") })}
+                        initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                  {settings?.leaderboardVisibleFrom && (
+                    <Button size="sm" variant="ghost" onClick={() => handleSettingChange({ leaderboardVisibleFrom: "" })}>Clear start date</Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Show until date (optional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start", !settings?.leaderboardVisibleUntil && "text-muted-foreground")}>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {settings?.leaderboardVisibleUntil ? format(new Date(settings.leaderboardVisibleUntil), "MMMM d, yyyy") : "No end date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single"
+                        selected={settings?.leaderboardVisibleUntil ? new Date(settings.leaderboardVisibleUntil) : undefined}
+                        onSelect={(d) => d && handleSettingChange({ leaderboardVisibleUntil: format(d, "yyyy-MM-dd") })}
+                        initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                  {settings?.leaderboardVisibleUntil && (
+                    <Button size="sm" variant="ghost" onClick={() => handleSettingChange({ leaderboardVisibleUntil: "" })}>Clear end date</Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
