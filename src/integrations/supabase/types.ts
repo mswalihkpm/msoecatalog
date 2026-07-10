@@ -204,6 +204,7 @@ export type Database = {
           read_status: string
           return_date: string
           review_conducted: boolean
+          review_points: number | null
         }
         Insert: {
           book_id: string
@@ -218,6 +219,7 @@ export type Database = {
           read_status?: string
           return_date: string
           review_conducted?: boolean
+          review_points?: number | null
         }
         Update: {
           book_id?: string
@@ -232,6 +234,7 @@ export type Database = {
           read_status?: string
           return_date?: string
           review_conducted?: boolean
+          review_points?: number | null
         }
         Relationships: [
           {
