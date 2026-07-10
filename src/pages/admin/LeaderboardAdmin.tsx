@@ -68,7 +68,7 @@ export function computeEntries(
     }
     if (r.reviewConducted) {
       entry.reviewCount += 1;
-      entry.points += reviewPointsDefault; // manual bonus, not doubled
+      entry.points += (r.reviewPoints ?? reviewPointsDefault); // manual per-record bonus, not doubled
     }
     map.set(key, entry);
   }
@@ -89,6 +89,8 @@ const LeaderboardAdmin = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [snapName, setSnapName] = useState("");
+  const [reviewingRecord, setReviewingRecord] = useState<BorrowRecord | null>(null);
+  const [reviewPointInput, setReviewPointInput] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
@@ -133,10 +135,25 @@ const LeaderboardAdmin = () => {
     toast.success("Updated");
   };
 
-  const handleToggleReview = async (id: string, val: boolean) => {
-    setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, reviewConducted: val } : r)));
-    await updateBorrowRecord(id, { reviewConducted: val } as any);
-    toast.success(val ? `+${reviewPts} review points awarded` : "Review bonus removed");
+  const openReviewDialog = (r: BorrowRecord) => {
+    setReviewingRecord(r);
+    setReviewPointInput(String(r.reviewPoints ?? reviewPts));
+  };
+
+  const handleSaveReview = async () => {
+    if (!reviewingRecord) return;
+    const pts = parseInt(reviewPointInput, 10);
+    if (isNaN(pts) || pts < 0) { toast.error("Enter a valid points number"); return; }
+    setRecords((prev) => prev.map((r) => (r.id === reviewingRecord.id ? { ...r, reviewConducted: true, reviewPoints: pts } : r)));
+    await updateBorrowRecord(reviewingRecord.id, { reviewConducted: true, reviewPoints: pts } as any);
+    toast.success(`+${pts} review points awarded`);
+    setReviewingRecord(null);
+  };
+
+  const handleRemoveReview = async (id: string) => {
+    setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, reviewConducted: false, reviewPoints: undefined } : r)));
+    await updateBorrowRecord(id, { reviewConducted: false, reviewPoints: null } as any);
+    toast.success("Review bonus removed");
   };
 
   const handleSaveSnapshot = async () => {
@@ -268,10 +285,19 @@ const LeaderboardAdmin = () => {
                             <SelectItem value="full_read">Full read</SelectItem>
                           </SelectContent>
                         </Select>
-                        <label className="flex items-center gap-2 text-xs">
-                          <Switch checked={!!r.reviewConducted} onCheckedChange={(v) => handleToggleReview(r.id, v)} />
-                          Review conducted (+{reviewPts})
-                        </label>
+                        {r.reviewConducted ? (
+                          <div className="flex items-center gap-1">
+                            <Badge className="bg-primary text-primary-foreground gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> +{r.reviewPoints ?? reviewPts} pts
+                            </Badge>
+                            <Button size="sm" variant="ghost" onClick={() => openReviewDialog(r)} className="text-xs h-7 px-2">Edit</Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleRemoveReview(r.id)} className="text-xs h-7 px-2 text-destructive">Remove</Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => openReviewDialog(r)} className="gap-1 h-9">
+                            <MessageSquare className="h-3.5 w-3.5" /> Review conducted…
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
