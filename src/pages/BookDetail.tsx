@@ -480,8 +480,21 @@ const BookDetail = () => {
           </div>
         </div>
 
-
-
+        {/* Title / Author / Description — full width card (shown prominently on mobile below the top grid) */}
+        <Card className="mt-6 md:mt-8 bg-card border-primary/10">
+          <CardContent className="p-4 md:p-6 space-y-3">
+            <div className="md:hidden">
+              <h1 className="font-serif text-2xl font-bold text-foreground leading-tight">{book.title}</h1>
+              <p className="text-sm text-muted-foreground">by {book.author}</p>
+            </div>
+            <div>
+              <h2 className="font-serif text-lg font-semibold mb-2 text-foreground">Description</h2>
+              <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
+                {book.description || "No description available for this book."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Separator className="my-12" />
 
