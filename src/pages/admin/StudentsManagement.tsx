@@ -33,10 +33,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Upload, Trash2, Search, Users, Pencil } from "lucide-react";
-import { getStudents, addStudent, deleteStudent, updateStudent, bulkAddStudents, bulkDeleteStudents } from "@/lib/store";
+import { Plus, Upload, Trash2, Search, Users, Pencil, ArrowRightLeft } from "lucide-react";
+import { getStudents, addStudent, deleteStudent, updateStudent, bulkAddStudents, bulkDeleteStudents, migrateStudentAccount } from "@/lib/store";
 import { Student } from "@/lib/types";
 import * as XLSX from "xlsx";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover as UIPopover, PopoverContent as UIPopoverContent, PopoverTrigger as UIPopoverTrigger } from "@/components/ui/popover";
 
 const StudentsManagement = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -47,6 +49,26 @@ const StudentsManagement = () => {
   const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+  const [migrationOldId, setMigrationOldId] = useState<string>("");
+  const [migrationOpen, setMigrationOpen] = useState(false);
+  const [migrationSearch, setMigrationSearch] = useState("");
+  const [migrationConfirmOpen, setMigrationConfirmOpen] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const oldStudents = useMemo(() => students.filter(s => s.studentType === "old"), [students]);
+  const selectedOld = useMemo(() => oldStudents.find(s => s.id === migrationOldId) || null, [oldStudents, migrationOldId]);
+
+  const runMigration = async () => {
+    if (!editStudent || !migrationOldId) return;
+    setMigrating(true);
+    const res = await migrateStudentAccount(migrationOldId, editStudent.id);
+    setMigrating(false);
+    if (!res.ok) { toast.error(`Migration failed: ${res.error || "unknown"}`); return; }
+    toast.success("Student account migrated successfully. All records have been transferred to the new account, and the old account has been deleted.");
+    setMigrationConfirmOpen(false);
+    setMigrationOldId("");
+    setEditStudent(null);
+    loadStudents();
+  };
 
   // House / Father names must be entered WITHOUT spaces.
   const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
