@@ -424,6 +424,80 @@ const StudentsManagement = () => {
             <Button onClick={handleEditStudent} className="w-full">
               Save Changes
             </Button>
+
+            {editStudent?.studentType === "new" && (
+              <Card className="border-primary/40 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ArrowRightLeft className="h-4 w-4 text-primary" /> Student Account Migration
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Merge an old student account into this new one. All borrow records, requests, reviews and profile data
+                    (passcode, house name, father's name, DOB) will transfer here — then the old account is deleted.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Select Old Student</Label>
+                    <UIPopover open={migrationOpen} onOpenChange={setMigrationOpen}>
+                      <UIPopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                          {selectedOld ? `${selectedOld.name} — ${selectedOld.class}` : "Search old students…"}
+                          <Search className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </UIPopoverTrigger>
+                      <UIPopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Type a name…" value={migrationSearch} onValueChange={setMigrationSearch} />
+                          <CommandList>
+                            <CommandEmpty>No old students found.</CommandEmpty>
+                            <CommandGroup>
+                              {oldStudents.slice(0, 100).map((s) => (
+                                <CommandItem key={s.id} value={`${s.name} ${s.class}`} onSelect={() => { setMigrationOldId(s.id); setMigrationOpen(false); }}>
+                                  <span className="font-medium mr-2">{s.name}</span>
+                                  <Badge variant="secondary">{s.class}</Badge>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </UIPopoverContent>
+                    </UIPopover>
+                  </div>
+                  {selectedOld && (
+                    <div className="p-3 rounded-md bg-background border border-border text-xs space-y-1">
+                      <p><strong>Name:</strong> {selectedOld.name}</p>
+                      <p><strong>Class:</strong> {selectedOld.class}</p>
+                      {selectedOld.houseName && <p><strong>House:</strong> {selectedOld.houseName}</p>}
+                      {selectedOld.fatherName && <p><strong>Father:</strong> {selectedOld.fatherName}</p>}
+                      {selectedOld.dateOfBirth && <p><strong>DOB:</strong> {selectedOld.dateOfBirth}</p>}
+                    </div>
+                  )}
+                  <AlertDialog open={migrationConfirmOpen} onOpenChange={setMigrationConfirmOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button disabled={!migrationOldId} className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                        <ArrowRightLeft className="h-4 w-4" /> Migrate Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Migrate this student account?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to migrate this student's account? All library records will be transferred
+                          to the new account, and the old account will be permanently deleted.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={migrating}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={runMigration} disabled={migrating}>
+                          {migrating ? "Migrating…" : "Confirm Migration"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </DialogContent>
       </Dialog>
