@@ -33,12 +33,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Upload, Trash2, Search, Users, Pencil, ArrowRightLeft } from "lucide-react";
-import { getStudents, addStudent, deleteStudent, updateStudent, bulkAddStudents, bulkDeleteStudents, migrateStudentAccount } from "@/lib/store";
+import { Plus, Upload, Trash2, Search, Users, Pencil } from "lucide-react";
+import { getStudents, addStudent, deleteStudent, updateStudent, bulkAddStudents, bulkDeleteStudents } from "@/lib/store";
 import { Student } from "@/lib/types";
 import * as XLSX from "xlsx";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover as UIPopover, PopoverContent as UIPopoverContent, PopoverTrigger as UIPopoverTrigger } from "@/components/ui/popover";
 
 const StudentsManagement = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -49,26 +47,6 @@ const StudentsManagement = () => {
   const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
-  const [migrationOldId, setMigrationOldId] = useState<string>("");
-  const [migrationOpen, setMigrationOpen] = useState(false);
-  const [migrationSearch, setMigrationSearch] = useState("");
-  const [migrationConfirmOpen, setMigrationConfirmOpen] = useState(false);
-  const [migrating, setMigrating] = useState(false);
-  const oldStudents = useMemo(() => students.filter(s => s.studentType === "old"), [students]);
-  const selectedOld = useMemo(() => oldStudents.find(s => s.id === migrationOldId) || null, [oldStudents, migrationOldId]);
-
-  const runMigration = async () => {
-    if (!editStudent || !migrationOldId) return;
-    setMigrating(true);
-    const res = await migrateStudentAccount(migrationOldId, editStudent.id);
-    setMigrating(false);
-    if (!res.ok) { toast.error(`Migration failed: ${res.error || "unknown"}`); return; }
-    toast.success("Student account migrated successfully. All records have been transferred to the new account, and the old account has been deleted.");
-    setMigrationConfirmOpen(false);
-    setMigrationOldId("");
-    setEditStudent(null);
-    loadStudents();
-  };
 
   // House / Father names must be entered WITHOUT spaces.
   const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
@@ -425,79 +403,6 @@ const StudentsManagement = () => {
               Save Changes
             </Button>
 
-            {editStudent?.studentType === "new" && (
-              <Card className="border-primary/40 bg-primary/5">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <ArrowRightLeft className="h-4 w-4 text-primary" /> Student Account Migration
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Merge an old student account into this new one. All borrow records, requests, reviews and profile data
-                    (passcode, house name, father's name, DOB) will transfer here — then the old account is deleted.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Select Old Student</Label>
-                    <UIPopover open={migrationOpen} onOpenChange={setMigrationOpen}>
-                      <UIPopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                          {selectedOld ? `${selectedOld.name} — ${selectedOld.class}` : "Search old students…"}
-                          <Search className="h-4 w-4 opacity-50" />
-                        </Button>
-                      </UIPopoverTrigger>
-                      <UIPopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Type a name…" value={migrationSearch} onValueChange={setMigrationSearch} />
-                          <CommandList>
-                            <CommandEmpty>No old students found.</CommandEmpty>
-                            <CommandGroup>
-                              {oldStudents.slice(0, 100).map((s) => (
-                                <CommandItem key={s.id} value={`${s.name} ${s.class}`} onSelect={() => { setMigrationOldId(s.id); setMigrationOpen(false); }}>
-                                  <span className="font-medium mr-2">{s.name}</span>
-                                  <Badge variant="secondary">{s.class}</Badge>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </UIPopoverContent>
-                    </UIPopover>
-                  </div>
-                  {selectedOld && (
-                    <div className="p-3 rounded-md bg-background border border-border text-xs space-y-1">
-                      <p><strong>Name:</strong> {selectedOld.name}</p>
-                      <p><strong>Class:</strong> {selectedOld.class}</p>
-                      {selectedOld.houseName && <p><strong>House:</strong> {selectedOld.houseName}</p>}
-                      {selectedOld.fatherName && <p><strong>Father:</strong> {selectedOld.fatherName}</p>}
-                      {selectedOld.dateOfBirth && <p><strong>DOB:</strong> {selectedOld.dateOfBirth}</p>}
-                    </div>
-                  )}
-                  <AlertDialog open={migrationConfirmOpen} onOpenChange={setMigrationConfirmOpen}>
-                    <AlertDialogTrigger asChild>
-                      <Button disabled={!migrationOldId} className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                        <ArrowRightLeft className="h-4 w-4" /> Migrate Account
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Migrate this student account?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to migrate this student's account? All library records will be transferred
-                          to the new account, and the old account will be permanently deleted.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel disabled={migrating}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={runMigration} disabled={migrating}>
-                          {migrating ? "Migrating…" : "Confirm Migration"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </DialogContent>
       </Dialog>
