@@ -53,8 +53,11 @@ import {
   deleteBookRequest,
   updateBook,
 } from "@/lib/store";
-import { Book, BorrowRecord, BookRequest } from "@/lib/types";
+import { Book, BorrowRecord, BookRequest, Student } from "@/lib/types";
 import { toast } from "sonner";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { StudentSearch } from "@/components/StudentSearch";
 
 const BorrowsManagement = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
@@ -70,6 +73,8 @@ const BorrowsManagement = () => {
   const [printToNum, setPrintToNum] = useState("");
   const [renewRecord, setRenewRecord] = useState<BorrowRecord | null>(null);
   const [renewDays, setRenewDays] = useState<string>("14");
+  const [bookPickerOpen, setBookPickerOpen] = useState(false);
+  const [selectedBorrower, setSelectedBorrower] = useState<Student | null>(null);
 
   const [formData, setFormData] = useState({
     bookId: "",
@@ -110,6 +115,7 @@ const BorrowsManagement = () => {
       returnDate: "",
     });
     setEditingRecord(null);
+    setSelectedBorrower(null);
   };
 
   const handleSubmit = async () => {
