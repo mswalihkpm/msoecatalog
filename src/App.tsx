@@ -24,10 +24,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import PostersManagement from "./pages/admin/PostersManagement";
 import StoreManagement from "./pages/admin/StoreManagement";
 import LeaderboardAdmin from "./pages/admin/LeaderboardAdmin";
-import CreativityAdmin from "./pages/admin/CreativityAdmin";
 import Store from "./pages/Store";
 import Leaderboard from "./pages/Leaderboard";
-import Creativity from "./pages/Creativity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,7 +52,6 @@ const AppContent = () => {
           <Route path="/categories" element={<Categories />} />
           <Route path="/store" element={<Store />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/creativity" element={<Creativity />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
@@ -63,7 +60,6 @@ const AppContent = () => {
             <Route path="reviews" element={<ReviewsManagement />} />
             <Route path="borrows" element={<BorrowsManagement />} />
             <Route path="leaderboard" element={<LeaderboardAdmin />} />
-            <Route path="creativity" element={<CreativityAdmin />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="posters" element={<PostersManagement />} />
             <Route path="store" element={<StoreManagement />} />
