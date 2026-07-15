@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import creativityLogo from "@/assets/creativity-logo.png.asset.json";
+
 
 const BOOKS_PER_PAGE = 40;
 const CATALOG_BROWSE_STATE_KEY = "catalogBrowseState";
@@ -293,12 +293,6 @@ const Catalog = () => {
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/creativity">
-                    <Button size="lg" variant="outline" className="gap-2 text-base px-6 border-primary/40 hover:border-primary hover:bg-primary/5">
-                      <img src={creativityLogo.url} alt="Creativity" className="h-5 w-5 object-contain" />
-                      Creativity
-                    </Button>
-                  </Link>
                 </div>
 
                 {/* Stats row */}
@@ -352,18 +346,11 @@ const Catalog = () => {
         {/* Promo Banner - mobile only */}
         <section className="container px-4 pt-6 lg:hidden space-y-3">
           <PromoBanner />
-          <div className="flex gap-2">
-            <Link to="/categories" className="flex-1">
-              <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                Browse Categories <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/creativity" className="flex-1">
-              <Button variant="outline" className="w-full gap-2 border-primary/40 hover:border-primary">
-                <img src={creativityLogo.url} alt="Creativity" className="h-5 w-5 object-contain" /> Creativity
-              </Button>
-            </Link>
-          </div>
+          <Link to="/categories">
+            <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+              Browse Categories <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </section>
 
         {/* Catalogue Section */}
