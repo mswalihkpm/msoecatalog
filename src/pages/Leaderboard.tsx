@@ -34,6 +34,7 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<LeaderboardEntry | null>(null);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [classFilter, setClassFilter] = useState<string>("all");
 
   useEffect(() => {
     Promise.all([getBorrowRecords(), getReviews(), getBooks(), getAdminSettings(), getLeaderboardSnapshots()])
@@ -77,9 +78,20 @@ const Leaderboard = () => {
     });
   }, [records, timeFilter, settings]);
 
-  const entries = useMemo(
+  const allEntries = useMemo(
     () => computeEntries(filteredRecords, books, scoringTable, reviewPts),
     [filteredRecords, books, scoringTable, reviewPts],
+  );
+
+  const classOptions = useMemo(() => {
+    const s = new Set<string>();
+    allEntries.forEach((e) => e.className && s.add(e.className));
+    return Array.from(s).sort();
+  }, [allEntries]);
+
+  const entries = useMemo(
+    () => classFilter === "all" ? allEntries : allEntries.filter((e) => e.className === classFilter),
+    [allEntries, classFilter],
   );
 
   const currentFromDate = settings?.leaderboardFromDate;
@@ -250,16 +262,25 @@ const Leaderboard = () => {
                   <CalendarDays className="h-3.5 w-3.5" />
                   {currentFromDate ? <>From <span className="text-foreground font-medium">{format(new Date(currentFromDate), "MMM d, yyyy")}</span></> : "All time"}
                 </div>
-                <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
-                  <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All time</SelectItem>
-                    <SelectItem value="week">This week</SelectItem>
-                    <SelectItem value="month">This month</SelectItem>
-                    <SelectItem value="year">This year</SelectItem>
-                    {currentFromDate && <SelectItem value="from">Since start date</SelectItem>}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Select value={classFilter} onValueChange={setClassFilter}>
+                    <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Class" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All classes</SelectItem>
+                      {classOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
+                    <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All time</SelectItem>
+                      <SelectItem value="week">This week</SelectItem>
+                      <SelectItem value="month">This month</SelectItem>
+                      <SelectItem value="year">This year</SelectItem>
+                      {currentFromDate && <SelectItem value="from">Since start date</SelectItem>}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {entries.length === 0 ? (
