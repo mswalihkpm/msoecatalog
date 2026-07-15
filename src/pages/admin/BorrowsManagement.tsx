@@ -392,28 +392,44 @@ const BorrowsManagement = () => {
             <div className="space-y-4">
               {!editingRecord && (
                 <div className="space-y-2">
-                  <Label htmlFor="book">Book *</Label>
-                  <Select
-                    value={formData.bookId}
-                    onValueChange={(value) => setFormData({ ...formData, bookId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a book" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableBooks.length > 0 ? (
-                        availableBooks.map((book) => (
-                          <SelectItem key={book.id} value={book.id}>
-                            {book.title} {book.volume ? `(Vol. ${book.volume})` : ""}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="none" disabled>
-                          No available books
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <Label>Book *</Label>
+                  <Popover open={bookPickerOpen} onOpenChange={setBookPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                        {formData.bookId
+                          ? (() => {
+                              const b = books.find((x) => x.id === formData.bookId);
+                              return b ? `${b.title}${b.volume ? ` (Vol. ${b.volume})` : ""}` : "Select a book";
+                            })()
+                          : "Search book by name..."}
+                        <Search className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Type book name..." />
+                        <CommandList>
+                          <CommandEmpty>No available book found.</CommandEmpty>
+                          <CommandGroup>
+                            {availableBooks.slice(0, 200).map((book) => (
+                              <CommandItem
+                                key={book.id}
+                                value={`${book.title} ${book.author} ${book.numberCode}`}
+                                onSelect={() => {
+                                  setFormData({ ...formData, bookId: book.id });
+                                  setBookPickerOpen(false);
+                                }}
+                              >
+                                <span className="font-medium mr-2">{book.title}</span>
+                                {book.volume && <Badge variant="outline" className="mr-1">Vol. {book.volume}</Badge>}
+                                <Badge variant="secondary" className="ml-auto font-mono text-xs">{book.numberCode}</Badge>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
               {editingRecord && (
@@ -423,12 +439,27 @@ const BorrowsManagement = () => {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="borrower">Borrower Name *</Label>
-                <Input
-                  id="borrower"
-                  value={formData.borrowerName}
-                  onChange={(e) => setFormData({ ...formData, borrowerName: e.target.value })}
-                />
+                <Label>Borrower *</Label>
+                {editingRecord ? (
+                  <Input
+                    value={formData.borrowerName}
+                    onChange={(e) => setFormData({ ...formData, borrowerName: e.target.value })}
+                  />
+                ) : (
+                  <StudentSearch
+                    skipCodeVerify
+                    selectedStudent={selectedBorrower}
+                    onSelect={(s) => {
+                      setSelectedBorrower(s);
+                      setFormData({
+                        ...formData,
+                        borrowerName: s?.name || "",
+                        borrowerClass: s?.class || "",
+                      });
+                    }}
+                    placeholder="Search student by name..."
+                  />
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="borrowerClass">Class</Label>
