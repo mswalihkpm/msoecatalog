@@ -406,28 +406,37 @@ const BorrowsManagement = () => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Type book name..." />
-                        <CommandList>
+                      <Command
+                        filter={(value, search) => {
+                          const q = search.trim().toLowerCase();
+                          if (!q) return 1;
+                          return value.toLowerCase().includes(q) ? 1 : 0;
+                        }}
+                      >
+                        <CommandInput placeholder="Search by title, author, code or SI no..." />
+                        <CommandList className="max-h-72">
                           <CommandEmpty>No available book found.</CommandEmpty>
                           <CommandGroup>
-                            {availableBooks.slice(0, 200).map((book) => (
+                            {availableBooks.map((book) => (
                               <CommandItem
                                 key={book.id}
-                                value={`${book.title} ${book.author} ${book.numberCode}`}
+                                value={`${book.title} ${book.author || ""} ${book.numberCode || ""} ${book.siNumber || ""} ${book.volume || ""}`}
                                 onSelect={() => {
                                   setFormData({ ...formData, bookId: book.id });
                                   setBookPickerOpen(false);
                                 }}
                               >
-                                <span className="font-medium mr-2">{book.title}</span>
-                                {book.volume && <Badge variant="outline" className="mr-1">Vol. {book.volume}</Badge>}
-                                <Badge variant="secondary" className="ml-auto font-mono text-xs">{book.numberCode}</Badge>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="font-medium truncate">{book.title}{book.volume ? ` (Vol. ${book.volume})` : ""}</span>
+                                  {book.author && <span className="text-xs text-muted-foreground truncate">{book.author}</span>}
+                                </div>
+                                <Badge variant="secondary" className="ml-2 font-mono text-[10px] shrink-0">{book.numberCode}</Badge>
                               </CommandItem>
                             ))}
                           </CommandGroup>
                         </CommandList>
                       </Command>
+
                     </PopoverContent>
                   </Popover>
                 </div>
