@@ -270,10 +270,16 @@ const Leaderboard = () => {
 
             <TabsContent value="current" className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                <div className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  {currentFromDate ? <>From <span className="text-foreground font-medium">{format(new Date(currentFromDate), "MMM d, yyyy")}</span></> : "All time"}
+                  {currentFromDate || currentUntilDate ? (
+                    <>
+                      {currentFromDate ? <>From <span className="text-foreground font-medium">{format(new Date(currentFromDate), "MMM d, yyyy")}</span></> : "All time"}
+                      {currentUntilDate && <> &nbsp;to <span className="text-foreground font-medium">{format(new Date(currentUntilDate), "MMM d, yyyy")}</span></>}
+                    </>
+                  ) : "All time"}
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Select value={classFilter} onValueChange={setClassFilter}>
                     <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Class" /></SelectTrigger>
