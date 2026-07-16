@@ -66,15 +66,25 @@ const Leaderboard = () => {
 
   const filteredRecords = useMemo(() => {
     let from: Date | null = null;
+    let to: Date | null = null;
     const now = new Date();
     if (timeFilter === "week") from = startOfWeek(now, { weekStartsOn: 1 });
     else if (timeFilter === "month") from = startOfMonth(now);
     else if (timeFilter === "year") from = startOfYear(now);
-    else if (timeFilter === "from" && settings?.leaderboardFromDate) from = parseISO(settings.leaderboardFromDate);
-    if (!from) return records;
+    else if (timeFilter === "from") {
+      if (settings?.leaderboardFromDate) from = parseISO(settings.leaderboardFromDate);
+      if (settings?.leaderboardVisibleUntil) {
+        to = parseISO(settings.leaderboardVisibleUntil);
+        to.setHours(23, 59, 59, 999);
+      }
+    }
+    if (!from && !to) return records;
     return records.filter((r) => {
       const d = r.borrowedDate ? new Date(r.borrowedDate) : null;
-      return d && !isNaN(+d) && d >= from!;
+      if (!d || isNaN(+d)) return false;
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
     });
   }, [records, timeFilter, settings]);
 
@@ -95,6 +105,8 @@ const Leaderboard = () => {
   );
 
   const currentFromDate = settings?.leaderboardFromDate;
+  const currentUntilDate = settings?.leaderboardVisibleUntil;
+
 
   const openReader = (entry: LeaderboardEntry) => setSelected(entry);
   const readerHistory = useMemo(() => {
