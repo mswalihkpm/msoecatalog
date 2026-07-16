@@ -66,15 +66,25 @@ const Leaderboard = () => {
 
   const filteredRecords = useMemo(() => {
     let from: Date | null = null;
+    let to: Date | null = null;
     const now = new Date();
     if (timeFilter === "week") from = startOfWeek(now, { weekStartsOn: 1 });
     else if (timeFilter === "month") from = startOfMonth(now);
     else if (timeFilter === "year") from = startOfYear(now);
-    else if (timeFilter === "from" && settings?.leaderboardFromDate) from = parseISO(settings.leaderboardFromDate);
-    if (!from) return records;
+    else if (timeFilter === "from") {
+      if (settings?.leaderboardFromDate) from = parseISO(settings.leaderboardFromDate);
+      if (settings?.leaderboardVisibleUntil) {
+        to = parseISO(settings.leaderboardVisibleUntil);
+        to.setHours(23, 59, 59, 999);
+      }
+    }
+    if (!from && !to) return records;
     return records.filter((r) => {
       const d = r.borrowedDate ? new Date(r.borrowedDate) : null;
-      return d && !isNaN(+d) && d >= from!;
+      if (!d || isNaN(+d)) return false;
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
     });
   }, [records, timeFilter, settings]);
 
@@ -95,6 +105,8 @@ const Leaderboard = () => {
   );
 
   const currentFromDate = settings?.leaderboardFromDate;
+  const currentUntilDate = settings?.leaderboardVisibleUntil;
+
 
   const openReader = (entry: LeaderboardEntry) => setSelected(entry);
   const readerHistory = useMemo(() => {
@@ -258,10 +270,16 @@ const Leaderboard = () => {
 
             <TabsContent value="current" className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                <div className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  {currentFromDate ? <>From <span className="text-foreground font-medium">{format(new Date(currentFromDate), "MMM d, yyyy")}</span></> : "All time"}
+                  {currentFromDate || currentUntilDate ? (
+                    <>
+                      {currentFromDate ? <>From <span className="text-foreground font-medium">{format(new Date(currentFromDate), "MMM d, yyyy")}</span></> : "All time"}
+                      {currentUntilDate && <> &nbsp;to <span className="text-foreground font-medium">{format(new Date(currentUntilDate), "MMM d, yyyy")}</span></>}
+                    </>
+                  ) : "All time"}
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Select value={classFilter} onValueChange={setClassFilter}>
                     <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Class" /></SelectTrigger>
@@ -277,7 +295,7 @@ const Leaderboard = () => {
                       <SelectItem value="week">This week</SelectItem>
                       <SelectItem value="month">This month</SelectItem>
                       <SelectItem value="year">This year</SelectItem>
-                      {currentFromDate && <SelectItem value="from">Since start date</SelectItem>}
+                      {(currentFromDate || currentUntilDate) && <SelectItem value="from">Borrow date range</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
