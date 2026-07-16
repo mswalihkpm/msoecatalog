@@ -295,7 +295,7 @@ const Leaderboard = () => {
                       <SelectItem value="week">This week</SelectItem>
                       <SelectItem value="month">This month</SelectItem>
                       <SelectItem value="year">This year</SelectItem>
-                      {currentFromDate && <SelectItem value="from">Since start date</SelectItem>}
+                      {(currentFromDate || currentUntilDate) && <SelectItem value="from">Borrow date range</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
