@@ -295,9 +295,9 @@ const BorrowsManagement = () => {
 
   // Only show requests that are pending for admin (exclude manager_pending/rejected).
   // Requests for books that are still borrowed stay hidden until the book is returned.
-  const pendingRequests = requests.filter(
-    (r) => r.status === "pending" && !books.find((b) => b.id === r.bookId)?.isBorrowed
-  );
+  const isBookBorrowed = (bookId: string) => !!books.find((b) => b.id === bookId)?.isBorrowed;
+  const visibleRequests = requests.filter((r) => r.status !== "pending" || !isBookBorrowed(r.bookId));
+  const pendingRequests = visibleRequests.filter((r) => r.status === "pending");
 
   const getBookSiNumber = (bookId: string) => {
     const book = books.find((b) => b.id === bookId);
