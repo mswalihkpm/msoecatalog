@@ -733,8 +733,8 @@ const BorrowsManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {requests.length > 0 ? (
-                    requests.map((request, index) => (
+                  {visibleRequests.length > 0 ? (
+                    visibleRequests.map((request, index) => (
                       <TableRow key={request.id}>
                         <TableCell className="font-mono text-sm">{index + 1}</TableCell>
                         <TableCell className="font-mono text-sm">{getBookSiNumber(request.bookId)}</TableCell>
