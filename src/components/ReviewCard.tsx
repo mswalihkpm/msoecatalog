@@ -40,7 +40,18 @@ export const ReviewCard = ({ review, onDelete, showDeleteButton = false }: Revie
               )}
             </div>
             {review.comment && (
-              <p className="text-sm text-muted-foreground">{review.comment}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {displayComment}
+              </p>
+            )}
+            {shouldTruncate && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-1 text-sm font-medium text-primary hover:underline focus:outline-none"
+              >
+                {isExpanded ? "Read less" : "Read more"}
+              </button>
             )}
           </div>
           <div className="flex items-center gap-2">
