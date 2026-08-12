@@ -358,7 +358,7 @@ const BookDetail = () => {
                     <CardContent className="pt-4">
                       <p className="font-medium text-destructive">Maximum requests reached</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {maxSlots} students have already requested this book. Please check back later.
+                        {maxSlots} student{maxSlots !== 1 ? "s" : ""} {maxSlots !== 1 ? "have" : "has"} already requested this book. Please check back later.
                       </p>
                     </CardContent>
                   </Card>
