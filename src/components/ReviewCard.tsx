@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Review } from "@/lib/types";
 import { StarRating } from "./StarRating";
 import { Card, CardContent } from "@/components/ui/card";
