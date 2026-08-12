@@ -124,7 +124,7 @@ const BookDetail = () => {
     }
     if (!book) return;
 
-    const maxSlots = 2;
+    const maxSlots = book.isBorrowed ? 1 : 2;
     if (pendingCount >= maxSlots) {
       toast.error(`Maximum ${maxSlots} requests allowed for this book. Please try later.`);
       return;
@@ -302,15 +302,15 @@ const BookDetail = () => {
 
 
             {/* Request Button */}
-            {book.isBorrowed ? (
-              <Card className="bg-destructive/10 border-destructive/20">
+            {book.isBorrowed && (
+              <Card className="bg-destructive/10 border-destructive/20 mb-4">
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2 text-destructive mb-2">
                     <User className="h-4 w-4" />
                     <span className="font-medium">Currently Borrowed</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    This book has been borrowed by another member. Please check back later.
+                    This book has been borrowed by another member. You can still reserve it — only <b>1 request slot</b> is available.
                   </p>
                   {book.returnDate && (
                     <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
@@ -318,9 +318,13 @@ const BookDetail = () => {
                       <span>Expected return: {format(new Date(book.returnDate), "MMM d, yyyy")}</span>
                     </div>
                   )}
+                  <p className="text-xs text-muted-foreground italic mt-2">
+                    Note: Your request will be sent to the library admin automatically only after this book is returned.
+                  </p>
                 </CardContent>
               </Card>
-            ) : (
+            )}
+            {(
               <div className="space-y-4">
                 {/* Queue info */}
                 {pendingCount > 0 && (
@@ -347,14 +351,14 @@ const BookDetail = () => {
                 )}
 
                 {(() => {
-                  const maxSlots = 2;
+                  const maxSlots = book.isBorrowed ? 1 : 2;
                   const slotsLeft = Math.max(0, maxSlots - pendingCount);
                   return pendingCount >= maxSlots ? (
                   <Card className="bg-destructive/10 border-destructive/20">
                     <CardContent className="pt-4">
                       <p className="font-medium text-destructive">Maximum requests reached</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {maxSlots} students have already requested this book. Please check back later.
+                        {maxSlots} student{maxSlots !== 1 ? "s" : ""} {maxSlots !== 1 ? "have" : "has"} already requested this book. Please check back later.
                       </p>
                     </CardContent>
                   </Card>

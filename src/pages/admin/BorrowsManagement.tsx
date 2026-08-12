@@ -293,8 +293,11 @@ const BorrowsManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Only show requests that are pending for admin (exclude manager_pending/rejected — those belong to manager panel)
-  const pendingRequests = requests.filter((r) => r.status === "pending");
+  // Only show requests that are pending for admin (exclude manager_pending/rejected).
+  // Requests for books that are still borrowed stay hidden until the book is returned.
+  const isBookBorrowed = (bookId: string) => !!books.find((b) => b.id === bookId)?.isBorrowed;
+  const visibleRequests = requests.filter((r) => r.status !== "pending" || !isBookBorrowed(r.bookId));
+  const pendingRequests = visibleRequests.filter((r) => r.status === "pending");
 
   const getBookSiNumber = (bookId: string) => {
     const book = books.find((b) => b.id === bookId);
@@ -730,8 +733,8 @@ const BorrowsManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {requests.length > 0 ? (
-                    requests.map((request, index) => (
+                  {visibleRequests.length > 0 ? (
+                    visibleRequests.map((request, index) => (
                       <TableRow key={request.id}>
                         <TableCell className="font-mono text-sm">{index + 1}</TableCell>
                         <TableCell className="font-mono text-sm">{getBookSiNumber(request.bookId)}</TableCell>

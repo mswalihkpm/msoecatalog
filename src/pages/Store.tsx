@@ -245,7 +245,7 @@ const Store = () => {
                   <Label>Select Your Name</Label>
                   <StudentSearch onSelect={setStudentReview} selectedStudent={studentReview} />
                   <Label>Your Review</Label>
-                  <Textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={500} placeholder="Share your thoughts..." />
+                  <Textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} placeholder="Share your thoughts..." />
                   <Button onClick={submitReview} className="w-full">Submit Review</Button>
                 </TabsContent>
               </Tabs>
