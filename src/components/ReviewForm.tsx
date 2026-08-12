@@ -139,7 +139,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={4}
-                  maxLength={500}
+
                 />
               </div>
               <Button type="submit" className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90">
