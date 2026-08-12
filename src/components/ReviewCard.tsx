@@ -15,11 +15,19 @@ interface ReviewCardProps {
 }
 
 export const ReviewCard = ({ review, onDelete, showDeleteButton = false }: ReviewCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleDelete = async () => {
     await deleteReview(review.id);
     toast.success("Review deleted successfully");
     onDelete?.();
   };
+
+  const wordCount = review.comment ? review.comment.trim().split(/\s+/).filter(Boolean).length : 0;
+  const shouldTruncate = wordCount > 45;
+  const displayComment = shouldTruncate && !isExpanded
+    ? review.comment!.trim().split(/\s+/).filter(Boolean).slice(0, 45).join(" ") + "..."
+    : review.comment;
 
   return (
     <Card className="bg-muted/50 border-border">
