@@ -126,6 +126,72 @@ export const SearchFilters = ({
         </div>
       </div>
 
+      {onAdvancedFiltersChange && (
+        <div className="rounded-lg border border-border/60 bg-card/40">
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((o) => !o)}
+            className="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium"
+            aria-expanded={advancedOpen}
+          >
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+              Advanced search
+              {activeAdvancedCount > 0 && (
+                <Badge variant="secondary" className="ml-1">{activeAdvancedCount}</Badge>
+              )}
+            </span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${advancedOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {advancedOpen && (
+            <div className="grid grid-cols-1 gap-3 border-t border-border/60 px-4 py-4 sm:grid-cols-2 lg:grid-cols-4">
+              {advancedEntries.map((field) => (
+                <div key={field.key} className="space-y-1.5">
+                  <Label htmlFor={`adv-${field.key}`} className="text-xs text-muted-foreground">
+                    {field.label}
+                  </Label>
+                  <Input
+                    id={`adv-${field.key}`}
+                    placeholder={field.placeholder}
+                    value={advancedFilters[field.key]}
+                    onChange={(e) => setAdvancedField(field.key, e.target.value)}
+                  />
+                </div>
+              ))}
+              <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                <Label className="text-xs text-muted-foreground">Category</Label>
+                <Select value={selectedCategory} onValueChange={onCategoryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {activeAdvancedCount > 0 && (
+                <div className="flex items-end sm:col-span-2 lg:col-span-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => onAdvancedFiltersChange(emptyAdvancedFilters)}
+                  >
+                    Clear advanced fields
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Active filters:</span>
