@@ -135,10 +135,18 @@ const Catalog = () => {
     const loadBooks = async () => {
       const [booksData, requestsData] = await Promise.all([getBooks(), getBookRequests()]);
       setBooks(booksData);
-      setPendingBookIds(new Set(requestsData.filter(r => r.status === "pending").map(r => r.bookId)));
-      const counts = new Map<string, number>();
-      for (const r of requestsData) counts.set(r.bookId, (counts.get(r.bookId) ?? 0) + 1);
-      setRequestCounts(counts);
+      const pending = requestsData.filter(r => r.status === "pending");
+      setPendingBookIds(new Set(pending.map(r => r.bookId)));
+      const pendingCounts = new Map<string, number>();
+      const totalCounts = new Map<string, number>();
+      for (const r of pending) {
+        pendingCounts.set(r.bookId, (pendingCounts.get(r.bookId) ?? 0) + 1);
+      }
+      for (const r of requestsData) {
+        totalCounts.set(r.bookId, (totalCounts.get(r.bookId) ?? 0) + 1);
+      }
+      setPendingRequestCounts(pendingCounts);
+      setRequestCounts(totalCounts);
       setIsLoading(false);
     };
     loadBooks();
