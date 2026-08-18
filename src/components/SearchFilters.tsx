@@ -1,4 +1,6 @@
-import { Search, X } from "lucide-react";
+import { useState } from "react";
+import { Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +33,20 @@ const categories: Category[] = [
 ];
 
 
+export interface AdvancedFilters {
+  title: string;
+  author: string;
+  numberCode: string;
+  siNumber: string;
+}
+
+export const emptyAdvancedFilters: AdvancedFilters = {
+  title: "",
+  author: "",
+  numberCode: "",
+  siNumber: "",
+};
+
 interface SearchFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -39,6 +55,8 @@ interface SearchFiltersProps {
   availabilityFilter: string;
   onAvailabilityChange: (availability: string) => void;
   onClearFilters: () => void;
+  advancedFilters?: AdvancedFilters;
+  onAdvancedFiltersChange?: (filters: AdvancedFilters) => void;
 }
 
 export const SearchFilters = ({
@@ -49,8 +67,25 @@ export const SearchFilters = ({
   availabilityFilter,
   onAvailabilityChange,
   onClearFilters,
+  advancedFilters = emptyAdvancedFilters,
+  onAdvancedFiltersChange,
 }: SearchFiltersProps) => {
-  const hasActiveFilters = searchQuery || selectedCategory !== "all" || availabilityFilter !== "all";
+  const advancedEntries: { key: keyof AdvancedFilters; label: string; placeholder: string }[] = [
+    { key: "title", label: "Title", placeholder: "e.g. Riyad us Saliheen" },
+    { key: "author", label: "Author", placeholder: "e.g. Imam Nawawi" },
+    { key: "numberCode", label: "Number code", placeholder: "e.g. EN-102" },
+    { key: "siNumber", label: "SI number", placeholder: "e.g. 245" },
+  ];
+
+  const activeAdvancedCount = advancedEntries.filter((f) => advancedFilters[f.key].trim()).length;
+  const [advancedOpen, setAdvancedOpen] = useState(activeAdvancedCount > 0);
+
+  const setAdvancedField = (key: keyof AdvancedFilters, value: string) => {
+    onAdvancedFiltersChange?.({ ...advancedFilters, [key]: value });
+  };
+
+  const hasActiveFilters =
+    searchQuery || selectedCategory !== "all" || availabilityFilter !== "all" || activeAdvancedCount > 0;
 
   return (
     <div className="space-y-4">
@@ -91,6 +126,72 @@ export const SearchFilters = ({
         </div>
       </div>
 
+      {onAdvancedFiltersChange && (
+        <div className="rounded-lg border border-border/60 bg-card/40">
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((o) => !o)}
+            className="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium"
+            aria-expanded={advancedOpen}
+          >
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+              Advanced search
+              {activeAdvancedCount > 0 && (
+                <Badge variant="secondary" className="ml-1">{activeAdvancedCount}</Badge>
+              )}
+            </span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${advancedOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {advancedOpen && (
+            <div className="grid grid-cols-1 gap-3 border-t border-border/60 px-4 py-4 sm:grid-cols-2 lg:grid-cols-4">
+              {advancedEntries.map((field) => (
+                <div key={field.key} className="space-y-1.5">
+                  <Label htmlFor={`adv-${field.key}`} className="text-xs text-muted-foreground">
+                    {field.label}
+                  </Label>
+                  <Input
+                    id={`adv-${field.key}`}
+                    placeholder={field.placeholder}
+                    value={advancedFilters[field.key]}
+                    onChange={(e) => setAdvancedField(field.key, e.target.value)}
+                  />
+                </div>
+              ))}
+              <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                <Label className="text-xs text-muted-foreground">Category</Label>
+                <Select value={selectedCategory} onValueChange={onCategoryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {activeAdvancedCount > 0 && (
+                <div className="flex items-end sm:col-span-2 lg:col-span-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => onAdvancedFiltersChange(emptyAdvancedFilters)}
+                  >
+                    Clear advanced fields
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Active filters:</span>
@@ -121,6 +222,17 @@ export const SearchFilters = ({
               />
             </Badge>
           )}
+          {advancedEntries
+            .filter((field) => advancedFilters[field.key].trim())
+            .map((field) => (
+              <Badge key={field.key} variant="secondary" className="gap-1">
+                {field.label}: {advancedFilters[field.key]}
+                <X
+                  className="h-3 w-3 cursor-pointer"
+                  onClick={() => setAdvancedField(field.key, "")}
+                />
+              </Badge>
+            ))}
           <Button
             variant="ghost"
             size="sm"

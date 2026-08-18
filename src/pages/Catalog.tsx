@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { BookCard } from "@/components/BookCard";
-import { SearchFilters } from "@/components/SearchFilters";
+import { SearchFilters, AdvancedFilters, emptyAdvancedFilters } from "@/components/SearchFilters";
 import { Header } from "@/components/Header";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PromoBanner } from "@/components/PromoBanner";
@@ -73,6 +73,7 @@ const Catalog = () => {
   const [pendingRequestCounts, setPendingRequestCounts] = useState<Map<string, number>>(new Map());
   const [requestCounts, setRequestCounts] = useState<Map<string, number>>(new Map());
   const [nextOpenDate, setNextOpenDate] = useState<Date | null>(null);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(emptyAdvancedFilters);
 
   useEffect(() => {
     getAdminSettings().then((s) => {
@@ -166,7 +167,17 @@ const Catalog = () => {
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.numberCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (book.publication && book.publication.toLowerCase().includes(searchQuery.toLowerCase()));
+        (book.publication && book.publication.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (book.siNumber && book.siNumber.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const fieldMatches = (value: string | undefined, term: string) =>
+        !term.trim() || (value ?? "").toLowerCase().includes(term.trim().toLowerCase());
+
+      const matchesAdvanced =
+        fieldMatches(book.title, advancedFilters.title) &&
+        fieldMatches(book.author, advancedFilters.author) &&
+        fieldMatches(book.numberCode, advancedFilters.numberCode) &&
+        fieldMatches(book.siNumber, advancedFilters.siNumber);
 
       const matchesCategory =
         selectedCategory === "all" || book.category === selectedCategory;
@@ -176,7 +187,7 @@ const Catalog = () => {
         (availabilityFilter === "available" && !book.isBorrowed) ||
         (availabilityFilter === "borrowed" && book.isBorrowed);
 
-      return matchesSearch && matchesCategory && matchesAvailability;
+      return matchesSearch && matchesAdvanced && matchesCategory && matchesAvailability;
     });
 
     const categoryOrder: Record<string, number> = {
@@ -223,7 +234,7 @@ const Catalog = () => {
       // 6. Alphabetical
       return a.title.localeCompare(b.title);
     });
-  }, [books, searchQuery, selectedCategory, availabilityFilter, requestCounts]);
+  }, [books, searchQuery, advancedFilters, selectedCategory, availabilityFilter, requestCounts]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -233,7 +244,7 @@ const Catalog = () => {
     }
 
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, availabilityFilter]);
+  }, [searchQuery, advancedFilters, selectedCategory, availabilityFilter]);
 
   const totalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
   const paginatedBooks = useMemo(
@@ -245,6 +256,7 @@ const Catalog = () => {
     setSearchQuery("");
     setSelectedCategory("all");
     setAvailabilityFilter("all");
+    setAdvancedFilters(emptyAdvancedFilters);
     setCurrentPage(1);
   };
 
@@ -374,6 +386,8 @@ const Catalog = () => {
               availabilityFilter={availabilityFilter}
               onAvailabilityChange={setAvailabilityFilter}
               onClearFilters={clearFilters}
+              advancedFilters={advancedFilters}
+              onAdvancedFiltersChange={setAdvancedFilters}
             />
           </div>
 
