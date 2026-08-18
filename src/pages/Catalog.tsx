@@ -70,6 +70,7 @@ const Catalog = () => {
   const [currentPage, setCurrentPage] = useState(() => initialBrowseStateRef.current?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingBookIds, setPendingBookIds] = useState<Set<string>>(new Set());
+  const [pendingRequestCounts, setPendingRequestCounts] = useState<Map<string, number>>(new Map());
   const [requestCounts, setRequestCounts] = useState<Map<string, number>>(new Map());
   const [nextOpenDate, setNextOpenDate] = useState<Date | null>(null);
 
