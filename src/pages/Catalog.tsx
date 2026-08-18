@@ -403,7 +403,7 @@ const Catalog = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.02 }}
                   >
-                    <BookCard book={book} onOpen={saveBrowseState} hasPendingRequest={pendingBookIds.has(book.id)} />
+                    <BookCard book={book} onOpen={saveBrowseState} hasPendingRequest={pendingBookIds.has(book.id)} pendingRequestCount={pendingRequestCounts.get(book.id) ?? 0} />
                   </motion.div>
                 ))}
               </div>
