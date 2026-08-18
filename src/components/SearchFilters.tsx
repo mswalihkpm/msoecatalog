@@ -31,6 +31,20 @@ const categories: Category[] = [
 ];
 
 
+export interface AdvancedFilters {
+  title: string;
+  author: string;
+  numberCode: string;
+  siNumber: string;
+}
+
+export const emptyAdvancedFilters: AdvancedFilters = {
+  title: "",
+  author: "",
+  numberCode: "",
+  siNumber: "",
+};
+
 interface SearchFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -39,6 +53,8 @@ interface SearchFiltersProps {
   availabilityFilter: string;
   onAvailabilityChange: (availability: string) => void;
   onClearFilters: () => void;
+  advancedFilters?: AdvancedFilters;
+  onAdvancedFiltersChange?: (filters: AdvancedFilters) => void;
 }
 
 export const SearchFilters = ({
@@ -49,8 +65,25 @@ export const SearchFilters = ({
   availabilityFilter,
   onAvailabilityChange,
   onClearFilters,
+  advancedFilters = emptyAdvancedFilters,
+  onAdvancedFiltersChange,
 }: SearchFiltersProps) => {
-  const hasActiveFilters = searchQuery || selectedCategory !== "all" || availabilityFilter !== "all";
+  const advancedEntries: { key: keyof AdvancedFilters; label: string; placeholder: string }[] = [
+    { key: "title", label: "Title", placeholder: "e.g. Riyad us Saliheen" },
+    { key: "author", label: "Author", placeholder: "e.g. Imam Nawawi" },
+    { key: "numberCode", label: "Number code", placeholder: "e.g. EN-102" },
+    { key: "siNumber", label: "SI number", placeholder: "e.g. 245" },
+  ];
+
+  const activeAdvancedCount = advancedEntries.filter((f) => advancedFilters[f.key].trim()).length;
+  const [advancedOpen, setAdvancedOpen] = useState(activeAdvancedCount > 0);
+
+  const setAdvancedField = (key: keyof AdvancedFilters, value: string) => {
+    onAdvancedFiltersChange?.({ ...advancedFilters, [key]: value });
+  };
+
+  const hasActiveFilters =
+    searchQuery || selectedCategory !== "all" || availabilityFilter !== "all" || activeAdvancedCount > 0;
 
   return (
     <div className="space-y-4">
