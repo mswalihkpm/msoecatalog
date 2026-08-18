@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Star, BookOpen, Image } from "lucide-react";
+import { Star } from "lucide-react";
 import { Book } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { GeneratedCover } from "@/components/GeneratedCover";
@@ -8,9 +8,22 @@ interface BookCardProps {
   book: Book;
   onOpen?: () => void;
   hasPendingRequest?: boolean;
+  pendingRequestCount?: number;
 }
 
-export const BookCard = ({ book, onOpen, hasPendingRequest = false }: BookCardProps) => {
+export const BookCard = ({ book, onOpen, hasPendingRequest = false, pendingRequestCount = 0 }: BookCardProps) => {
+  const getAvailabilityStatus = () => {
+    if (book.isBorrowed) {
+      return { label: "BORROWED", className: "bg-destructive text-destructive-foreground" };
+    }
+    if (pendingRequestCount > 0) {
+      return { label: "RESERVED", className: "bg-amber-500 text-white" };
+    }
+    return { label: "AVAILABLE", className: "bg-emerald-500 text-white" };
+  };
+
+  const status = getAvailabilityStatus();
+
   return (
     <Link to={`/book/${book.id}`} onClick={onOpen}>
       <div className={`group relative h-full overflow-hidden rounded-xl border-2 bg-card transition-all duration-300 hover:-translate-y-1 ${hasPendingRequest ? "border-destructive/50 hover:border-destructive hover:shadow-[0_0_25px_hsl(var(--destructive)/0.4)]" : "border-primary/20 hover:border-primary/50 hover:shadow-teal"}`}>
@@ -40,21 +53,17 @@ export const BookCard = ({ book, onOpen, hasPendingRequest = false }: BookCardPr
           
           {/* Availability Badge - Top Right */}
           <Badge 
-            className={`absolute top-2 right-2 font-semibold text-[10px] px-2 py-0.5 ${
-              book.isBorrowed 
-                ? "bg-destructive text-destructive-foreground" 
-                : "bg-secondary text-secondary-foreground"
-            }`}
+            className={`absolute top-2 right-2 font-bold uppercase text-[10px] px-2 py-0.5 shadow-sm ${status.className}`}
           >
-            {book.isBorrowed ? "BORROWED" : "AVAILABLE"}
+            {status.label}
           </Badge>
 
-          {/* Red shading overlay when book has pending request */}
-          {hasPendingRequest && (
+          {/* Red shading overlay and request count when book has pending requests */}
+          {(hasPendingRequest || pendingRequestCount > 0) && (
             <>
-              <div className="absolute inset-0 bg-destructive/40 pointer-events-none" />
-              <Badge className="absolute bottom-2 left-2 bg-destructive text-destructive-foreground font-semibold uppercase text-[10px] px-2 py-0.5">
-                Requested
+              <div className="absolute inset-0 bg-amber-500/20 pointer-events-none" />
+              <Badge className="absolute bottom-2 left-2 bg-amber-500 text-white font-semibold uppercase text-[10px] px-2 py-0.5">
+                {pendingRequestCount > 1 ? `${pendingRequestCount} Requests` : "Requested"}
               </Badge>
             </>
           )}
