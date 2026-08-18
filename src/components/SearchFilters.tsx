@@ -222,6 +222,17 @@ export const SearchFilters = ({
               />
             </Badge>
           )}
+          {advancedEntries
+            .filter((field) => advancedFilters[field.key].trim())
+            .map((field) => (
+              <Badge key={field.key} variant="secondary" className="gap-1">
+                {field.label}: {advancedFilters[field.key]}
+                <X
+                  className="h-3 w-3 cursor-pointer"
+                  onClick={() => setAdvancedField(field.key, "")}
+                />
+              </Badge>
+            ))}
           <Button
             variant="ghost"
             size="sm"
