@@ -145,7 +145,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
                 className="h-full w-full object-contain"
                 animate={{ rotateY: [0, 180, 360] }}
                 transition={{
-                  duration: 1.8,
+                  duration: 1,
                   repeat: Infinity,
                   ease: "linear",
                 }}
