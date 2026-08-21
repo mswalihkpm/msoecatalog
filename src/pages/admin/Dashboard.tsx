@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useEffect, useState, useMemo } from "react";
 import { BookOpen, Users, Star, Library, FileSpreadsheet, Clock, CheckCircle, XCircle, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -254,10 +255,7 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <div className="text-center py-16">
-        <div className="animate-pulse">
-          <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
+        <LoadingLogo text="Loading dashboard..." />
       </div>
     );
   }

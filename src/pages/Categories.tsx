@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -207,10 +208,7 @@ const Categories = () => {
 
             {isLoading ? (
               <div className="text-center py-16">
-                <div className="animate-pulse">
-                  <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Loading categories...</p>
-                </div>
+                <LoadingLogo text="Loading categories..." />
               </div>
             ) : (
               <>
