@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useState, useEffect, useRef } from "react";
 import { Search, User, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
