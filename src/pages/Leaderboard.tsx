@@ -254,7 +254,7 @@ const Leaderboard = () => {
         )}
 
         {loading ? (
-          <p className="text-muted-foreground text-center py-12">Loading leaderboard…</p>
+          <div className="py-12"><LoadingLogo text="Loading leaderboard…" /></div>
         ) : !isVisible ? (
           <div className="text-center py-16">
             <EyeOff className="h-10 w-10 text-muted-foreground mx-auto mb-3" />

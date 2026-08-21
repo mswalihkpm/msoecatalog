@@ -164,7 +164,7 @@ const Store = () => {
         </div>
 
         {loading ? (
-          <p className="text-center text-muted-foreground py-8">Loading...</p>
+          <div className="py-8"><LoadingLogo text="Loading store..." /></div>
         ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No items found.</p>
         ) : (
