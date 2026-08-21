@@ -131,22 +131,25 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
               </motion.p>
             </motion.div>
 
-            {/* Loading bar */}
+            {/* Loading flip logo */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2 }}
-              className="mt-8 w-48 h-1 bg-muted rounded-full overflow-hidden"
+              className="mt-8 h-12 w-12"
+              style={{ perspective: 600 }}
             >
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
+              <motion.img
+                src={logo}
+                alt="Loading"
+                className="h-full w-full object-contain"
+                animate={{ rotateY: [0, 180, 360] }}
                 transition={{
-                  duration: 1.2,
-                  delay: 1.3,
-                  ease: "easeInOut",
+                  duration: 1.8,
+                  repeat: Infinity,
+                  ease: "linear",
                 }}
-                className="h-full w-full bg-gradient-to-r from-transparent via-primary to-transparent"
+                style={{ backfaceVisibility: "hidden" }}
               />
             </motion.div>
 
