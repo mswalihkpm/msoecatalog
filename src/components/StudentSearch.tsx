@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useState, useEffect, useRef } from "react";
 import { Search, User, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -151,7 +152,7 @@ export const StudentSearch = ({ onSelect, placeholder = "Search student...", sel
           {isOpen && (query.length > 0) && (
             <Card className="absolute z-50 w-full mt-1 max-h-60 overflow-auto shadow-lg">
               {isLoading ? (
-                <div className="p-4 text-center text-muted-foreground">Searching...</div>
+                <div className="p-4 text-center"><LoadingLogo size={28} /></div>
               ) : results.length > 0 ? (
                 <div className="p-1">
                   {results.map((student) => (

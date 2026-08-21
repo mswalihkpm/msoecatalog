@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,7 @@ export const BookHistoryDialog = ({ bookId, bookTitle, bookCode, open, onOpenCha
           <DialogTitle className="font-serif">{bookTitle} <span className="text-sm font-normal text-muted-foreground">({bookCode})</span></DialogTitle>
         </DialogHeader>
         {loading ? (
-          <p className="text-center text-muted-foreground py-8">Loading...</p>
+          <div className="py-8"><LoadingLogo size={32} /></div>
         ) : (
           <div className="space-y-6">
             <div>

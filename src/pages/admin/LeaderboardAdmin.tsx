@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Trophy, Save, Trash2, Eye, EyeOff, CalendarDays, RefreshCw, MessageSquare, CheckCircle2, Info, Grid3x3 } from "lucide-react";
@@ -249,7 +250,7 @@ const LeaderboardAdmin = () => {
           </Card>
 
           {loading ? (
-            <p className="text-center py-8 text-muted-foreground">Loading…</p>
+            <div className="py-8"><LoadingLogo text="Loading records..." /></div>
           ) : filtered.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">No records match.</p>
           ) : (

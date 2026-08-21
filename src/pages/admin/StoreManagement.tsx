@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -216,7 +217,7 @@ const StoreManagement = () => {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="py-8"><LoadingLogo text="Loading items..." /></div>
       ) : items.length === 0 ? (
         <p className="text-muted-foreground">No items yet. Upload your first file.</p>
       ) : (

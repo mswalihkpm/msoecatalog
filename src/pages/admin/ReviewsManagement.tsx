@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useState, useEffect, useMemo } from "react";
 import { Search, Star, Trash2, BookOpen } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,10 +77,7 @@ const ReviewsManagement = () => {
   if (isLoading) {
     return (
       <div className="text-center py-16">
-        <div className="animate-pulse">
-          <Star className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading reviews...</p>
-        </div>
+        <LoadingLogo text="Loading reviews..." />
       </div>
     );
   }

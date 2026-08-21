@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { BookCard } from "@/components/BookCard";
@@ -402,10 +403,7 @@ const Catalog = () => {
           {/* Book Grid */}
           {isLoading ? (
             <div className="text-center py-16">
-              <div className="animate-pulse">
-                <Library className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading books...</p>
-              </div>
+              <LoadingLogo text="Loading books..." />
             </div>
           ) : paginatedBooks.length > 0 ? (
             <>
