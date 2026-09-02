@@ -33,10 +33,26 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     initializeData();
   }, []);
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  if (!isOnline) {
+    return <OfflineScreen onRetry={() => setIsOnline(navigator.onLine)} />;
+  }
 
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
