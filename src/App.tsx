@@ -77,6 +77,7 @@ const AppContent = () => {
             <Route path="students" element={<StudentsManagement />} />
             <Route path="reviews" element={<ReviewsManagement />} />
             <Route path="borrows" element={<BorrowsManagement />} />
+            <Route path="overdue" element={<OverdueManagement />} />
             <Route path="leaderboard" element={<LeaderboardAdmin />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="posters" element={<PostersManagement />} />
