@@ -389,29 +389,64 @@ export type Database = {
         }
         Relationships: []
       }
+      review_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          voter_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          voter_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          voter_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           book_id: string
           comment: string | null
           created_at: string
+          helpful_count: number
           id: string
           rating: number
+          status: string
           user_name: string
         }
         Insert: {
           book_id: string
           comment?: string | null
           created_at?: string
+          helpful_count?: number
           id?: string
           rating: number
+          status?: string
           user_name: string
         }
         Update: {
           book_id?: string
           comment?: string | null
           created_at?: string
+          helpful_count?: number
           id?: string
           rating?: number
+          status?: string
           user_name?: string
         }
         Relationships: [
