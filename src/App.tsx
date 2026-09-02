@@ -19,6 +19,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import BooksManagement from "./pages/admin/BooksManagement";
 import BorrowsManagement from "./pages/admin/BorrowsManagement";
+import OverdueManagement from "./pages/admin/OverdueManagement";
 import StudentsManagement from "./pages/admin/StudentsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -76,6 +77,7 @@ const AppContent = () => {
             <Route path="students" element={<StudentsManagement />} />
             <Route path="reviews" element={<ReviewsManagement />} />
             <Route path="borrows" element={<BorrowsManagement />} />
+            <Route path="overdue" element={<OverdueManagement />} />
             <Route path="leaderboard" element={<LeaderboardAdmin />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="posters" element={<PostersManagement />} />
