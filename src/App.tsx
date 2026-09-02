@@ -8,6 +8,7 @@ import { initializeData } from "@/lib/store";
 import { SplashScreen } from "@/components/SplashScreen";
 import { MobileFooter } from "@/components/MobileFooter";
 import { BackButton } from "@/components/BackButton";
+import { OfflineScreen } from "@/components/OfflineScreen";
 
 import Catalog from "./pages/Catalog";
 import BookDetail from "./pages/BookDetail";
