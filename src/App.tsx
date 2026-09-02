@@ -19,6 +19,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import BooksManagement from "./pages/admin/BooksManagement";
 import BorrowsManagement from "./pages/admin/BorrowsManagement";
+import OverdueManagement from "./pages/admin/OverdueManagement";
 import StudentsManagement from "./pages/admin/StudentsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
