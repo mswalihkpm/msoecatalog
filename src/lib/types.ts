@@ -25,7 +25,10 @@ export interface Review {
   rating: number;
   comment: string;
   createdAt: string;
+  status?: "pending" | "approved" | "hidden";
+  helpfulCount?: number;
 }
+
 
 export interface BorrowRecord {
   id: string;
