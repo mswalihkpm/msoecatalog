@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import offlineImage from "@/assets/no-internet.png.asset.json";
+import offlineImage from "@/assets/no-internet.png";
 
 interface OfflineScreenProps {
   onRetry?: () => void;
@@ -14,7 +14,7 @@ export const OfflineScreen = ({ onRetry }: OfflineScreenProps) => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        src={offlineImage.url}
+        src={offlineImage}
         alt="No internet connection"
         className="w-64 max-w-[80vw] object-contain"
       />
