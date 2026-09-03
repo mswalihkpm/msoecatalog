@@ -42,7 +42,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
       comment: "", // No comment for rating-only
     });
 
-    toast.success("Rating submitted successfully!");
+    toast.success("Your rating was sent for approval.");
     setSelectedStudentForRating(null);
     setRatingOnly(0);
     onReviewAdded();
@@ -67,7 +67,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
       comment: comment.trim(),
     });
 
-    toast.success("Review submitted successfully!");
+    toast.success("Your review was sent for approval.");
     setSelectedStudentForReview(null);
     setReviewRating(0);
     setComment("");
@@ -91,7 +91,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="font-serif text-lg">Rate this Book</CardTitle>
-            <p className="text-sm text-muted-foreground">Your rating will be shown as "Anonymous"</p>
+            <p className="text-sm text-muted-foreground">Your rating will be shown as "Anonymous" after admin approval</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitRating} className="space-y-4">
@@ -119,7 +119,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="font-serif text-lg">Write a Review</CardTitle>
-            <p className="text-sm text-muted-foreground">Your name will be shown with your review</p>
+            <p className="text-sm text-muted-foreground">Your name will be shown with your review once the admin approves it</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitReview} className="space-y-4">
