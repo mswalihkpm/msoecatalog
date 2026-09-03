@@ -298,11 +298,30 @@ export const bulkAddBooks = async (books: Omit<Book, "id" | "averageRating" | "t
 };
 
 // Reviews
-export const getReviews = async (bookId?: string): Promise<Review[]> => {
+export type ReviewStatus = "pending" | "approved" | "hidden";
+
+const mapReview = (review: any): Review => ({
+  id: review.id,
+  bookId: review.book_id,
+  userName: review.user_name,
+  rating: review.rating,
+  comment: review.comment || "",
+  createdAt: review.created_at,
+  status: (review.status || "approved") as ReviewStatus,
+  helpfulCount: review.helpful_count ?? 0,
+});
+
+export const getReviews = async (
+  bookId?: string,
+  status?: ReviewStatus | "all"
+): Promise<Review[]> => {
   let query = supabase.from("reviews").select("*");
 
   if (bookId) {
     query = query.eq("book_id", bookId);
+  }
+  if (status && status !== "all") {
+    query = query.eq("status", status);
   }
 
   const { data, error } = await query.order("created_at", { ascending: false });
@@ -312,17 +331,10 @@ export const getReviews = async (bookId?: string): Promise<Review[]> => {
     return [];
   }
 
-  return data.map((review) => ({
-    id: review.id,
-    bookId: review.book_id,
-    userName: review.user_name,
-    rating: review.rating,
-    comment: review.comment || "",
-    createdAt: review.created_at,
-  }));
+  return data.map(mapReview);
 };
 
-export const addReview = async (review: Omit<Review, "id" | "createdAt">): Promise<Review | null> => {
+export const addReview = async (review: Omit<Review, "id" | "createdAt" | "status" | "helpfulCount">): Promise<Review | null> => {
   const { data, error } = await supabase
     .from("reviews")
     .insert({
@@ -330,7 +342,8 @@ export const addReview = async (review: Omit<Review, "id" | "createdAt">): Promi
       user_name: review.userName,
       rating: review.rating,
       comment: review.comment,
-    })
+      status: "pending",
+    } as any)
     .select()
     .single();
 
@@ -339,14 +352,18 @@ export const addReview = async (review: Omit<Review, "id" | "createdAt">): Promi
     return null;
   }
 
-  return {
-    id: data.id,
-    bookId: data.book_id,
-    userName: data.user_name,
-    rating: data.rating,
-    comment: data.comment || "",
-    createdAt: data.created_at,
-  };
+  return mapReview(data);
+};
+
+export const updateReviewStatus = async (id: string, status: ReviewStatus) => {
+  const { error } = await supabase.from("reviews").update({ status } as any).eq("id", id);
+  if (error) console.error("Error updating review status:", error);
+};
+
+export const bulkUpdateReviewStatus = async (ids: string[], status: ReviewStatus) => {
+  if (!ids.length) return;
+  const { error } = await supabase.from("reviews").update({ status } as any).in("id", ids);
+  if (error) console.error("Error bulk updating review status:", error);
 };
 
 export const deleteReview = async (id: string) => {
@@ -355,6 +372,63 @@ export const deleteReview = async (id: string) => {
     console.error("Error deleting review:", error);
   }
 };
+
+// Helpful votes
+const VOTER_KEY_STORAGE = "review_voter_key";
+export const getVoterKey = (): string => {
+  let key = localStorage.getItem(VOTER_KEY_STORAGE);
+  if (!key) {
+    key = `v_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+    localStorage.setItem(VOTER_KEY_STORAGE, key);
+  }
+  return key;
+};
+
+export const voteReviewHelpful = async (reviewId: string) => {
+  const { error } = await supabase
+    .from("review_votes")
+    .insert({ review_id: reviewId, voter_key: getVoterKey() } as any);
+  if (error) console.error("Error voting review:", error);
+};
+
+export const removeReviewVote = async (reviewId: string) => {
+  const { error } = await supabase
+    .from("review_votes")
+    .delete()
+    .eq("review_id", reviewId)
+    .eq("voter_key", getVoterKey());
+  if (error) console.error("Error removing vote:", error);
+};
+
+export const getMyVotedReviewIds = async (reviewIds: string[]): Promise<string[]> => {
+  if (!reviewIds.length) return [];
+  const { data, error } = await supabase
+    .from("review_votes")
+    .select("review_id")
+    .eq("voter_key", getVoterKey())
+    .in("review_id", reviewIds);
+  if (error || !data) return [];
+  return data.map((v: any) => v.review_id);
+};
+
+/** Reviewer badge stats computed from approved reviews. */
+export const getReviewerStats = async (): Promise<Record<string, { count: number; helpful: number }>> => {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("user_name, helpful_count, status")
+    .eq("status", "approved");
+  if (error || !data) return {};
+  const stats: Record<string, { count: number; helpful: number }> = {};
+  for (const r of data as any[]) {
+    if (!r.user_name || r.user_name === "Anonymous") continue;
+    const s = stats[r.user_name] || { count: 0, helpful: 0 };
+    s.count += 1;
+    s.helpful += r.helpful_count ?? 0;
+    stats[r.user_name] = s;
+  }
+  return stats;
+};
+
 
 // Borrow Records
 export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
