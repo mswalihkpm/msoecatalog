@@ -69,11 +69,23 @@ const BookDetail = () => {
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
-      const reviewsData = await getReviews(id);
+      const reviewsData = await getReviews(id, "approved");
+      reviewsData.sort((a, b) => {
+        const h = (b.helpfulCount ?? 0) - (a.helpfulCount ?? 0);
+        if (h !== 0) return h;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       setReviews(reviewsData);
+      const [stats, voted] = await Promise.all([
+        getReviewerStats(),
+        getMyVotedReviewIds(reviewsData.map((r) => r.id)),
+      ]);
+      setReviewerStats(stats);
+      setVotedIds(voted);
       const count = await getPendingRequestCount(id);
       setPendingCount(count);
     }
+
   };
 
   useEffect(() => {
