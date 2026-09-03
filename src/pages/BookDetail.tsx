@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount, getAdminSettings, hasStudentRequestedBook, getStudentPendingRequestForBook, deleteBookRequest } from "@/lib/store";
+import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getReviewerStats, getMyVotedReviewIds, getStudentPendingRequestCount, getAdminSettings, hasStudentRequestedBook, getStudentPendingRequestForBook, deleteBookRequest } from "@/lib/store";
 import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -33,6 +33,8 @@ const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<Book | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewerStats, setReviewerStats] = useState<Record<string, { count: number; helpful: number }>>({});
+  const [votedIds, setVotedIds] = useState<string[]>([]);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [daysToReturn, setDaysToReturn] = useState<string>("");
@@ -535,7 +537,14 @@ const BookDetail = () => {
                 {reviews
                   .filter(r => r.comment && r.comment.trim())
                   .map((review) => (
-                    <ReviewCard key={review.id} review={review} onDelete={loadData} />
+                    <ReviewCard
+                      key={review.id}
+                      review={review}
+                      onDelete={loadData}
+                      reviewerStat={reviewerStats[review.userName]}
+                      hasVoted={votedIds.includes(review.id)}
+                      showHelpful
+                    />
                   ))}
               </div>
             ) : (
