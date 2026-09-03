@@ -1,10 +1,12 @@
 import { LoadingLogo } from "@/components/LoadingLogo";
 import { useState, useEffect, useMemo } from "react";
-import { Search, Star, Trash2, BookOpen } from "lucide-react";
+import { Search, Star, Trash2, BookOpen, Check, EyeOff, ThumbsUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getReviews, getBooks, deleteReview } from "@/lib/store";
+import {
+  getReviews,
+  getBooks,
+  deleteReview,
+  updateReviewStatus,
+  bulkUpdateReviewStatus,
+  type ReviewStatus,
+} from "@/lib/store";
 import { Review, Book } from "@/lib/types";
 import { StarRating } from "@/components/StarRating";
 import { format } from "date-fns";
@@ -34,6 +43,8 @@ const ReviewsManagement = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [tab, setTab] = useState<ReviewStatus>("pending");
+  const [selected, setSelected] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,11 +53,12 @@ const ReviewsManagement = () => {
 
   const loadData = async () => {
     const [reviewsData, booksData] = await Promise.all([
-      getReviews(),
+      getReviews(undefined, "all"),
       getBooks(),
     ]);
     setReviews(reviewsData);
     setBooks(booksData);
+    setSelected([]);
     setIsLoading(false);
   };
 
@@ -61,10 +73,29 @@ const ReviewsManagement = () => {
     loadData();
   };
 
+  const handleStatus = async (id: string, status: ReviewStatus) => {
+    await updateReviewStatus(id, status);
+    toast.success(status === "approved" ? "Review approved" : "Review hidden");
+    loadData();
+  };
+
+  const handleBulk = async (status: ReviewStatus) => {
+    await bulkUpdateReviewStatus(selected, status);
+    toast.success(`${selected.length} review(s) ${status === "approved" ? "approved" : "hidden"}`);
+    loadData();
+  };
+
+  const counts = useMemo(() => ({
+    pending: reviews.filter((r) => (r.status ?? "approved") === "pending").length,
+    approved: reviews.filter((r) => (r.status ?? "approved") === "approved").length,
+    hidden: reviews.filter((r) => r.status === "hidden").length,
+  }), [reviews]);
+
   const filteredReviews = useMemo(() => {
-    if (!searchQuery) return reviews;
     const query = searchQuery.toLowerCase();
     return reviews.filter((review) => {
+      if ((review.status ?? "approved") !== tab) return false;
+      if (!query) return true;
       const bookTitle = getBookTitle(review.bookId).toLowerCase();
       return (
         review.userName.toLowerCase().includes(query) ||
@@ -72,7 +103,9 @@ const ReviewsManagement = () => {
         (review.comment && review.comment.toLowerCase().includes(query))
       );
     });
-  }, [reviews, searchQuery, books]);
+  }, [reviews, searchQuery, books, tab]);
+
+  const allSelected = filteredReviews.length > 0 && filteredReviews.every((r) => selected.includes(r.id));
 
   if (isLoading) {
     return (
@@ -86,7 +119,7 @@ const ReviewsManagement = () => {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-3xl font-bold">Reviews Management</h1>
-        <p className="text-muted-foreground">Manage all book reviews and ratings</p>
+        <p className="text-muted-foreground">Approve, hide or delete book reviews and ratings</p>
       </div>
 
       <Card>
@@ -95,11 +128,9 @@ const ReviewsManagement = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Star className="h-5 w-5" />
-                All Reviews
+                Reviews
               </CardTitle>
-              <CardDescription>
-                {reviews.length} total reviews
-              </CardDescription>
+              <CardDescription>{reviews.length} total reviews</CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -111,16 +142,48 @@ const ReviewsManagement = () => {
               />
             </div>
           </div>
+
+          <Tabs value={tab} onValueChange={(v) => { setTab(v as ReviewStatus); setSelected([]); }} className="mt-4">
+            <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-flex">
+              <TabsTrigger value="pending" className="gap-2">
+                Pending
+                {counts.pending > 0 && <Badge variant="destructive">{counts.pending}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="approved">Approved ({counts.approved})</TabsTrigger>
+              <TabsTrigger value="hidden">Hidden ({counts.hidden})</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {selected.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              <span className="text-sm text-muted-foreground">{selected.length} selected</span>
+              <Button size="sm" onClick={() => handleBulk("approved")} className="gap-1">
+                <Check className="h-4 w-4" /> Approve selected
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleBulk("hidden")} className="gap-1">
+                <EyeOff className="h-4 w-4" /> Hide selected
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <div className="rounded-md border">
-            <Table className="min-w-[600px]">
+            <Table className="min-w-[750px]">
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={(v) =>
+                        setSelected(v ? filteredReviews.map((r) => r.id) : [])
+                      }
+                    />
+                  </TableHead>
                   <TableHead>Book</TableHead>
                   <TableHead>Reviewer</TableHead>
                   <TableHead>Rating</TableHead>
                   <TableHead>Comment</TableHead>
+                  <TableHead>Helpful</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -128,13 +191,23 @@ const ReviewsManagement = () => {
               <TableBody>
                 {filteredReviews.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No reviews found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredReviews.map((review) => (
                     <TableRow key={review.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selected.includes(review.id)}
+                          onCheckedChange={(v) =>
+                            setSelected((prev) =>
+                              v ? [...prev, review.id] : prev.filter((id) => id !== review.id)
+                            )
+                          }
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -154,31 +227,57 @@ const ReviewsManagement = () => {
                           {review.comment || <span className="italic">No comment</span>}
                         </p>
                       </TableCell>
+                      <TableCell>
+                        <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <ThumbsUp className="h-3.5 w-3.5" />
+                          {review.helpfulCount ?? 0}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(review.createdAt), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                        <div className="flex items-center justify-end gap-1">
+                          {(review.status ?? "approved") !== "approved" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleStatus(review.id, "approved")}
+                            >
+                              <Check className="h-4 w-4 text-primary" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Review?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete this review by {review.userName}. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteReview(review.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                          )}
+                          {(review.status ?? "approved") !== "hidden" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleStatus(review.id, "hidden")}
+                            >
+                              <EyeOff className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Review?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this review by {review.userName}. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteReview(review.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
