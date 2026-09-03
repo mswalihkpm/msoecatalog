@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getStudentPendingRequestCount, getAdminSettings, hasStudentRequestedBook, getStudentPendingRequestForBook, deleteBookRequest } from "@/lib/store";
+import { getBookById, getReviews, addBookRequest, getPendingRequestCount, getReviewerStats, getMyVotedReviewIds, getStudentPendingRequestCount, getAdminSettings, hasStudentRequestedBook, getStudentPendingRequestForBook, deleteBookRequest } from "@/lib/store";
 import { Book, Review, Student } from "@/lib/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -33,6 +33,8 @@ const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<Book | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewerStats, setReviewerStats] = useState<Record<string, { count: number; helpful: number }>>({});
+  const [votedIds, setVotedIds] = useState<string[]>([]);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [daysToReturn, setDaysToReturn] = useState<string>("");
@@ -69,11 +71,23 @@ const BookDetail = () => {
     if (id) {
       const bookData = await getBookById(id);
       setBook(bookData || null);
-      const reviewsData = await getReviews(id);
+      const reviewsData = await getReviews(id, "approved");
+      reviewsData.sort((a, b) => {
+        const h = (b.helpfulCount ?? 0) - (a.helpfulCount ?? 0);
+        if (h !== 0) return h;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       setReviews(reviewsData);
+      const [stats, voted] = await Promise.all([
+        getReviewerStats(),
+        getMyVotedReviewIds(reviewsData.map((r) => r.id)),
+      ]);
+      setReviewerStats(stats);
+      setVotedIds(voted);
       const count = await getPendingRequestCount(id);
       setPendingCount(count);
     }
+
   };
 
   useEffect(() => {
@@ -523,7 +537,14 @@ const BookDetail = () => {
                 {reviews
                   .filter(r => r.comment && r.comment.trim())
                   .map((review) => (
-                    <ReviewCard key={review.id} review={review} onDelete={loadData} />
+                    <ReviewCard
+                      key={review.id}
+                      review={review}
+                      onDelete={loadData}
+                      reviewerStat={reviewerStats[review.userName]}
+                      hasVoted={votedIds.includes(review.id)}
+                      showHelpful
+                    />
                   ))}
               </div>
             ) : (
