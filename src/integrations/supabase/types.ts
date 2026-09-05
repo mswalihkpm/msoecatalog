@@ -87,6 +87,7 @@ export type Database = {
           requester_name: string
           return_date: string | null
           status: string
+          student_id: string | null
         }
         Insert: {
           book_id: string
@@ -100,6 +101,7 @@ export type Database = {
           requester_name: string
           return_date?: string | null
           status?: string
+          student_id?: string | null
         }
         Update: {
           book_id?: string
@@ -113,6 +115,7 @@ export type Database = {
           requester_name?: string
           return_date?: string | null
           status?: string
+          student_id?: string | null
         }
         Relationships: [
           {
@@ -120,6 +123,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -205,6 +215,7 @@ export type Database = {
           return_date: string
           review_conducted: boolean
           review_points: number | null
+          student_id: string | null
         }
         Insert: {
           book_id: string
@@ -220,6 +231,7 @@ export type Database = {
           return_date: string
           review_conducted?: boolean
           review_points?: number | null
+          student_id?: string | null
         }
         Update: {
           book_id?: string
@@ -235,6 +247,7 @@ export type Database = {
           return_date?: string
           review_conducted?: boolean
           review_points?: number | null
+          student_id?: string | null
         }
         Relationships: [
           {
@@ -242,6 +255,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "borrow_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -427,6 +447,7 @@ export type Database = {
           id: string
           rating: number
           status: string
+          student_id: string | null
           user_name: string
         }
         Insert: {
@@ -437,6 +458,7 @@ export type Database = {
           id?: string
           rating: number
           status?: string
+          student_id?: string | null
           user_name: string
         }
         Update: {
@@ -447,6 +469,7 @@ export type Database = {
           id?: string
           rating?: number
           status?: string
+          student_id?: string | null
           user_name?: string
         }
         Relationships: [
@@ -455,6 +478,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -545,6 +575,7 @@ export type Database = {
           id: string
           migrated_from: string | null
           name: string
+          spr_student_id: string | null
           student_type: string
           updated_at: string
         }
@@ -558,6 +589,7 @@ export type Database = {
           id?: string
           migrated_from?: string | null
           name: string
+          spr_student_id?: string | null
           student_type?: string
           updated_at?: string
         }
@@ -571,6 +603,7 @@ export type Database = {
           id?: string
           migrated_from?: string | null
           name?: string
+          spr_student_id?: string | null
           student_type?: string
           updated_at?: string
         }
@@ -578,7 +611,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      spr_migration_report: {
+        Row: {
+          book_title: string | null
+          reason: string | null
+          record_date: string | null
+          record_id: string | null
+          source_table: string | null
+          student_class: string | null
+          student_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       migrate_student: {
