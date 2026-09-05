@@ -1,0 +1,1 @@
+ALTER VIEW public.spr_migration_report SET (security_invoker = on);
