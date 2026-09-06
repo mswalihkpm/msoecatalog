@@ -456,6 +456,7 @@ export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
     readStatus: (record.read_status as ReadStatus) || "not_read",
     reviewConducted: !!record.review_conducted,
     reviewPoints: record.review_points ?? undefined,
+    studentId: record.student_id || undefined,
   }));
 };
 
@@ -587,6 +588,7 @@ export const getBookRequests = async (): Promise<BookRequest[]> => {
     requestDate: request.request_date,
     returnDate: (request as any).return_date || undefined,
     status: request.status as "pending" | "approved" | "rejected",
+    studentId: (request as any).student_id || undefined,
   }));
 };
 

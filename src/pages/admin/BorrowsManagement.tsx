@@ -149,6 +149,7 @@ const BorrowsManagement = () => {
         borrowedDate: formData.borrowedDate,
         returnDate: formData.returnDate,
         isReturned: false,
+        studentId: selectedBorrower?.id,
       });
       toast.success("Borrow record added successfully");
     }
@@ -196,6 +197,7 @@ const BorrowsManagement = () => {
           borrowedDate,
           returnDate,
           isReturned: false,
+          studentId: next.studentId,
         });
         await updateBookRequest(next.id, { status: "approved" });
         toast.success(`Next request auto-approved: ${next.requesterName}`);
@@ -261,6 +263,7 @@ const BorrowsManagement = () => {
       borrowedDate: approveFormData.borrowedDate,
       returnDate: approveFormData.returnDate,
       isReturned: false,
+      studentId: approveRequest.studentId,
     });
 
     await updateBookRequest(approveRequest.id, { status: "approved" });
