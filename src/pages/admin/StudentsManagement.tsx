@@ -81,7 +81,7 @@ const StudentsManagement = () => {
       return;
     }
 
-    await addStudent({
+    const created = await addStudent({
       name: newStudent.name,
       class: newStudent.class,
       code: newStudent.code,
@@ -90,6 +90,10 @@ const StudentsManagement = () => {
       dateOfBirth: newStudent.dateOfBirth || undefined,
       sprStudentId: newStudent.sprStudentId.trim() || undefined,
     });
+    if (!created) {
+      toast.error("Could not add student. If an SPR Student ID was entered, make sure it is not already used.");
+      return;
+    }
     toast.success("Student added successfully");
     setNewStudent({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "", sprStudentId: "" });
     setIsAddDialogOpen(false);
@@ -111,15 +115,19 @@ const StudentsManagement = () => {
       return;
     }
 
-    await updateStudent(editStudent.id, {
+    const updateError = await updateStudent(editStudent.id, {
       name: editForm.name,
       class: editForm.class,
       code: editForm.code,
       houseName: editForm.houseName || undefined,
       fatherName: editForm.fatherName || undefined,
       dateOfBirth: editForm.dateOfBirth || undefined,
-      sprStudentId: editForm.sprStudentId.trim() || undefined,
+      sprStudentId: editForm.sprStudentId.trim(),
     });
+    if (updateError) {
+      toast.error("Could not save. This SPR Student ID may already belong to another student.");
+      return;
+    }
     toast.success("Student updated successfully");
     setEditStudent(null);
     loadStudents();

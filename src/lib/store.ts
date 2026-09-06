@@ -884,6 +884,7 @@ export const updateStudent = async (id: string, updates: Partial<Omit<Student, "
   if (updates.sprStudentId !== undefined) dbUpdates.spr_student_id = updates.sprStudentId?.trim() || null;
   const { error } = await supabase.from("students").update(dbUpdates).eq("id", id);
   if (error) console.error("Error updating student:", error);
+  return error ? error.message : null;
 };
 
 export const deleteStudent = async (id: string) => {
