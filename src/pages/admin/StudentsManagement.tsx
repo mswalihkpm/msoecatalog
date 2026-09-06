@@ -43,10 +43,10 @@ const StudentsManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "", sprStudentId: "" });
   const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+  const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "", sprStudentId: "" });
 
   // House / Father names must be entered WITHOUT spaces.
   const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
@@ -88,9 +88,10 @@ const StudentsManagement = () => {
       houseName: newStudent.houseName || undefined,
       fatherName: newStudent.fatherName || undefined,
       dateOfBirth: newStudent.dateOfBirth || undefined,
+      sprStudentId: newStudent.sprStudentId.trim() || undefined,
     });
     toast.success("Student added successfully");
-    setNewStudent({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+    setNewStudent({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "", sprStudentId: "" });
     setIsAddDialogOpen(false);
     loadStudents();
   };
@@ -117,6 +118,7 @@ const StudentsManagement = () => {
       houseName: editForm.houseName || undefined,
       fatherName: editForm.fatherName || undefined,
       dateOfBirth: editForm.dateOfBirth || undefined,
+      sprStudentId: editForm.sprStudentId.trim() || undefined,
     });
     toast.success("Student updated successfully");
     setEditStudent(null);
@@ -150,6 +152,7 @@ const StudentsManagement = () => {
           const code = String(row["Code"] || row["code"] || row["Secret Code"] || row["secret_code"] || "").trim();
           const houseName = noSpace(String(row["House"] || row["HouseName"] || row["House Name"] || row["house_name"] || ""));
           const fatherName = noSpace(String(row["Father"] || row["FatherName"] || row["Father Name"] || row["father_name"] || ""));
+          const sprStudentId = String(row["SPR ID"] || row["SPR Id"] || row["SPRID"] || row["spr_student_id"] || row["SPR Student ID"] || "").trim();
           const dateOfBirth = formatDob(String(row["DOB"] || row["DateOfBirth"] || row["Date of Birth"] || row["date_of_birth"] || ""));
 
           if (name && studentClass) {
@@ -160,12 +163,13 @@ const StudentsManagement = () => {
               houseName: houseName || undefined,
               fatherName: fatherName || undefined,
               dateOfBirth: dateOfBirth.length === 10 ? dateOfBirth : undefined,
+              sprStudentId: sprStudentId || undefined,
             });
           }
         }
 
         if (studentsToAdd.length === 0) {
-          toast.error("No valid students found. Ensure columns: Name, Class, Code (House, Father, DOB optional)");
+          toast.error("No valid students found. Ensure columns: Name, Class, Code (House, Father, DOB, SPR ID optional)");
           return;
         }
 
@@ -399,6 +403,14 @@ const StudentsManagement = () => {
                 maxLength={10}
               />
             </div>
+            <div className="space-y-2">
+              <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Input
+                placeholder="e.g. SPR-10234"
+                value={editForm.sprStudentId}
+                onChange={(e) => setEditForm({ ...editForm, sprStudentId: e.target.value })}
+              />
+            </div>
             <Button onClick={handleEditStudent} className="w-full">
               Save Changes
             </Button>
@@ -499,6 +511,7 @@ const StudentsManagement = () => {
                                 houseName: student.houseName || "",
                                 fatherName: student.fatherName || "",
                                 dateOfBirth: student.dateOfBirth || "",
+                                sprStudentId: student.sprStudentId || "",
                               });
                             }}
                           >
