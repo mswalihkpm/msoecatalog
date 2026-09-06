@@ -343,6 +343,7 @@ export const addReview = async (review: Omit<Review, "id" | "createdAt" | "statu
       rating: review.rating,
       comment: review.comment,
       status: "pending",
+      student_id: review.studentId || null,
     } as any)
     .select()
     .single();
@@ -471,7 +472,8 @@ export const addBorrowRecord = async (record: Omit<BorrowRecord, "id">): Promise
       borrowed_date: record.borrowedDate,
       return_date: record.returnDate,
       is_returned: record.isReturned,
-    })
+      student_id: record.studentId || null,
+    } as any)
     .select()
     .single();
 
@@ -627,6 +629,7 @@ export const addBookRequest = async (
     requester_name: request.requesterName,
     requester_class: request.requesterClass,
     status: initialStatus,
+    student_id: request.studentId || null,
   };
   if (request.returnDate) {
     insertData.return_date = request.returnDate;
@@ -810,6 +813,7 @@ const mapStudent = (student: any): Student => ({
   houseName: student.house_name || undefined,
   fatherName: student.father_name || undefined,
   dateOfBirth: student.date_of_birth || undefined,
+  sprStudentId: student.spr_student_id || undefined,
   studentType: (student.student_type as any) || "new",
   migratedFrom: student.migrated_from || undefined,
   createdAt: student.created_at,
@@ -835,6 +839,7 @@ export const addStudent = async (student: Omit<Student, "id" | "createdAt" | "up
       house_name: student.houseName || null,
       father_name: student.fatherName || null,
       date_of_birth: student.dateOfBirth || null,
+      spr_student_id: student.sprStudentId?.trim() || null,
     } as any)
     .select()
     .single();
@@ -856,6 +861,7 @@ export const bulkAddStudents = async (students: Omit<Student, "id" | "createdAt"
         house_name: student.houseName || null,
         father_name: student.fatherName || null,
         date_of_birth: student.dateOfBirth || null,
+        spr_student_id: student.sprStudentId?.trim() || null,
       }));
       const { data, error } = await supabase.from("students").insert(dbStudents as any).select();
       if (error) { console.error("Error bulk adding students (chunk):", error); break; }
@@ -873,6 +879,7 @@ export const updateStudent = async (id: string, updates: Partial<Omit<Student, "
   if (updates.houseName !== undefined) dbUpdates.house_name = updates.houseName || null;
   if (updates.fatherName !== undefined) dbUpdates.father_name = updates.fatherName || null;
   if (updates.dateOfBirth !== undefined) dbUpdates.date_of_birth = updates.dateOfBirth || null;
+  if (updates.sprStudentId !== undefined) dbUpdates.spr_student_id = updates.sprStudentId?.trim() || null;
   const { error } = await supabase.from("students").update(dbUpdates).eq("id", id);
   if (error) console.error("Error updating student:", error);
 };

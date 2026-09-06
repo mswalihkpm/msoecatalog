@@ -40,6 +40,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
       userName: "Anonymous", // Rating is anonymous
       rating: ratingOnly,
       comment: "", // No comment for rating-only
+      studentId: selectedStudentForRating.id,
     });
 
     toast.success("Your rating was sent for approval.");
@@ -65,6 +66,7 @@ export const ReviewForm = ({ bookId, onReviewAdded }: ReviewFormProps) => {
       userName: `${selectedStudentForReview.name} (${selectedStudentForReview.class})`,
       rating: 0, // No rating for text reviews
       comment: comment.trim(),
+      studentId: selectedStudentForReview.id,
     });
 
     toast.success("Your review was sent for approval.");

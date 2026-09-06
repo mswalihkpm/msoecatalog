@@ -27,6 +27,7 @@ export interface Review {
   createdAt: string;
   status?: "pending" | "approved" | "hidden";
   helpfulCount?: number;
+  studentId?: string;
 }
 
 
@@ -43,6 +44,7 @@ export interface BorrowRecord {
   readStatus?: ReadStatus;
   reviewConducted?: boolean;
   reviewPoints?: number;
+  studentId?: string;
 }
 
 
@@ -57,6 +59,7 @@ export interface BookRequest {
   requestDate: string;
   returnDate?: string;
   status: "pending" | "approved" | "rejected";
+  studentId?: string;
 }
 
 /** Editable 14x7 scoring table. Keys are categories, values map page-range -> points. */
@@ -117,6 +120,8 @@ export interface Student {
   fatherName?: string;
   dateOfBirth?: string; // stored as DD/MM/YYYY
   studentType?: StudentType;
+  /** External Students Performance Rate (SPR) identifier. */
+  sprStudentId?: string;
   migratedFrom?: string;
   createdAt: string;
   updatedAt: string;
