@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { Plus, Upload, Trash2, Search, Users, Pencil } from "lucide-react";
 import { getStudents, addStudent, deleteStudent, updateStudent, bulkAddStudents, bulkDeleteStudents } from "@/lib/store";
 import { Student } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 
 const StudentsManagement = () => {
@@ -57,10 +58,21 @@ const StudentsManagement = () => {
     return `${d.slice(0,2)}/${d.slice(2,4)}/${d.slice(4)}`;
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [unlinked, setUnlinked] = useState<{ noMatch: number; ambiguous: number } | null>(null);
 
   useEffect(() => {
     loadStudents();
+    loadLinkStatus();
   }, []);
+
+  const loadLinkStatus = async () => {
+    const { data, error } = await supabase.from("spr_migration_report").select("reason");
+    if (error || !data) return;
+    setUnlinked({
+      noMatch: data.filter((r) => r.reason === "no_match").length,
+      ambiguous: data.filter((r) => r.reason === "ambiguous").length,
+    });
+  };
 
   const loadStudents = async () => {
     const data = await getStudents();
@@ -426,6 +438,21 @@ const StudentsManagement = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {unlinked && (unlinked.noMatch > 0 || unlinked.ambiguous > 0) && (
+        <Card className="border-primary/30">
+          <CardHeader>
+            <CardTitle className="text-base">Reading records not yet linked to a student account</CardTitle>
+            <CardDescription>
+              Older records saved only a name. New borrows, requests and reviews link automatically.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3 text-sm">
+            <Badge variant="secondary">No matching student: {unlinked.noMatch}</Badge>
+            <Badge variant="secondary">Same name used by more than one student: {unlinked.ambiguous}</Badge>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
