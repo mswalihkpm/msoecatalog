@@ -163,6 +163,7 @@ const BookDetail = () => {
         bookVolume: book.volume,
         requesterName: selectedStudent.name,
         requesterClass: selectedStudent.class,
+        studentId: selectedStudent.id,
         returnDate: calculatedReturnDate ? format(calculatedReturnDate, "yyyy-MM-dd") : undefined,
       });
 

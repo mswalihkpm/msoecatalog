@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { Plus, Upload, Trash2, Search, Users, Pencil } from "lucide-react";
 import { getStudents, addStudent, deleteStudent, updateStudent, bulkAddStudents, bulkDeleteStudents } from "@/lib/store";
 import { Student } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 
 const StudentsManagement = () => {
@@ -43,10 +44,10 @@ const StudentsManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+  const [newStudent, setNewStudent] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "", sprStudentId: "" });
   const [historyStudent, setHistoryStudent] = useState<string | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+  const [editForm, setEditForm] = useState({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "", sprStudentId: "" });
 
   // House / Father names must be entered WITHOUT spaces.
   const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
@@ -57,10 +58,21 @@ const StudentsManagement = () => {
     return `${d.slice(0,2)}/${d.slice(2,4)}/${d.slice(4)}`;
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [unlinked, setUnlinked] = useState<{ noMatch: number; ambiguous: number } | null>(null);
 
   useEffect(() => {
     loadStudents();
+    loadLinkStatus();
   }, []);
+
+  const loadLinkStatus = async () => {
+    const { data, error } = await supabase.from("spr_migration_report").select("reason");
+    if (error || !data) return;
+    setUnlinked({
+      noMatch: data.filter((r) => r.reason === "no_match").length,
+      ambiguous: data.filter((r) => r.reason === "ambiguous").length,
+    });
+  };
 
   const loadStudents = async () => {
     const data = await getStudents();
@@ -81,16 +93,21 @@ const StudentsManagement = () => {
       return;
     }
 
-    await addStudent({
+    const created = await addStudent({
       name: newStudent.name,
       class: newStudent.class,
       code: newStudent.code,
       houseName: newStudent.houseName || undefined,
       fatherName: newStudent.fatherName || undefined,
       dateOfBirth: newStudent.dateOfBirth || undefined,
+      sprStudentId: newStudent.sprStudentId.trim() || undefined,
     });
+    if (!created) {
+      toast.error("Could not add student. If an SPR Student ID was entered, make sure it is not already used.");
+      return;
+    }
     toast.success("Student added successfully");
-    setNewStudent({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "" });
+    setNewStudent({ name: "", class: "", code: "", houseName: "", fatherName: "", dateOfBirth: "", sprStudentId: "" });
     setIsAddDialogOpen(false);
     loadStudents();
   };
@@ -110,14 +127,19 @@ const StudentsManagement = () => {
       return;
     }
 
-    await updateStudent(editStudent.id, {
+    const updateError = await updateStudent(editStudent.id, {
       name: editForm.name,
       class: editForm.class,
       code: editForm.code,
       houseName: editForm.houseName || undefined,
       fatherName: editForm.fatherName || undefined,
       dateOfBirth: editForm.dateOfBirth || undefined,
+      sprStudentId: editForm.sprStudentId.trim(),
     });
+    if (updateError) {
+      toast.error("Could not save. This SPR Student ID may already belong to another student.");
+      return;
+    }
     toast.success("Student updated successfully");
     setEditStudent(null);
     loadStudents();
@@ -150,6 +172,7 @@ const StudentsManagement = () => {
           const code = String(row["Code"] || row["code"] || row["Secret Code"] || row["secret_code"] || "").trim();
           const houseName = noSpace(String(row["House"] || row["HouseName"] || row["House Name"] || row["house_name"] || ""));
           const fatherName = noSpace(String(row["Father"] || row["FatherName"] || row["Father Name"] || row["father_name"] || ""));
+          const sprStudentId = String(row["SPR ID"] || row["SPR Id"] || row["SPRID"] || row["spr_student_id"] || row["SPR Student ID"] || "").trim();
           const dateOfBirth = formatDob(String(row["DOB"] || row["DateOfBirth"] || row["Date of Birth"] || row["date_of_birth"] || ""));
 
           if (name && studentClass) {
@@ -160,12 +183,13 @@ const StudentsManagement = () => {
               houseName: houseName || undefined,
               fatherName: fatherName || undefined,
               dateOfBirth: dateOfBirth.length === 10 ? dateOfBirth : undefined,
+              sprStudentId: sprStudentId || undefined,
             });
           }
         }
 
         if (studentsToAdd.length === 0) {
-          toast.error("No valid students found. Ensure columns: Name, Class, Code (House, Father, DOB optional)");
+          toast.error("No valid students found. Ensure columns: Name, Class, Code (House, Father, DOB, SPR ID optional)");
           return;
         }
 
@@ -399,6 +423,14 @@ const StudentsManagement = () => {
                 maxLength={10}
               />
             </div>
+            <div className="space-y-2">
+              <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Input
+                placeholder="e.g. SPR-10234"
+                value={editForm.sprStudentId}
+                onChange={(e) => setEditForm({ ...editForm, sprStudentId: e.target.value })}
+              />
+            </div>
             <Button onClick={handleEditStudent} className="w-full">
               Save Changes
             </Button>
@@ -406,6 +438,21 @@ const StudentsManagement = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {unlinked && (unlinked.noMatch > 0 || unlinked.ambiguous > 0) && (
+        <Card className="border-primary/30">
+          <CardHeader>
+            <CardTitle className="text-base">Reading records not yet linked to a student account</CardTitle>
+            <CardDescription>
+              Older records saved only a name. New borrows, requests and reviews link automatically.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3 text-sm">
+            <Badge variant="secondary">No matching student: {unlinked.noMatch}</Badge>
+            <Badge variant="secondary">Same name used by more than one student: {unlinked.ambiguous}</Badge>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -499,6 +546,7 @@ const StudentsManagement = () => {
                                 houseName: student.houseName || "",
                                 fatherName: student.fatherName || "",
                                 dateOfBirth: student.dateOfBirth || "",
+                                sprStudentId: student.sprStudentId || "",
                               });
                             }}
                           >
