@@ -355,6 +355,15 @@ const StudentsManagement = () => {
                      maxLength={10}
                    />
                  </div>
+                 <div className="space-y-2">
+                   <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional, format SPR0001)</span></Label>
+                   <Input
+                     placeholder="e.g. SPR0001"
+                     value={newStudent.sprStudentId}
+                     onChange={(e) => setNewStudent({ ...newStudent, sprStudentId: normalizeSpr(e.target.value) })}
+                     maxLength={7}
+                   />
+                 </div>
                  <Button onClick={handleAddStudent} className="w-full">
                   Add Student
                 </Button>
