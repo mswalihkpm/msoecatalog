@@ -433,11 +433,12 @@ const StudentsManagement = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional, format SPR0001)</span></Label>
               <Input
-                placeholder="e.g. SPR-10234"
+                placeholder="e.g. SPR0001"
                 value={editForm.sprStudentId}
-                onChange={(e) => setEditForm({ ...editForm, sprStudentId: e.target.value })}
+                onChange={(e) => setEditForm({ ...editForm, sprStudentId: normalizeSpr(e.target.value) })}
+                maxLength={7}
               />
             </div>
             <Button onClick={handleEditStudent} className="w-full">
