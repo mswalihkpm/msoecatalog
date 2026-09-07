@@ -51,6 +51,13 @@ const StudentsManagement = () => {
 
   // House / Father names must be entered WITHOUT spaces.
   const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
+  const normalizeSpr = (v: string) => {
+    const cleaned = v.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const digits = cleaned.replace(/^SPR/, "").replace(/\D/g, "").slice(0, 4);
+    if (!cleaned) return "";
+    return `SPR${digits}`;
+  };
+  const isValidSpr = (v: string) => /^SPR\d{4}$/.test(v);
   const formatDob = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 8);
     if (d.length <= 2) return d;
@@ -93,6 +100,18 @@ const StudentsManagement = () => {
       return;
     }
 
+    if (newStudent.sprStudentId && !isValidSpr(newStudent.sprStudentId)) {
+      toast.error("SPR Student ID must look like SPR0001 (SPR followed by 4 digits)");
+      return;
+    }
+    if (
+      newStudent.sprStudentId &&
+      students.some((s) => (s.sprStudentId || "").toUpperCase() === newStudent.sprStudentId)
+    ) {
+      toast.error("This SPR Student ID is already used by another student");
+      return;
+    }
+
     const created = await addStudent({
       name: newStudent.name,
       class: newStudent.class,
@@ -124,6 +143,20 @@ const StudentsManagement = () => {
     }
     if (/\s/.test(editForm.houseName) || /\s/.test(editForm.fatherName)) {
       toast.error("House Name and Father's Name must be entered WITHOUT any space");
+      return;
+    }
+
+    if (editForm.sprStudentId && !isValidSpr(editForm.sprStudentId)) {
+      toast.error("SPR Student ID must look like SPR0001 (SPR followed by 4 digits)");
+      return;
+    }
+    if (
+      editForm.sprStudentId &&
+      students.some(
+        (s) => s.id !== editStudent.id && (s.sprStudentId || "").toUpperCase() === editForm.sprStudentId,
+      )
+    ) {
+      toast.error("This SPR Student ID is already used by another student");
       return;
     }
 
@@ -173,6 +206,7 @@ const StudentsManagement = () => {
           const houseName = noSpace(String(row["House"] || row["HouseName"] || row["House Name"] || row["house_name"] || ""));
           const fatherName = noSpace(String(row["Father"] || row["FatherName"] || row["Father Name"] || row["father_name"] || ""));
           const sprStudentId = String(row["SPR ID"] || row["SPR Id"] || row["SPRID"] || row["spr_student_id"] || row["SPR Student ID"] || "").trim();
+          const sprId = normalizeSpr(sprStudentId);
           const dateOfBirth = formatDob(String(row["DOB"] || row["DateOfBirth"] || row["Date of Birth"] || row["date_of_birth"] || ""));
 
           if (name && studentClass) {
@@ -183,7 +217,7 @@ const StudentsManagement = () => {
               houseName: houseName || undefined,
               fatherName: fatherName || undefined,
               dateOfBirth: dateOfBirth.length === 10 ? dateOfBirth : undefined,
-              sprStudentId: sprStudentId || undefined,
+              sprStudentId: isValidSpr(sprId) ? sprId : undefined,
             });
           }
         }
@@ -240,7 +274,8 @@ const StudentsManagement = () => {
     return students.filter(
       (student) =>
         student.name.toLowerCase().includes(query) ||
-        student.class.toLowerCase().includes(query)
+        student.class.toLowerCase().includes(query) ||
+        (student.sprStudentId || "").toLowerCase().includes(query)
     );
   }, [students, searchQuery]);
 
@@ -355,6 +390,15 @@ const StudentsManagement = () => {
                      maxLength={10}
                    />
                  </div>
+                 <div className="space-y-2">
+                   <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional, format SPR0001)</span></Label>
+                   <Input
+                     placeholder="e.g. SPR0001"
+                     value={newStudent.sprStudentId}
+                     onChange={(e) => setNewStudent({ ...newStudent, sprStudentId: normalizeSpr(e.target.value) })}
+                     maxLength={7}
+                   />
+                 </div>
                  <Button onClick={handleAddStudent} className="w-full">
                   Add Student
                 </Button>
@@ -424,11 +468,12 @@ const StudentsManagement = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Label>SPR Student ID <span className="text-xs text-muted-foreground">(optional, format SPR0001)</span></Label>
               <Input
-                placeholder="e.g. SPR-10234"
+                placeholder="e.g. SPR0001"
                 value={editForm.sprStudentId}
-                onChange={(e) => setEditForm({ ...editForm, sprStudentId: e.target.value })}
+                onChange={(e) => setEditForm({ ...editForm, sprStudentId: normalizeSpr(e.target.value) })}
+                maxLength={7}
               />
             </div>
             <Button onClick={handleEditStudent} className="w-full">
@@ -469,7 +514,7 @@ const StudentsManagement = () => {
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search students..."
+                placeholder="Search name, class or SPR ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -499,13 +544,14 @@ const StudentsManagement = () => {
                    <TableHead>Name</TableHead>
                    <TableHead>Class</TableHead>
                    <TableHead>Code</TableHead>
+                   <TableHead>SPR ID</TableHead>
                    <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.length === 0 ? (
                   <TableRow>
-                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No students found
                     </TableCell>
                   </TableRow>
@@ -531,6 +577,13 @@ const StudentsManagement = () => {
                      </TableCell>
                      <TableCell>
                        <Badge variant="outline" className="font-mono">{student.code}</Badge>
+                     </TableCell>
+                     <TableCell>
+                       {student.sprStudentId ? (
+                         <Badge className="font-mono">{student.sprStudentId}</Badge>
+                       ) : (
+                         <span className="text-xs text-muted-foreground">—</span>
+                       )}
                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
