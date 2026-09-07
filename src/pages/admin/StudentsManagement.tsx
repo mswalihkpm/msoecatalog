@@ -51,6 +51,13 @@ const StudentsManagement = () => {
 
   // House / Father names must be entered WITHOUT spaces.
   const noSpace = (v: string) => v.replace(/\s+/g, "").toUpperCase();
+  const normalizeSpr = (v: string) => {
+    const cleaned = v.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const digits = cleaned.replace(/^SPR/, "").replace(/\D/g, "").slice(0, 4);
+    if (!cleaned) return "";
+    return `SPR${digits}`;
+  };
+  const isValidSpr = (v: string) => /^SPR\d{4}$/.test(v);
   const formatDob = (v: string) => {
     const d = v.replace(/\D/g, "").slice(0, 8);
     if (d.length <= 2) return d;
