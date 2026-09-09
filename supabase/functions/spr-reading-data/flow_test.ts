@@ -7,7 +7,7 @@ Deno.test("token is configured", () => {
 });
 
 Deno.test("rejects missing/wrong token", async () => {
-  const r = await fetch(`${URL}?sprStudentId=SPR9999`, {
+  const r = await fetch(`${URL}?sprStudentId=SPR0001`, {
     headers: { Authorization: "Bearer wrong-token" },
   });
   console.log("wrong token status:", r.status, await r.text());
@@ -15,7 +15,7 @@ Deno.test("rejects missing/wrong token", async () => {
 
 Deno.test("valid token, sample lookup", async () => {
   if (!TOKEN) return;
-  const r = await fetch(`${URL}?sprStudentId=SPR9999`, {
+  const r = await fetch(`${URL}?sprStudentId=SPR0001`, {
     headers: { Authorization: `Bearer ${TOKEN}` },
   });
   console.log("valid token status:", r.status, (await r.text()).slice(0, 400));
