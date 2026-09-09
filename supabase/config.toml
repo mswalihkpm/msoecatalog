@@ -2,3 +2,6 @@ project_id = "lezoaunsbfgrbcskedoq"
 
 [functions.library-ai]
 verify_jwt = false
+
+[functions.spr-reading-data]
+verify_jwt = false
