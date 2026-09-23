@@ -146,6 +146,7 @@ export type Database = {
           description: string | null
           id: string
           is_borrowed: boolean
+          is_missing: boolean
           number_code: string
           pages: string | null
           publication: string | null
@@ -154,6 +155,7 @@ export type Database = {
           title: string
           total_reviews: number
           updated_at: string
+          visibility: string
           volume: string | null
         }
         Insert: {
@@ -167,6 +169,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_borrowed?: boolean
+          is_missing?: boolean
           number_code: string
           pages?: string | null
           publication?: string | null
@@ -175,6 +178,7 @@ export type Database = {
           title: string
           total_reviews?: number
           updated_at?: string
+          visibility?: string
           volume?: string | null
         }
         Update: {
@@ -188,6 +192,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_borrowed?: boolean
+          is_missing?: boolean
           number_code?: string
           pages?: string | null
           publication?: string | null
@@ -196,6 +201,7 @@ export type Database = {
           title?: string
           total_reviews?: number
           updated_at?: string
+          visibility?: string
           volume?: string | null
         }
         Relationships: []
@@ -211,6 +217,7 @@ export type Database = {
           created_at: string
           id: string
           is_returned: boolean
+          pages_read: number | null
           read_status: string
           return_date: string
           review_conducted: boolean
@@ -227,6 +234,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_returned?: boolean
+          pages_read?: number | null
           read_status?: string
           return_date: string
           review_conducted?: boolean
@@ -243,6 +251,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_returned?: boolean
+          pages_read?: number | null
           read_status?: string
           return_date?: string
           review_conducted?: boolean
