@@ -72,6 +72,10 @@ const BorrowsManagement = () => {
   const [printFromNum, setPrintFromNum] = useState("");
   const [printToNum, setPrintToNum] = useState("");
   const [renewRecord, setRenewRecord] = useState<BorrowRecord | null>(null);
+  const [returnRecord, setReturnRecord] = useState<BorrowRecord | null>(null);
+  const [returnRead, setReturnRead] = useState<"not_read" | "full_read" | "pages">("full_read");
+  const [returnPages, setReturnPages] = useState("");
+  const isPrivateBook = (bookId: string) => books.find((b) => b.id === bookId)?.visibility === "private";
   const [renewDays, setRenewDays] = useState<string>("14");
   const [bookPickerOpen, setBookPickerOpen] = useState(false);
   const [selectedBorrower, setSelectedBorrower] = useState<Student | null>(null);
@@ -171,9 +175,9 @@ const BorrowsManagement = () => {
     setIsDialogOpen(true);
   };
 
-  const handleMarkReturned = async (id: string) => {
+  const handleMarkReturned = async (id: string, extra: Partial<BorrowRecord> = {}) => {
     const record = records.find((r) => r.id === id);
-    await updateBorrowRecord(id, { isReturned: true });
+    await updateBorrowRecord(id, { isReturned: true, ...extra } as any);
     toast.success("Book marked as returned");
 
     // Auto-approve the next pending request (oldest) for this book, if any.
@@ -592,7 +596,7 @@ const BorrowsManagement = () => {
                     filteredRecords.map((record) => (
                       <TableRow key={record.id}>
                         <TableCell className="font-medium">
-                          {record.bookTitle}
+                          <span className={isPrivateBook(record.bookId) ? "font-bold text-destructive" : ""}>{record.bookTitle}</span>
                           {record.bookVolume && <span className="text-muted-foreground text-sm ml-1">(Vol. {record.bookVolume})</span>}
                         </TableCell>
                         <TableCell>{record.borrowerName}</TableCell>
@@ -618,7 +622,7 @@ const BorrowsManagement = () => {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleMarkReturned(record.id)}
+                                  onClick={() => { setReturnRecord(record); setReturnRead("full_read"); setReturnPages(""); }}
                                   className="text-secondary"
                                   title="Mark Returned"
                                 >
@@ -742,7 +746,7 @@ const BorrowsManagement = () => {
                         <TableCell className="font-mono text-sm">{index + 1}</TableCell>
                         <TableCell className="font-mono text-sm">{getBookSiNumber(request.bookId)}</TableCell>
                         <TableCell className="font-medium">
-                          {request.bookTitle}
+                          <span className={isPrivateBook(request.bookId) ? "font-bold text-destructive" : ""}>{request.bookTitle}</span>
                           {request.bookVolume && <span className="text-muted-foreground text-sm ml-1">(Vol. {request.bookVolume})</span>}
                         </TableCell>
                         <TableCell className="font-mono text-sm text-primary">
@@ -926,6 +930,47 @@ const BorrowsManagement = () => {
             <Button onClick={handleRenewSubmit} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
               Renew
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!returnRecord} onOpenChange={(o) => !o && setReturnRecord(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark returned</DialogTitle>
+            <DialogDescription>How much of "{returnRecord?.bookTitle}" did {returnRecord?.borrowerName} read? This sets their leaderboard points.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Select value={returnRead} onValueChange={(v) => setReturnRead(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_read">Not read</SelectItem>
+                <SelectItem value="full_read">Full read</SelectItem>
+                <SelectItem value="pages">Pages read (custom)</SelectItem>
+              </SelectContent>
+            </Select>
+            {returnRead === "pages" && (
+              <div>
+                <Label>Pages read</Label>
+                <Input type="number" min={1} value={returnPages} onChange={(e) => setReturnPages(e.target.value)} placeholder="e.g. 120" />
+                <p className="text-xs text-muted-foreground mt-1">Points come from the scoring table using this page count.</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReturnRecord(null)}>Cancel</Button>
+            <Button onClick={async () => {
+              if (!returnRecord) return;
+              let extra: any;
+              if (returnRead === "pages") {
+                const n = parseInt(returnPages, 10);
+                if (!n || n < 1) { toast.error("Enter the number of pages read"); return; }
+                extra = { readStatus: "half_read", pagesRead: n };
+              } else extra = { readStatus: returnRead, pagesRead: null };
+              const id = returnRecord.id;
+              setReturnRecord(null);
+              await handleMarkReturned(id, extra);
+            }}>Confirm return</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -418,7 +418,7 @@ const Dashboard = () => {
               {filteredRequests.map((request) => (
                 <div key={request.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{request.bookTitle}</p>
+                    <p className={`truncate ${books.find((b) => b.id === request.bookId)?.visibility === "private" ? "font-bold text-destructive" : "font-medium text-foreground"}`}>{request.bookTitle}</p>
                     <p className="text-xs text-muted-foreground">
                       Code: {request.bookNumberCode} | By: {request.requesterName} ({request.requesterClass})
                     </p>
