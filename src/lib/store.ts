@@ -65,6 +65,8 @@ export const getBooks = async (): Promise<Book[]> => {
       returnDate: book.return_date || undefined,
       averageRating: book.average_rating,
       totalReviews: book.total_reviews,
+      visibility: (book.visibility === "private" ? "private" : "library") as "library" | "private",
+      isMissing: !!book.is_missing,
     };
   }
 
@@ -101,6 +103,8 @@ export const getBookById = async (id: string): Promise<Book | undefined> => {
     returnDate: data.return_date || undefined,
     averageRating: Number(data.average_rating),
     totalReviews: data.total_reviews,
+    visibility: ((data as any).visibility === "private" ? "private" : "library") as "library" | "private",
+    isMissing: !!(data as any).is_missing,
   };
 };
 
@@ -119,7 +123,9 @@ export const addBook = async (book: Omit<Book, "id" | "averageRating" | "totalRe
       pages: book.pages,
       publication: book.publication,
       is_borrowed: book.isBorrowed,
-    })
+      visibility: book.visibility || "library",
+      is_missing: !!book.isMissing,
+    } as any)
     .select()
     .single();
 
@@ -143,6 +149,8 @@ export const addBook = async (book: Omit<Book, "id" | "averageRating" | "totalRe
     isBorrowed: data.is_borrowed,
     averageRating: Number(data.average_rating),
     totalReviews: data.total_reviews,
+    visibility: ((data as any).visibility === "private" ? "private" : "library") as "library" | "private",
+    isMissing: !!(data as any).is_missing,
   };
 };
 
@@ -163,6 +171,8 @@ export const updateBook = async (id: string, updates: Partial<Book>) => {
   if (updates.borrowedBy !== undefined) dbUpdates.borrowed_by = updates.borrowedBy;
   if (updates.borrowedDate !== undefined) dbUpdates.borrowed_date = updates.borrowedDate;
   if (updates.returnDate !== undefined) dbUpdates.return_date = updates.returnDate;
+  if (updates.visibility !== undefined) dbUpdates.visibility = updates.visibility;
+  if (updates.isMissing !== undefined) dbUpdates.is_missing = updates.isMissing;
 
   const { error } = await supabase
     .from("books")
@@ -272,6 +282,8 @@ export const bulkAddBooks = async (books: Omit<Book, "id" | "averageRating" | "t
         pages: book.pages,
         publication: book.publication,
         is_borrowed: book.isBorrowed,
+        visibility: book.visibility || "library",
+        is_missing: !!book.isMissing,
       }));
 
       // Use .select() so Supabase returns inserted rows (when available)
@@ -456,6 +468,7 @@ export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
     readStatus: (record.read_status as ReadStatus) || "not_read",
     reviewConducted: !!record.review_conducted,
     reviewPoints: record.review_points ?? undefined,
+    pagesRead: record.pages_read ?? undefined,
     studentId: record.student_id || undefined,
   }));
 };
@@ -518,6 +531,7 @@ export const updateBorrowRecord = async (id: string, updates: Partial<BorrowReco
   if ((updates as any).readStatus !== undefined) dbUpdates.read_status = (updates as any).readStatus;
   if ((updates as any).reviewConducted !== undefined) dbUpdates.review_conducted = (updates as any).reviewConducted;
   if ((updates as any).reviewPoints !== undefined) dbUpdates.review_points = (updates as any).reviewPoints;
+  if ((updates as any).pagesRead !== undefined) dbUpdates.pages_read = (updates as any).pagesRead;
 
   const { data: record } = await supabase
     .from("borrow_records")
