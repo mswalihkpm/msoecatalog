@@ -8,6 +8,7 @@ import {
   getBooks,
   getAdminSettings,
   getLeaderboardSnapshots,
+  getStudents,
   DEFAULT_SCORING_TABLE,
   pointsForBook,
 } from "@/lib/store";
@@ -355,6 +356,7 @@ const Leaderboard = () => {
                 <Trophy className="h-5 w-5 text-primary" />
                 {selected?.name}
               </DialogTitle>
+              {selected?.sprStudentId && <span className="inline-block mt-1 px-2 py-0.5 rounded bg-primary text-primary-foreground text-xs font-mono font-bold">{selected.sprStudentId}</span>}
               {selected?.className && <p className="text-sm text-muted-foreground">{selected.className}</p>}
             </DialogHeader>
 
