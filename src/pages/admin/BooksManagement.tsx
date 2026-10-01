@@ -94,6 +94,8 @@ const BooksManagement = () => {
     volume: "",
     pages: "",
     publication: "",
+    visibility: "library" as "library" | "private",
+    isMissing: false,
   });
 
   const [coverPreview, setCoverPreview] = useState<string>("");
@@ -120,6 +122,8 @@ const BooksManagement = () => {
       volume: "",
       pages: "",
       publication: "",
+      visibility: "library",
+      isMissing: false,
     });
     setCoverPreview("");
     setCoverFile(null);
@@ -228,6 +232,8 @@ const BooksManagement = () => {
       volume: book.volume || "",
       pages: book.pages || "",
       publication: book.publication || "",
+      visibility: book.visibility || "library",
+      isMissing: !!book.isMissing,
     });
     setCoverPreview(book.coverImage || "");
     setIsAddDialogOpen(true);
@@ -688,6 +694,25 @@ const BooksManagement = () => {
                       onChange={(e) => setFormData({ ...formData, publication: e.target.value })}
                       placeholder="Publisher name"
                     />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Book type</Label>
+                    <Select value={formData.visibility} onValueChange={(v) => setFormData({ ...formData, visibility: v as "library" | "private" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="library">Library</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Book missed from library</Label>
+                    <label className="flex items-center gap-2 h-10 text-sm">
+                      <input type="checkbox" checked={formData.isMissing} onChange={(e) => setFormData({ ...formData, isMissing: e.target.checked })} className="h-4 w-4 accent-primary" />
+                      Mark as missing
+                    </label>
                   </div>
                 </div>
                 <div className="space-y-2">

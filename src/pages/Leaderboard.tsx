@@ -8,6 +8,7 @@ import {
   getBooks,
   getAdminSettings,
   getLeaderboardSnapshots,
+  getStudents,
   DEFAULT_SCORING_TABLE,
   pointsForBook,
 } from "@/lib/store";
@@ -36,11 +37,13 @@ const Leaderboard = () => {
   const [selected, setSelected] = useState<LeaderboardEntry | null>(null);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [classFilter, setClassFilter] = useState<string>("all");
+  const [students, setStudents] = useState<{ id: string; sprStudentId?: string }[]>([]);
 
   useEffect(() => {
     Promise.all([getBorrowRecords(), getReviews(), getBooks(), getAdminSettings(), getLeaderboardSnapshots()])
       .then(([r, rv, bk, st, sn]) => { setRecords(r); setReviews(rv); setBooks(bk); setSettings(st); setSnapshots(sn); })
       .finally(() => setLoading(false));
+    getStudents().then((st) => setStudents(st.map((x) => ({ id: x.id, sprStudentId: x.sprStudentId })))).catch(() => {});
   }, []);
 
   const scoringTable: ScoringTable = settings?.scoringTable && Object.keys(settings.scoringTable).length > 0
@@ -90,8 +93,8 @@ const Leaderboard = () => {
   }, [records, timeFilter, settings]);
 
   const allEntries = useMemo(
-    () => computeEntries(filteredRecords, books, scoringTable, reviewPts),
-    [filteredRecords, books, scoringTable, reviewPts],
+    () => computeEntries(filteredRecords, books, scoringTable, reviewPts, students),
+    [filteredRecords, books, scoringTable, reviewPts, students],
   );
 
   const classOptions = useMemo(() => {
@@ -112,7 +115,7 @@ const Leaderboard = () => {
   const openReader = (entry: LeaderboardEntry) => setSelected(entry);
   const readerHistory = useMemo(() => {
     if (!selected) return { read: [], reviews: [] as Review[] };
-    const readList = records.filter((r) => r.borrowerName.trim() === selected.name && r.readStatus && r.readStatus !== "not_read");
+    const readList = records.filter((r) => (selected.studentId ? r.studentId === selected.studentId : r.borrowerName.trim() === selected.name) && r.readStatus && r.readStatus !== "not_read");
     const reviewsList = reviews.filter((rv) => rv.userName.trim().toLowerCase() === selected.name.toLowerCase());
     return { read: readList, reviews: reviewsList };
   }, [selected, records, reviews]);
@@ -178,12 +181,13 @@ const Leaderboard = () => {
           if (!reader) return <div key={i} className="flex flex-col items-center w-24 sm:w-32"><div className={`w-full ${m.height} rounded-t-xl bg-muted/40`} /></div>;
           const Icon = m.Icon;
           return (
-            <motion.button key={reader.name}
+            <motion.button key={reader.studentId || reader.name}
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
               onClick={() => onClick?.(reader)}
               className="flex flex-col items-center w-24 sm:w-32 group">
               <Icon className={`h-7 w-7 mb-1 ${m.iconColor} drop-shadow`} />
               <p className="text-sm font-semibold text-foreground text-center line-clamp-2 leading-tight mb-1">{reader.name}</p>
+{reader.sprStudentId && <span className="inline-block mb-1 px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-mono font-bold">{reader.sprStudentId}</span>}
               {reader.className && <p className="text-[10px] text-muted-foreground mb-1">{reader.className}</p>}
               <div className={`w-full ${m.height} rounded-t-xl bg-gradient-to-b ${m.color} flex flex-col items-center justify-center text-white shadow-lg group-hover:scale-[1.02] transition-transform`}>
                 <span className="text-3xl font-black drop-shadow">{m.rank}</span>
@@ -203,7 +207,7 @@ const Leaderboard = () => {
     return (
       <div className="space-y-2 max-w-2xl mx-auto">
         {rest.map((reader, i) => (
-          <motion.button key={reader.name}
+          <motion.button key={reader.studentId || reader.name}
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
             onClick={() => onClick?.(reader)}
             className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-accent transition-colors text-left">
@@ -212,6 +216,7 @@ const Leaderboard = () => {
               <p className="font-semibold text-foreground truncate flex items-center gap-1.5">
                 {reader.name}
                 {reader.reviewCount > 0 && <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0" aria-label="Verified by review" />}
+                {reader.sprStudentId && <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-mono font-bold flex-shrink-0">{reader.sprStudentId}</span>}
               </p>
               {reader.className && <p className="text-xs text-muted-foreground">{reader.className}</p>}
             </div>
@@ -351,6 +356,7 @@ const Leaderboard = () => {
                 <Trophy className="h-5 w-5 text-primary" />
                 {selected?.name}
               </DialogTitle>
+              {selected?.sprStudentId && <span className="inline-block mt-1 px-2 py-0.5 rounded bg-primary text-primary-foreground text-xs font-mono font-bold">{selected.sprStudentId}</span>}
               {selected?.className && <p className="text-sm text-muted-foreground">{selected.className}</p>}
             </DialogHeader>
 
@@ -377,13 +383,13 @@ const Leaderboard = () => {
                       {readerHistory.read.map((b) => {
                         const bk = bookMap.get(b.bookId);
                         const pts = pointsForBook(scoringTable, bk?.category, bk?.pages);
-                        const awarded = b.readStatus === "full_read" ? pts : Math.round(pts / 2);
+                        const awarded = b.readStatus === "full_read" ? pts : b.pagesRead ? pointsForBook(scoringTable, bk?.category, b.pagesRead) : Math.round(pts / 2);
                         return (
                           <li key={b.id} className="p-2 rounded-md bg-card border border-border">
                             <div className="flex items-center justify-between gap-2">
                               <p className="font-medium text-sm text-foreground truncate">{b.bookTitle}</p>
                               <Badge variant="outline" className="text-[10px] shrink-0">
-                                {b.readStatus === "full_read" ? "Full" : "Half"}
+                                {b.readStatus === "full_read" ? "Full" : b.pagesRead ? `${b.pagesRead} pages` : "Half"}
                               </Badge>
                             </div>
                             <div className="flex flex-wrap gap-1 mt-1">

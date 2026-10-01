@@ -163,6 +163,7 @@ const Catalog = () => {
 
   const filteredBooks = useMemo(() => {
     const filtered = books.filter((book) => {
+      if (book.visibility === "private") return false;
       const matchesSearch =
         !searchQuery ||
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

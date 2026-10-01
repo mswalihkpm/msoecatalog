@@ -44,14 +44,19 @@ export function computeEntries(
   books: Book[],
   scoringTable: ScoringTable,
   reviewPointsDefault: number,
+  students: { id: string; sprStudentId?: string }[] = [],
 ): LeaderboardEntry[] {
   const bookMap = new Map(books.map((b) => [b.id, b]));
+  const sprMap = new Map(students.map((s) => [s.id, s.sprStudentId]));
   const map = new Map<string, LeaderboardEntry>();
   for (const r of records) {
-    const key = r.borrowerName.trim();
-    if (!key) continue;
+    const name = r.borrowerName.trim();
+    if (!name) continue;
+    const key = r.studentId ? `id:${r.studentId}` : `name:${name}`;
     const entry = map.get(key) ?? {
-      name: key,
+      name,
+      studentId: r.studentId,
+      sprStudentId: r.studentId ? sprMap.get(r.studentId) : undefined,
       className: r.borrowerClass,
       points: 0,
       fullRead: 0,
@@ -61,7 +66,10 @@ export function computeEntries(
     if (!entry.className && r.borrowerClass) entry.className = r.borrowerClass;
     const book = bookMap.get(r.bookId);
     const fullPts = pointsForBook(scoringTable, book?.category, book?.pages);
-    if (r.readStatus === "full_read") {
+    if (r.pagesRead && r.pagesRead > 0 && r.readStatus !== "full_read" && r.readStatus !== "not_read") {
+      entry.halfRead += 1;
+      entry.points += pointsForBook(scoringTable, book?.category, r.pagesRead);
+    } else if (r.readStatus === "full_read") {
       entry.fullRead += 1;
       entry.points += fullPts;
     } else if (r.readStatus === "half_read") {

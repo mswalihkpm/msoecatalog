@@ -16,6 +16,8 @@ export interface Book {
   returnDate?: string;
   averageRating: number;
   totalReviews: number;
+  visibility?: "library" | "private";
+  isMissing?: boolean;
 }
 
 export interface Review {
@@ -45,6 +47,8 @@ export interface BorrowRecord {
   reviewConducted?: boolean;
   reviewPoints?: number;
   studentId?: string;
+  /** Custom number of pages read (scored via the page tier of the scoring table). */
+  pagesRead?: number;
 }
 
 
@@ -140,6 +144,8 @@ export interface LeaderboardEntry {
   fullRead: number;
   halfRead: number;
   reviewCount: number;
+  studentId?: string;
+  sprStudentId?: string;
 }
 
 export interface LeaderboardSnapshot {

@@ -6,13 +6,14 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getBooks, initializeData, getPublicationLogos, PublicationLogo } from "@/lib/store";
 import { Book, Category } from "@/lib/types";
 import { GeneratedCover } from "@/components/GeneratedCover";
 import {
   BookOpen, Scroll, User, FlaskConical, Languages, BookText,
   History, Layers, Feather, MoreHorizontal, ArrowLeft, Star, Building2,
-  Plane, NotebookPen, Globe, UserCheck, BookMarked,
+  Plane, NotebookPen, Globe, UserCheck, BookMarked, Lock, Search,
 } from "lucide-react";
 
 const categoryIcons: Record<Category, React.ReactNode> = {
@@ -74,6 +75,11 @@ const Categories = () => {
   const [view, setView] = useState<SavedState["view"]>(initialView);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(initialRef.current?.selectedCategory ?? null);
   const [selectedPublication, setSelectedPublication] = useState<string | null>(initialRef.current?.selectedPublication ?? null);
+  const [privateView, setPrivateView] = useState(false);
+  const [listSearch, setListSearch] = useState("");
+  useEffect(() => { setListSearch(""); }, [view, selectedCategory, selectedPublication, privateView]);
+  const libraryBooks = books.filter((b) => b.visibility !== "private");
+  const privateBooks = books.filter((b) => b.visibility === "private");
 
   // React to hash changes (mobile footer link)
   useEffect(() => {
@@ -123,12 +129,12 @@ const Categories = () => {
     } satisfies SavedState));
   }, [view, selectedCategory, selectedPublication]);
 
-  const getCategoryCount = (c: Category) => books.filter((b) => b.category === c).length;
-  const getAvailableCount = (c: Category) => books.filter((b) => b.category === c && !b.isBorrowed).length;
+  const getCategoryCount = (c: Category) => libraryBooks.filter((b) => b.category === c).length;
+  const getAvailableCount = (c: Category) => libraryBooks.filter((b) => b.category === c && !b.isBorrowed).length;
 
   const publicationsList = (() => {
     const map = new Map<string, number>();
-    books.forEach((b) => {
+    libraryBooks.forEach((b) => {
       const pub = (b.publication || "").trim();
       if (!pub) return;
       map.set(pub, (map.get(pub) || 0) + 1);
@@ -142,15 +148,20 @@ const Categories = () => {
   const codeCompare = (a: Book, b: Book) =>
     (a.numberCode || "").localeCompare(b.numberCode || "", undefined, { numeric: true, sensitivity: "base" });
 
+  const q = listSearch.trim().toLowerCase();
   const filteredBooks = (
-    view === "category" && selectedCategory
-      ? books.filter((b) => b.category === selectedCategory)
+    privateView
+      ? privateBooks
+      : view === "category" && selectedCategory
+      ? libraryBooks.filter((b) => b.category === selectedCategory)
       : view === "publication" && selectedPublication
-      ? books.filter((b) => (b.publication || "").trim().toLowerCase() === selectedPublication.toLowerCase())
+      ? libraryBooks.filter((b) => (b.publication || "").trim().toLowerCase() === selectedPublication.toLowerCase())
       : []
-  ).sort(codeCompare);
+  ).filter((b) => !q || [b.title, b.author, b.numberCode, b.siNumber, b.publication].some((v) => (v || "").toLowerCase().includes(q)))
+   .sort(codeCompare);
 
   const goBack = () => {
+    setPrivateView(false);
     if (view === "category") setView("categories");
     else if (view === "publication") setView("publications");
     else if (view === "publications") setView("categories");
@@ -260,6 +271,28 @@ const Categories = () => {
                       </CardContent>
                     </Card>
                   </div>
+                  {privateBooks.length > 0 && (
+                    <div
+                      onClick={() => { setPrivateView(true); setView("category"); setSelectedCategory(null); window.scrollTo({ top: 0 }); }}
+                      className="animate-fade-in cursor-pointer"
+                    >
+                      <Card className="h-full transition-all duration-300 hover:shadow-teal hover:border-primary/50 hover:scale-[1.02]">
+                        <CardHeader className="text-center pb-2">
+                          <div className="mx-auto mb-3 p-4 rounded-full bg-primary/10 text-primary">
+                            <Lock className="h-8 w-8" />
+                          </div>
+                          <CardTitle className="font-serif text-xl">Private</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center space-y-2">
+                          <p className="text-2xl font-bold text-foreground">{privateBooks.length}</p>
+                          <p className="text-sm text-muted-foreground">Total Books</p>
+                          <Badge variant="secondary" className="mt-2">
+                            {privateBooks.filter((b) => !b.isBorrowed).length} Available
+                          </Badge>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -318,17 +351,21 @@ const Categories = () => {
               </Button>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/10 text-primary">
-                  {view === "category" && selectedCategory ? categoryIcons[selectedCategory] : <Building2 className="h-8 w-8" />}
+                  {privateView ? <Lock className="h-8 w-8" /> : view === "category" && selectedCategory ? categoryIcons[selectedCategory] : <Building2 className="h-8 w-8" />}
                 </div>
                 <div>
                   <h1 className="font-serif text-2xl md:text-3xl font-bold text-foreground">
-                    {view === "category" ? selectedCategory : selectedPublication}
+                    {privateView ? "Private" : view === "category" ? selectedCategory : selectedPublication}
                   </h1>
                   <p className="text-sm text-muted-foreground">{filteredBooks.length} books found</p>
                 </div>
               </div>
             </div>
 
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={listSearch} onChange={(e) => setListSearch(e.target.value)} placeholder="Search title, author, code..." className="pl-9" />
+            </div>
             {filteredBooks.length === 0 ? (
               <div className="text-center py-16">
                 <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -339,7 +376,8 @@ const Categories = () => {
                 {filteredBooks.map((book) => (
                   <Link key={book.id} to={`/book/${book.id}`} className="block" onClick={saveState}>
                     <div className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:border-primary/50 hover:shadow-teal transition-all duration-200">
-                      <div className="shrink-0 w-12 h-16 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                      <div className="relative shrink-0 w-12 h-16 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                        {book.isMissing && <div className="absolute inset-0 bg-destructive/50 z-[1]" />}
                         {book.coverImage ? (
                           <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
                         ) : (

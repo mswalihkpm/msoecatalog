@@ -44,6 +44,12 @@ export const BookCard = ({ book, onOpen, hasPendingRequest = false, pendingReque
             />
           )}
           
+          {book.isMissing && (
+            <div className="absolute inset-0 bg-destructive/50 flex items-center justify-center z-[1]">
+              <span className="px-2 py-1 rounded bg-destructive text-destructive-foreground text-xs font-bold uppercase tracking-wide">Missing</span>
+            </div>
+          )}
+
           {/* Category Badge - Top Left */}
           <Badge 
             className="absolute top-2 left-2 bg-primary text-primary-foreground font-semibold uppercase text-[10px] px-2 py-0.5"
