@@ -1,0 +1,1 @@
+Keep reading-point rates in append-only effective-dated versions and freeze each completed return's calculated score on its borrow record, because later rate changes must never alter historical points.
