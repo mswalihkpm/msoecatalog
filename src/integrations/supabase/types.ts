@@ -214,12 +214,18 @@ export type Database = {
           borrowed_date: string
           borrower_class: string | null
           borrower_name: string
+          calculated_points: number | null
           created_at: string
           id: string
           is_returned: boolean
           pages_read: number | null
+          pages_used: number | null
+          rate_used: number | null
+          rate_version_id: string | null
           read_status: string
           return_date: string
+          return_option: string | null
+          returned_at: string | null
           review_conducted: boolean
           review_points: number | null
           student_id: string | null
@@ -231,12 +237,18 @@ export type Database = {
           borrowed_date: string
           borrower_class?: string | null
           borrower_name: string
+          calculated_points?: number | null
           created_at?: string
           id?: string
           is_returned?: boolean
           pages_read?: number | null
+          pages_used?: number | null
+          rate_used?: number | null
+          rate_version_id?: string | null
           read_status?: string
           return_date: string
+          return_option?: string | null
+          returned_at?: string | null
           review_conducted?: boolean
           review_points?: number | null
           student_id?: string | null
@@ -248,12 +260,18 @@ export type Database = {
           borrowed_date?: string
           borrower_class?: string | null
           borrower_name?: string
+          calculated_points?: number | null
           created_at?: string
           id?: string
           is_returned?: boolean
           pages_read?: number | null
+          pages_used?: number | null
+          rate_used?: number | null
+          rate_version_id?: string | null
           read_status?: string
           return_date?: string
+          return_option?: string | null
+          returned_at?: string | null
           review_conducted?: boolean
           review_points?: number | null
           student_id?: string | null
@@ -264,6 +282,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "borrow_records_rate_version_id_fkey"
+            columns: ["rate_version_id"]
+            isOneToOne: false
+            referencedRelation: "reading_rate_versions"
             referencedColumns: ["id"]
           },
           {
@@ -415,6 +440,30 @@ export type Database = {
           logo_url?: string | null
           publication_name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      reading_rate_versions: {
+        Row: {
+          category: string
+          created_at: string
+          effective_from: string
+          id: string
+          points_per_10_pages: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          effective_from?: string
+          id?: string
+          points_per_10_pages: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          effective_from?: string
+          id?: string
+          points_per_10_pages?: number
         }
         Relationships: []
       }
