@@ -8,6 +8,20 @@
       "when": 1790184173794,
       "tag": "0000_book_visibility_missing_pages_read",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791341167608,
+      "tag": "0001_version_reading_point_rates",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791341303090,
+      "tag": "0002_freeze_reading_percentage_denominator",
+      "breakpoints": true
     }
   ]
 }
