@@ -15,6 +15,13 @@
       "when": 1791341167608,
       "tag": "0001_version_reading_point_rates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791341303090,
+      "tag": "0002_freeze_reading_percentage_denominator",
+      "breakpoints": true
     }
   ]
 }

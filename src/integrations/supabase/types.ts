@@ -218,6 +218,7 @@ export type Database = {
           created_at: string
           id: string
           is_returned: boolean
+          max_possible_points: number | null
           pages_read: number | null
           pages_used: number | null
           rate_used: number | null
@@ -241,6 +242,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_returned?: boolean
+          max_possible_points?: number | null
           pages_read?: number | null
           pages_used?: number | null
           rate_used?: number | null
@@ -264,6 +266,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_returned?: boolean
+          max_possible_points?: number | null
           pages_read?: number | null
           pages_used?: number | null
           rate_used?: number | null
