@@ -49,6 +49,21 @@ export interface BorrowRecord {
   studentId?: string;
   /** Custom number of pages read (scored via the page tier of the scoring table). */
   pagesRead?: number;
+  returnOption?: "not_read" | "full_read" | "half_read" | "custom_page";
+  pagesUsed?: number;
+  rateUsed?: number;
+  rateVersionId?: string;
+  calculatedPoints?: number;
+  maxPossiblePoints?: number;
+  returnedAt?: string;
+}
+
+export interface ReadingRateVersion {
+  id: string;
+  category: string;
+  pointsPer10Pages: number;
+  effectiveFrom: string;
+  createdAt: string;
 }
 
 

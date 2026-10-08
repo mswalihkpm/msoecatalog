@@ -1,7 +1,7 @@
 import { LoadingLogo } from "@/components/LoadingLogo";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Trophy, Save, Trash2, Eye, EyeOff, CalendarDays, RefreshCw, MessageSquare, CheckCircle2, Info, Grid3x3 } from "lucide-react";
+import { Trophy, Save, Trash2, Eye, EyeOff, CalendarDays, RefreshCw, MessageSquare, CheckCircle2, Info, Grid3x3, History } from "lucide-react";
 import {
   getBorrowRecords,
   updateBorrowRecord,
@@ -12,11 +12,12 @@ import {
   deleteLeaderboardSnapshot,
   getBooks,
   DEFAULT_SCORING_TABLE,
-  updateScoringTable,
+  getReadingRateVersions,
+  addReadingRateVersion,
   updateReviewPointsDefault,
   pointsForBook,
 } from "@/lib/store";
-import { BorrowRecord, Book, LeaderboardEntry, LeaderboardSnapshot, ReadStatus, AdminSettings as AdminSettingsT, ScoringTable, PAGE_TIER_LABELS, PageTier } from "@/lib/types";
+import { BorrowRecord, Book, LeaderboardEntry, LeaderboardSnapshot, ReadStatus, AdminSettings as AdminSettingsT, ScoringTable, ReadingRateVersion } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,10 +36,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { READING_RATE_CATEGORIES, calculateReadingPoints, displayReadingPoints, parsePageCount } from "@/lib/reading-points";
 
-const PAGE_TIERS: PageTier[] = ["b50", "b100", "b150", "b200", "b250", "b300", "a300"];
-
-/** Compute leaderboard entries using the editable scoring table + book pages. */
+/** Use frozen return points; legacy tier-based calculation is only a fallback for unreturned records. */
 export function computeEntries(
   records: BorrowRecord[],
   books: Book[],
@@ -66,15 +66,16 @@ export function computeEntries(
     if (!entry.className && r.borrowerClass) entry.className = r.borrowerClass;
     const book = bookMap.get(r.bookId);
     const fullPts = pointsForBook(scoringTable, book?.category, book?.pages);
+    const hasFrozenPoints = r.calculatedPoints !== undefined && r.calculatedPoints !== null;
     if (r.pagesRead && r.pagesRead > 0 && r.readStatus !== "full_read" && r.readStatus !== "not_read") {
       entry.halfRead += 1;
-      entry.points += pointsForBook(scoringTable, book?.category, r.pagesRead);
+      entry.points += hasFrozenPoints ? r.calculatedPoints ?? 0 : pointsForBook(scoringTable, book?.category, r.pagesRead);
     } else if (r.readStatus === "full_read") {
       entry.fullRead += 1;
-      entry.points += fullPts;
+      entry.points += hasFrozenPoints ? r.calculatedPoints ?? 0 : fullPts;
     } else if (r.readStatus === "half_read") {
       entry.halfRead += 1;
-      entry.points += Math.round(fullPts / 2);
+      entry.points += hasFrozenPoints ? r.calculatedPoints ?? 0 : Math.round(fullPts / 2);
     }
     if (r.reviewConducted) {
       entry.reviewCount += 1;
@@ -101,16 +102,28 @@ const LeaderboardAdmin = () => {
   const [snapName, setSnapName] = useState("");
   const [reviewingRecord, setReviewingRecord] = useState<BorrowRecord | null>(null);
   const [reviewPointInput, setReviewPointInput] = useState<string>("");
+  const [rateVersions, setRateVersions] = useState<ReadingRateVersion[]>([]);
+  const [rateDraft, setRateDraft] = useState<Record<string, string>>({});
+  const [confirmRateSave, setConfirmRateSave] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const [rs, bs, st, sn] = await Promise.all([
-      getBorrowRecords(), getBooks(), getAdminSettings(), getLeaderboardSnapshots(),
+    const [rs, bs, st, sn, rates] = await Promise.all([
+      getBorrowRecords(), getBooks(), getAdminSettings(), getLeaderboardSnapshots(), getReadingRateVersions(),
     ]);
     setRecords(rs);
     setBooks(bs);
     setSettings(st);
     setSnapshots(sn);
+    setRateVersions(rates);
+    const currentByCategory = new Map<string, ReadingRateVersion>();
+    rates.forEach((rate) => {
+      if (!currentByCategory.has(rate.category)) currentByCategory.set(rate.category, rate);
+    });
+    setRateDraft(Object.fromEntries(READING_RATE_CATEGORIES.map((category) => [
+      category,
+      String(currentByCategory.get(category)?.pointsPer10Pages ?? 0),
+    ])));
     setScoringTable(st.scoringTable && Object.keys(st.scoringTable).length > 0 ? st.scoringTable : DEFAULT_SCORING_TABLE);
     setReviewPts(st.reviewPointsDefault ?? 10);
     setLoading(false);
@@ -194,23 +207,40 @@ const LeaderboardAdmin = () => {
     await updateLeaderboardSettings(patch as any);
   };
 
-  const updateCell = (cat: string, tier: PageTier, val: string) => {
-    const num = parseInt(val, 10);
-    setScoringTable((prev) => ({
-      ...prev,
-      [cat]: { ...(prev[cat] || {}), [tier]: isNaN(num) ? 0 : num } as any,
-    }));
-  };
-
-  const saveTable = async () => {
-    await updateScoringTable(scoringTable);
+  const saveReviewPoints = async () => {
     await updateReviewPointsDefault(reviewPts);
-    toast.success("Scoring table saved");
+    toast.success("Review points saved");
   };
 
-  const resetTable = () => {
-    setScoringTable(DEFAULT_SCORING_TABLE);
-    toast.info("Reset to defaults (not saved yet)");
+  const saveRateChanges = async () => {
+    const currentByCategory = new Map<string, ReadingRateVersion>();
+    rateVersions.forEach((rate) => {
+      if (!currentByCategory.has(rate.category)) currentByCategory.set(rate.category, rate);
+    });
+    const changes = READING_RATE_CATEGORIES.flatMap((category) => {
+      const value = Number(rateDraft[category]);
+      if (!Number.isFinite(value) || value < 0) {
+        toast.error(`Enter a valid non-negative rate for ${category}`);
+        return [];
+      }
+      if (currentByCategory.get(category)?.pointsPer10Pages === value) return [];
+      return [{ category, value }];
+    });
+    if (changes.length === 0) {
+      toast.info("No rate changes to save");
+      setConfirmRateSave(false);
+      return;
+    }
+    const saved = await Promise.all(changes.map(({ category, value }) => addReadingRateVersion(category, value)));
+    if (saved.some((rate) => rate === null)) {
+      toast.error("Some rates could not be saved. Refresh and try again.");
+      await load();
+      setConfirmRateSave(false);
+      return;
+    }
+    setRateVersions((previous) => [...(saved.filter((rate): rate is ReadingRateVersion => rate !== null)), ...previous]);
+    toast.success("New rate versions are now effective");
+    setConfirmRateSave(false);
   };
 
   return (
@@ -321,60 +351,64 @@ const LeaderboardAdmin = () => {
         <TabsContent value="table" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="font-serif text-base flex items-center gap-2"><Grid3x3 className="h-4 w-4" />Editable scoring table</CardTitle>
-              <CardDescription>
-                Full-read points per category × page range. Half-read = half of full-read (rounded).
-                Users see the updated instructions automatically.
-              </CardDescription>
+              <CardTitle className="font-serif text-base flex items-center gap-2"><Grid3x3 className="h-4 w-4" />Points per 10 pages</CardTitle>
+              <CardDescription>Each category has its own effective-dated rate. New rates never replace the previous versions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
+                Changing this rate will apply only to new reading records. Existing points will not be affected.
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {READING_RATE_CATEGORIES.map((category) => (
+                  <div key={category} className="space-y-1">
+                    <Label htmlFor={`rate-${category}`}>{category}</Label>
+                    <Input
+                      id={`rate-${category}`}
+                      type="number"
+                      min="0"
+                      step="0.0001"
+                      value={rateDraft[category] ?? "0"}
+                      onChange={(event) => setRateDraft((previous) => ({ ...previous, [category]: event.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
               <div className="flex flex-wrap items-end gap-3">
+                <Button onClick={() => setConfirmRateSave(true)} className="gap-2"><Save className="h-4 w-4" />Save new rates</Button>
                 <div className="space-y-1">
                   <Label className="text-xs">Review-conducted bonus</Label>
-                  <Input
-                    type="number"
-                    className="w-32"
-                    value={reviewPts}
-                    onChange={(e) => setReviewPts(parseInt(e.target.value, 10) || 0)}
-                  />
+                  <Input type="number" min="0" className="w-32" value={reviewPts} onChange={(event) => setReviewPts(parseInt(event.target.value, 10) || 0)} />
                 </div>
-                <Button onClick={saveTable} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
-                  <Save className="h-4 w-4" /> Save table
-                </Button>
-                <Button variant="outline" onClick={resetTable}>Reset to defaults</Button>
+                <Button variant="outline" onClick={saveReviewPoints}>Save review points</Button>
               </div>
-
-              <div className="overflow-x-auto rounded-md border border-border">
-                <table className="w-full text-sm">
-                  <thead className="bg-primary/10">
-                    <tr>
-                      <th className="text-left p-2 sticky left-0 bg-primary/10">Category</th>
-                      {PAGE_TIERS.map((t) => (
-                        <th key={t} className="p-2 text-xs font-semibold">{PAGE_TIER_LABELS[t]}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.keys(scoringTable).map((cat) => (
-                      <tr key={cat} className="border-t border-border">
-                        <td className="p-2 font-medium sticky left-0 bg-card">{cat}</td>
-                        {PAGE_TIERS.map((t) => (
-                          <td key={t} className="p-1">
-                            <Input
-                              type="number"
-                              className="h-8 w-16 text-center"
-                              value={scoringTable[cat]?.[t] ?? 0}
-                              onChange={(e) => updateCell(cat, t, e.target.value)}
-                            />
-                          </td>
-                        ))}
-                      </tr>
+              <section className="space-y-2 pt-3 border-t border-border">
+                <h3 className="font-semibold flex items-center gap-2"><History className="h-4 w-4" />Previous rate versions</h3>
+                {rateVersions.length === 0 ? <p className="text-sm text-muted-foreground">No rate history available.</p> : (
+                  <div className="space-y-2 max-h-96 overflow-auto">
+                    {rateVersions.map((rate) => (
+                      <div key={rate.id} className="flex flex-wrap items-center justify-between gap-2 text-sm border-b border-border pb-2">
+                        <span className="font-medium">{rate.category}</span>
+                        <span>{rate.pointsPer10Pages.toFixed(4)} pts / 10 pages</span>
+                        <span className="text-muted-foreground">Effective {format(new Date(rate.effectiveFrom), "MMM d, yyyy · h:mm a")}</span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
+                )}
+              </section>
             </CardContent>
           </Card>
+          <AlertDialog open={confirmRateSave} onOpenChange={setConfirmRateSave}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Change category rates?</AlertDialogTitle>
+                <AlertDialogDescription>Changing this rate will apply only to new reading records. Existing points will not be affected.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={(event) => { event.preventDefault(); void saveRateChanges(); }}>Create rate versions</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </TabsContent>
 
         {/* PREVIEW */}

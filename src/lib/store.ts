@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student, LeaderboardSnapshot, ReadStatus, ScoringTable, CreativeWork } from "./types";
+import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student, LeaderboardSnapshot, ReadStatus, ScoringTable, CreativeWork, ReadingRateVersion } from "./types";
 
 
 // Initialize data - now just ensures dark mode
@@ -470,6 +470,13 @@ export const getBorrowRecords = async (): Promise<BorrowRecord[]> => {
     reviewPoints: record.review_points ?? undefined,
     pagesRead: record.pages_read ?? undefined,
     studentId: record.student_id || undefined,
+    returnOption: record.return_option || undefined,
+    pagesUsed: record.pages_used === null ? undefined : Number(record.pages_used),
+    rateUsed: record.rate_used === null ? undefined : Number(record.rate_used),
+    rateVersionId: record.rate_version_id || undefined,
+    calculatedPoints: record.calculated_points === null ? undefined : Number(record.calculated_points),
+    maxPossiblePoints: record.max_possible_points === null ? undefined : Number(record.max_possible_points),
+    returnedAt: record.returned_at || undefined,
   }));
 };
 
@@ -532,6 +539,13 @@ export const updateBorrowRecord = async (id: string, updates: Partial<BorrowReco
   if ((updates as any).reviewConducted !== undefined) dbUpdates.review_conducted = (updates as any).reviewConducted;
   if ((updates as any).reviewPoints !== undefined) dbUpdates.review_points = (updates as any).reviewPoints;
   if ((updates as any).pagesRead !== undefined) dbUpdates.pages_read = (updates as any).pagesRead;
+  if (updates.returnOption !== undefined) dbUpdates.return_option = updates.returnOption;
+  if (updates.pagesUsed !== undefined) dbUpdates.pages_used = updates.pagesUsed;
+  if (updates.rateUsed !== undefined) dbUpdates.rate_used = updates.rateUsed;
+  if (updates.rateVersionId !== undefined) dbUpdates.rate_version_id = updates.rateVersionId;
+  if (updates.calculatedPoints !== undefined) dbUpdates.calculated_points = updates.calculatedPoints;
+  if (updates.maxPossiblePoints !== undefined) dbUpdates.max_possible_points = updates.maxPossiblePoints;
+  if (updates.returnedAt !== undefined) dbUpdates.returned_at = updates.returnedAt;
 
   const { data: record } = await supabase
     .from("borrow_records")
@@ -1001,6 +1015,43 @@ export const verifyStudentCode = async (studentId: string, code: string): Promis
 // ============================================================
 // Scoring Table (editable 14x7 grid stored in admin_settings)
 // ============================================================
+export const getReadingRateVersions = async (): Promise<ReadingRateVersion[]> => {
+  const { data, error } = await supabase
+    .from("reading_rate_versions")
+    .select("id,category,points_per_10_pages,effective_from,created_at")
+    .order("effective_from", { ascending: false });
+  if (error || !data) {
+    console.error("Error fetching reading rate versions:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    id: row.id,
+    category: row.category,
+    pointsPer10Pages: Number(row.points_per_10_pages),
+    effectiveFrom: row.effective_from,
+    createdAt: row.created_at,
+  }));
+};
+
+export const addReadingRateVersion = async (category: string, pointsPer10Pages: number): Promise<ReadingRateVersion | null> => {
+  const { data, error } = await supabase
+    .from("reading_rate_versions")
+    .insert({ category, points_per_10_pages: pointsPer10Pages })
+    .select("id,category,points_per_10_pages,effective_from,created_at")
+    .single();
+  if (error || !data) {
+    console.error("Error adding reading rate version:", error);
+    return null;
+  }
+  return {
+    id: data.id,
+    category: data.category,
+    pointsPer10Pages: Number(data.points_per_10_pages),
+    effectiveFrom: data.effective_from,
+    createdAt: data.created_at,
+  };
+};
+
 export const DEFAULT_SCORING_TABLE: ScoringTable = {
   Islamic:        { b50: 10, b100: 15, b150: 20, b200: 25, b250: 30, b300: 35, a300: 50 },
   General:        { b50: 8,  b100: 13, b150: 18, b200: 23, b250: 28, b300: 33, a300: 48 },
