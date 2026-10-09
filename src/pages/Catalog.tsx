@@ -276,8 +276,9 @@ const Catalog = () => {
     return pages;
   }, [totalPages, currentPage]);
 
-  const topRated = useMemo(() => books.sort((a, b) => b.averageRating - a.averageRating).slice(0, 5), [books]);
-  const totalAvailable = useMemo(() => books.filter(b => !b.isBorrowed).length, [books]);
+  const libraryBooks = useMemo(() => books.filter((b) => b.visibility !== "private"), [books]);
+  const topRated = useMemo(() => [...libraryBooks].sort((a, b) => b.averageRating - a.averageRating).slice(0, 5), [libraryBooks]);
+  const totalAvailable = useMemo(() => libraryBooks.filter(b => !b.isBorrowed).length, [libraryBooks]);
 
   return (
     <div className="min-h-screen bg-background relative">
