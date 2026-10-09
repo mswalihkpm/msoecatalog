@@ -623,7 +623,7 @@ const BorrowsManagement = () => {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => { setReturnRecord(record); setReturnRead("full_read"); setReturnPages(""); }}
+                                  onClick={() => { setReturnRecord(record); if (rateVersions.length === 0) getReadingRateVersions().then(setRateVersions); }}
                                   className="text-secondary"
                                   title="Mark Returned"
                                 >
