@@ -52,12 +52,14 @@ import {
   updateBookRequest,
   deleteBookRequest,
   updateBook,
+  getReadingRateVersions,
 } from "@/lib/store";
-import { Book, BorrowRecord, BookRequest, Student } from "@/lib/types";
+import { Book, BorrowRecord, BookRequest, Student, ReadingRateVersion } from "@/lib/types";
 import { toast } from "sonner";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { StudentSearch } from "@/components/StudentSearch";
+import { ReadingOutcomeDialog } from "@/components/admin/ReadingOutcomeDialog";
 
 const BorrowsManagement = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
@@ -73,8 +75,7 @@ const BorrowsManagement = () => {
   const [printToNum, setPrintToNum] = useState("");
   const [renewRecord, setRenewRecord] = useState<BorrowRecord | null>(null);
   const [returnRecord, setReturnRecord] = useState<BorrowRecord | null>(null);
-  const [returnRead, setReturnRead] = useState<"not_read" | "full_read" | "pages">("full_read");
-  const [returnPages, setReturnPages] = useState("");
+  const [rateVersions, setRateVersions] = useState<ReadingRateVersion[]>([]);
   const isPrivateBook = (bookId: string) => books.find((b) => b.id === bookId)?.visibility === "private";
   const [renewDays, setRenewDays] = useState<string>("14");
   const [bookPickerOpen, setBookPickerOpen] = useState(false);
@@ -934,46 +935,20 @@ const BorrowsManagement = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!returnRecord} onOpenChange={(o) => !o && setReturnRecord(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Mark returned</DialogTitle>
-            <DialogDescription>How much of "{returnRecord?.bookTitle}" did {returnRecord?.borrowerName} read? This sets their leaderboard points.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Select value={returnRead} onValueChange={(v) => setReturnRead(v as any)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="not_read">Not read</SelectItem>
-                <SelectItem value="full_read">Full read</SelectItem>
-                <SelectItem value="pages">Pages read (custom)</SelectItem>
-              </SelectContent>
-            </Select>
-            {returnRead === "pages" && (
-              <div>
-                <Label>Pages read</Label>
-                <Input type="number" min={1} value={returnPages} onChange={(e) => setReturnPages(e.target.value)} placeholder="e.g. 120" />
-                <p className="text-xs text-muted-foreground mt-1">Points come from the scoring table using this page count.</p>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setReturnRecord(null)}>Cancel</Button>
-            <Button onClick={async () => {
-              if (!returnRecord) return;
-              let extra: any;
-              if (returnRead === "pages") {
-                const n = parseInt(returnPages, 10);
-                if (!n || n < 1) { toast.error("Enter the number of pages read"); return; }
-                extra = { readStatus: "half_read", pagesRead: n };
-              } else extra = { readStatus: returnRead, pagesRead: null };
-              const id = returnRecord.id;
-              setReturnRecord(null);
-              await handleMarkReturned(id, extra);
-            }}>Confirm return</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReadingOutcomeDialog
+        record={returnRecord}
+        book={returnRecord ? books.find((b) => b.id === returnRecord.bookId) : undefined}
+        versions={rateVersions}
+        title="Mark returned"
+        confirmLabel="Confirm return"
+        onClose={() => setReturnRecord(null)}
+        onConfirm={async (result) => {
+          if (!returnRecord) return;
+          const id = returnRecord.id;
+          setReturnRecord(null);
+          await handleMarkReturned(id, { ...result, pagesRead: result.pagesRead as any, returnedAt: new Date().toISOString() });
+        }}
+      />
     </div>
   );
 };
