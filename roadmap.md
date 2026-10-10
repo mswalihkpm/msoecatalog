@@ -1,0 +1,4 @@
+- [ ] Finish versioned page-based scoring in return, leaderboard, book history, and SPR response flows.
+- [ ] Route overdue returns through the same reading-outcome scoring dialog.
+- [ ] Exclude private books from public homepage totals without changing admin totals.
+- [ ] Verify build and targeted scoring behavior; review roadmap before completion.
