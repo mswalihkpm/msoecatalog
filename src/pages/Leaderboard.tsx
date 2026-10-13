@@ -9,11 +9,13 @@ import {
   getAdminSettings,
   getLeaderboardSnapshots,
   getStudents,
+  getReadingRateVersions,
   DEFAULT_SCORING_TABLE,
   pointsForBook,
 } from "@/lib/store";
-import { Book, BorrowRecord, Review, LeaderboardEntry, LeaderboardSnapshot, AdminSettings, ScoringTable, PAGE_TIER_LABELS, PageTier } from "@/lib/types";
+import { Book, BorrowRecord, Review, LeaderboardEntry, LeaderboardSnapshot, AdminSettings, ScoringTable, ReadingRateVersion } from "@/lib/types";
 import { computeEntries } from "@/pages/admin/LeaderboardAdmin";
+import { READING_RATE_CATEGORIES, readingPointsForRecord, displayReadingPoints, getRateAt } from "@/lib/reading-points";
 import { Trophy, BookOpen, Medal, Crown, Award, HelpCircle, CalendarDays, Info, CheckCircle2, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,7 +27,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format, startOfWeek, startOfMonth, startOfYear, isAfter, parseISO } from "date-fns";
 
 type TimeFilter = "all" | "week" | "month" | "year" | "from";
-const PAGE_TIERS: PageTier[] = ["b50", "b100", "b150", "b200", "b250", "b300", "a300"];
 
 const Leaderboard = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
@@ -33,6 +34,7 @@ const Leaderboard = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [settings, setSettings] = useState<AdminSettings | null>(null);
   const [snapshots, setSnapshots] = useState<LeaderboardSnapshot[]>([]);
+  const [rateVersions, setRateVersions] = useState<ReadingRateVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<LeaderboardEntry | null>(null);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
@@ -40,16 +42,20 @@ const Leaderboard = () => {
   const [students, setStudents] = useState<{ id: string; sprStudentId?: string }[]>([]);
 
   useEffect(() => {
-    Promise.all([getBorrowRecords(), getReviews(), getBooks(), getAdminSettings(), getLeaderboardSnapshots()])
-      .then(([r, rv, bk, st, sn]) => { setRecords(r); setReviews(rv); setBooks(bk); setSettings(st); setSnapshots(sn); })
+    Promise.all([getBorrowRecords(), getReviews(), getBooks(), getAdminSettings(), getLeaderboardSnapshots(), getReadingRateVersions()])
+      .then(([r, rv, bk, st, sn, rates]) => {
+        setRecords(r);
+        setReviews(rv);
+        setBooks(bk);
+        setSettings(st);
+        setSnapshots(sn);
+        setRateVersions(rates);
+      })
       .finally(() => setLoading(false));
     getStudents().then((st) => setStudents(st.map((x) => ({ id: x.id, sprStudentId: x.sprStudentId })))).catch(() => {});
   }, []);
 
-  const scoringTable: ScoringTable = settings?.scoringTable && Object.keys(settings.scoringTable).length > 0
-    ? settings.scoringTable
-    : DEFAULT_SCORING_TABLE;
-  const reviewPts = settings?.reviewPointsDefault ?? 10;
+  const reviewPts = settings?.reviewPointsDefault ?? 1;
 
   const bookMap = useMemo(() => new Map(books.map((b) => [b.id, b])), [books]);
 
@@ -93,8 +99,8 @@ const Leaderboard = () => {
   }, [records, timeFilter, settings]);
 
   const allEntries = useMemo(
-    () => computeEntries(filteredRecords, books, scoringTable, reviewPts, students),
-    [filteredRecords, books, scoringTable, reviewPts, students],
+    () => computeEntries(filteredRecords, books, rateVersions, reviewPts, students),
+    [filteredRecords, books, rateVersions, reviewPts, students],
   );
 
   const classOptions = useMemo(() => {
@@ -127,41 +133,46 @@ const Leaderboard = () => {
           <Info className="h-4 w-4 text-primary" /> How scoring works
         </h3>
         <p className="text-muted-foreground">
-          Every borrowed book is marked by the admin as <strong>Full read</strong>, <strong>Half read</strong> or <strong>Not read</strong>.
-          Points depend on both the book's <strong>category</strong> and its <strong>page count</strong>.
-          Half read = half of the full-read points (rounded). Not read = 0.
-          When the admin marks <strong>"Review conducted"</strong>, you get an extra <strong>+{reviewPts}</strong> bonus points (awarded manually — no doubling).
+          Every borrowed book is scored based on its <strong>category rate</strong> and its <strong>page count</strong>:
+        </p>
+        <div className="my-2 p-2.5 rounded-md bg-primary/10 text-xs font-mono text-primary font-medium">
+          Full Read Points = (Book Pages ÷ 10) × Category Rate
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Half read earns 50% of the full-read points (or based on entered pages read). Not read = 0.
+          When the admin conducts a review, you get an extra <strong>+{reviewPts}</strong> bonus points.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-foreground mb-2">Full-read points table</h3>
+        <h3 className="font-semibold text-foreground mb-2">Category valuation points (per 10 pages)</h3>
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-xs">
             <thead className="bg-primary/10">
               <tr>
-                <th className="text-left p-1.5">Category</th>
-                {PAGE_TIERS.map((t) => (
-                  <th key={t} className="p-1.5 whitespace-nowrap">{PAGE_TIER_LABELS[t]}</th>
-                ))}
+                <th className="text-left p-2">Category</th>
+                <th className="text-right p-2">Points per 10 pages</th>
               </tr>
             </thead>
             <tbody>
-              {Object.keys(scoringTable).map((cat) => (
-                <tr key={cat} className="border-t border-border">
-                  <td className="p-1.5 font-medium">{cat}</td>
-                  {PAGE_TIERS.map((t) => (
-                    <td key={t} className="p-1.5 text-center font-mono">{scoringTable[cat]?.[t] ?? 0}</td>
-                  ))}
-                </tr>
-              ))}
+              {READING_RATE_CATEGORIES.map((cat) => {
+                const rate = getRateAt(rateVersions, cat);
+                return (
+                  <tr key={cat} className="border-t border-border">
+                    <td className="p-2 font-medium">{cat}</td>
+                    <td className="p-2 text-right font-mono text-primary font-semibold">
+                      {rate?.pointsPer10Pages !== undefined ? Number(rate.pointsPer10Pages).toFixed(2) : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </section>
 
       <p className="text-xs text-muted-foreground">
-        The admin can update this table at any time; the instructions update automatically.
+        Category rates are maintained by the library administration and reflect the latest valuation.
       </p>
     </div>
   );
@@ -191,7 +202,7 @@ const Leaderboard = () => {
               {reader.className && <p className="text-[10px] text-muted-foreground mb-1">{reader.className}</p>}
               <div className={`w-full ${m.height} rounded-t-xl bg-gradient-to-b ${m.color} flex flex-col items-center justify-center text-white shadow-lg group-hover:scale-[1.02] transition-transform`}>
                 <span className="text-3xl font-black drop-shadow">{m.rank}</span>
-                <span className="text-xs font-semibold opacity-95">{reader.points} pts</span>
+                <span className="text-xs font-semibold opacity-95">{displayReadingPoints(reader.points)} pts</span>
                 <span className="text-[10px] font-medium opacity-80">{reader.fullRead}f · {reader.halfRead}h</span>
               </div>
             </motion.button>
@@ -221,7 +232,7 @@ const Leaderboard = () => {
               {reader.className && <p className="text-xs text-muted-foreground">{reader.className}</p>}
             </div>
             <div className="flex flex-col items-end gap-1">
-              <Badge className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90"><Trophy className="h-3 w-3" />{reader.points} pts</Badge>
+              <Badge className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90"><Trophy className="h-3 w-3" />{displayReadingPoints(reader.points)} pts</Badge>
               <span className="text-[10px] text-muted-foreground flex items-center gap-1"><BookOpen className="h-3 w-3" />{reader.fullRead + reader.halfRead}</span>
             </div>
           </motion.button>
@@ -363,7 +374,7 @@ const Leaderboard = () => {
             {selected && (
               <div className="space-y-5 mt-2">
                 <div className="flex gap-2 flex-wrap">
-                  <Badge className="bg-primary text-primary-foreground">{selected.points} points</Badge>
+                  <Badge className="bg-primary text-primary-foreground">{displayReadingPoints(selected.points)} points</Badge>
                   <Badge variant="secondary">{selected.fullRead} full read</Badge>
                   <Badge variant="outline">{selected.halfRead} half read</Badge>
                   {selected.reviewCount > 0 && (
@@ -382,8 +393,7 @@ const Leaderboard = () => {
                     <ul className="space-y-2">
                       {readerHistory.read.map((b) => {
                         const bk = bookMap.get(b.bookId);
-                        const pts = pointsForBook(scoringTable, bk?.category, bk?.pages);
-                        const awarded = b.readStatus === "full_read" ? pts : b.pagesRead ? pointsForBook(scoringTable, bk?.category, b.pagesRead) : Math.round(pts / 2);
+                        const awarded = readingPointsForRecord(b, bk, rateVersions);
                         return (
                           <li key={b.id} className="p-2 rounded-md bg-card border border-border">
                             <div className="flex items-center justify-between gap-2">
@@ -394,11 +404,11 @@ const Leaderboard = () => {
                             </div>
                             <div className="flex flex-wrap gap-1 mt-1">
                               <Badge variant="secondary" className="text-[10px]">{bk?.category || "—"}</Badge>
-                              <Badge variant="secondary" className="text-[10px]">{bk?.pages || "?"} pages</Badge>
-                              <Badge className="text-[10px] bg-primary text-primary-foreground">+{awarded} pts</Badge>
+                              <Badge variant="secondary" className="text-[10px]">{bk?.pages ? `${bk.pages} pages` : "? pages"}</Badge>
+                              <Badge className="text-[10px] bg-primary text-primary-foreground">+{displayReadingPoints(awarded)} pts</Badge>
                               {b.reviewConducted && (
                                 <Badge className="text-[10px] gap-1 bg-primary/80 text-primary-foreground">
-                                  <CheckCircle2 className="h-3 w-3" /> Review +{reviewPts}
+                                  <CheckCircle2 className="h-3 w-3" /> Review +{b.reviewPoints ?? reviewPts}
                                 </Badge>
                               )}
                             </div>

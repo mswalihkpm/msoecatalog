@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Book, Review, BorrowRecord, BookRequest, AdminSettings, Student, LeaderboardSnapshot, ReadStatus, ScoringTable, CreativeWork, ReadingRateVersion } from "./types";
+import { calculateReadingPoints, parsePageCount, roundPoints, getRateAt } from "./reading-points";
 
 
 // Initialize data - now just ensures dark mode
@@ -1050,6 +1051,69 @@ export const addReadingRateVersion = async (category: string, pointsPer10Pages: 
     effectiveFrom: data.effective_from,
     createdAt: data.created_at,
   };
+};
+
+export const recalculateAllBorrowRecords = async (providedRates?: ReadingRateVersion[]): Promise<number> => {
+  const [rates, records, books] = await Promise.all([
+    providedRates && providedRates.length > 0 ? Promise.resolve(providedRates) : getReadingRateVersions(),
+    getBorrowRecords(),
+    getBooks(),
+  ]);
+
+  const bookMap = new Map(books.map((b) => [b.id, b]));
+  let updatedCount = 0;
+
+  for (const r of records) {
+    const book = bookMap.get(r.bookId);
+    const category = book?.category || "Others";
+    const rateVersion = getRateAt(rates, category);
+    const rate = rateVersion?.pointsPer10Pages ?? 0.5;
+    const totalPages = parsePageCount(book?.pages);
+
+    let returnOption = r.returnOption;
+    if (!returnOption) {
+      if (r.readStatus === "full_read") returnOption = "full_read";
+      else if (r.readStatus === "half_read") returnOption = (r.pagesRead && r.pagesRead > 0) ? "custom_page" : "half_read";
+      else returnOption = "not_read";
+    }
+
+    let calculatedPoints = 0;
+    let pagesUsed = 0;
+    const fullPoints = calculateReadingPoints(totalPages, rate);
+
+    if (returnOption === "full_read" || r.readStatus === "full_read") {
+      pagesUsed = totalPages;
+      calculatedPoints = fullPoints;
+      returnOption = "full_read";
+    } else if (returnOption === "half_read" || (r.readStatus === "half_read" && !r.pagesRead)) {
+      pagesUsed = totalPages / 2;
+      calculatedPoints = roundPoints(fullPoints / 2);
+      returnOption = "half_read";
+    } else if (returnOption === "custom_page" || (r.readStatus === "half_read" && r.pagesRead)) {
+      pagesUsed = Math.max(0, r.pagesRead ?? 0);
+      calculatedPoints = calculateReadingPoints(pagesUsed, rate);
+      returnOption = "custom_page";
+    } else {
+      pagesUsed = 0;
+      calculatedPoints = 0;
+      returnOption = "not_read";
+    }
+
+    const shouldUpdate = r.isReturned || r.readStatus === "full_read" || r.readStatus === "half_read" || r.calculatedPoints !== undefined;
+    if (!shouldUpdate) continue;
+
+    await updateBorrowRecord(r.id, {
+      returnOption,
+      pagesUsed,
+      rateUsed: rate,
+      rateVersionId: rateVersion?.id,
+      calculatedPoints,
+      maxPossiblePoints: fullPoints,
+    });
+    updatedCount++;
+  }
+
+  return updatedCount;
 };
 
 export const DEFAULT_SCORING_TABLE: ScoringTable = {

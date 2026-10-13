@@ -16,6 +16,7 @@ import {
   addReadingRateVersion,
   updateReviewPointsDefault,
   pointsForBook,
+  recalculateAllBorrowRecords,
 } from "@/lib/store";
 import { BorrowRecord, Book, LeaderboardEntry, LeaderboardSnapshot, ReadStatus, AdminSettings as AdminSettingsT, ScoringTable, ReadingRateVersion } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -36,19 +37,33 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { READING_RATE_CATEGORIES, calculateReadingPoints, displayReadingPoints, parsePageCount } from "@/lib/reading-points";
+import {
+  READING_RATE_CATEGORIES,
+  calculateReadingPoints,
+  displayReadingPoints,
+  parsePageCount,
+  roundPoints,
+  readingPointsForRecord,
+  recordReturnOption,
+  rateForRecord,
+  scoreReading,
+} from "@/lib/reading-points";
 
-/** Use frozen return points; legacy tier-based calculation is only a fallback for unreturned records. */
+/** Calculates leaderboard entries using versioned category page rates with fallback to legacy table if provided. */
 export function computeEntries(
   records: BorrowRecord[],
   books: Book[],
-  scoringTable: ScoringTable,
-  reviewPointsDefault: number,
+  rateVersionsOrTable: ReadingRateVersion[] | ScoringTable = [],
+  reviewPointsDefault: number = 1,
   students: { id: string; sprStudentId?: string }[] = [],
 ): LeaderboardEntry[] {
   const bookMap = new Map(books.map((b) => [b.id, b]));
   const sprMap = new Map(students.map((s) => [s.id, s.sprStudentId]));
+  const isRateVersions = Array.isArray(rateVersionsOrTable);
+  const rateVersions = isRateVersions ? (rateVersionsOrTable as ReadingRateVersion[]) : [];
+  const scoringTable = !isRateVersions ? (rateVersionsOrTable as ScoringTable) : DEFAULT_SCORING_TABLE;
   const map = new Map<string, LeaderboardEntry>();
+
   for (const r of records) {
     const name = r.borrowerName.trim();
     if (!name) continue;
@@ -65,24 +80,41 @@ export function computeEntries(
     };
     if (!entry.className && r.borrowerClass) entry.className = r.borrowerClass;
     const book = bookMap.get(r.bookId);
-    const fullPts = pointsForBook(scoringTable, book?.category, book?.pages);
-    const hasFrozenPoints = r.calculatedPoints !== undefined && r.calculatedPoints !== null;
-    if (r.pagesRead && r.pagesRead > 0 && r.readStatus !== "full_read" && r.readStatus !== "not_read") {
-      entry.halfRead += 1;
-      entry.points += hasFrozenPoints ? r.calculatedPoints ?? 0 : pointsForBook(scoringTable, book?.category, r.pagesRead);
-    } else if (r.readStatus === "full_read") {
+
+    const option = recordReturnOption(r);
+    if (option === "full_read" || r.readStatus === "full_read") {
       entry.fullRead += 1;
-      entry.points += hasFrozenPoints ? r.calculatedPoints ?? 0 : fullPts;
-    } else if (r.readStatus === "half_read") {
+    } else if (option === "half_read" || option === "custom_page" || r.readStatus === "half_read") {
       entry.halfRead += 1;
-      entry.points += hasFrozenPoints ? r.calculatedPoints ?? 0 : Math.round(fullPts / 2);
     }
+
+    if (r.calculatedPoints !== undefined && r.calculatedPoints !== null) {
+      entry.points += r.calculatedPoints;
+    } else if (isRateVersions && rateVersions.length > 0) {
+      entry.points += readingPointsForRecord(r, book, rateVersions);
+    } else {
+      const fullPts = pointsForBook(scoringTable, book?.category, book?.pages);
+      if (r.pagesRead && r.pagesRead > 0 && r.readStatus !== "full_read" && r.readStatus !== "not_read") {
+        entry.points += pointsForBook(scoringTable, book?.category, r.pagesRead);
+      } else if (r.readStatus === "full_read") {
+        entry.points += fullPts;
+      } else if (r.readStatus === "half_read") {
+        entry.points += Math.round(fullPts / 2);
+      }
+    }
+
     if (r.reviewConducted) {
       entry.reviewCount += 1;
-      entry.points += (r.reviewPoints ?? reviewPointsDefault); // manual per-record bonus, not doubled
+      entry.points += (r.reviewPoints ?? reviewPointsDefault);
     }
     map.set(key, entry);
   }
+
+  // Round points to 2 decimal places to prevent floating point imprecision
+  for (const entry of map.values()) {
+    entry.points = roundPoints(entry.points);
+  }
+
   return Array.from(map.values())
     .filter((e) => e.points > 0 || e.fullRead > 0 || e.halfRead > 0)
     .sort((a, b) => b.points - a.points || b.fullRead - a.fullRead || a.name.localeCompare(b.name));
@@ -106,6 +138,8 @@ const LeaderboardAdmin = () => {
   const [rateDraft, setRateDraft] = useState<Record<string, string>>({});
   const [confirmRateSave, setConfirmRateSave] = useState(false);
 
+  const [isRecalculating, setIsRecalculating] = useState(false);
+
   const load = async () => {
     setLoading(true);
     const [rs, bs, st, sn, rates] = await Promise.all([
@@ -125,7 +159,7 @@ const LeaderboardAdmin = () => {
       String(currentByCategory.get(category)?.pointsPer10Pages ?? 0),
     ])));
     setScoringTable(st.scoringTable && Object.keys(st.scoringTable).length > 0 ? st.scoringTable : DEFAULT_SCORING_TABLE);
-    setReviewPts(st.reviewPointsDefault ?? 10);
+    setReviewPts(st.reviewPointsDefault ?? 1);
     setLoading(false);
   };
 
@@ -148,14 +182,45 @@ const LeaderboardAdmin = () => {
   }, [records, bookMap, search, categoryFilter, statusFilter]);
 
   const entries = useMemo(
-    () => computeEntries(records, books, scoringTable, reviewPts),
-    [records, books, scoringTable, reviewPts],
+    () => computeEntries(records, books, rateVersions, reviewPts),
+    [records, books, rateVersions, reviewPts],
   );
 
   const handleUpdateStatus = async (id: string, readStatus: ReadStatus) => {
-    setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, readStatus } : r)));
-    await updateBorrowRecord(id, { readStatus } as any);
-    toast.success("Updated");
+    const record = records.find((r) => r.id === id);
+    const book = record ? bookMap.get(record.bookId) : undefined;
+    const rate = rateForRecord(record, book, rateVersions);
+    const option = readStatus === "full_read" ? "full_read" : readStatus === "half_read" ? (record?.pagesRead && record.pagesRead > 0 ? "custom_page" : "half_read") : "not_read";
+    const score = scoreReading(book, option, record?.pagesRead, rate);
+
+    const updates = {
+      readStatus,
+      returnOption: score.returnOption,
+      calculatedPoints: score.calculatedPoints,
+      maxPossiblePoints: score.maxPossiblePoints,
+      pagesUsed: score.pagesUsed,
+      rateUsed: score.rateUsed,
+      rateVersionId: score.rateVersionId,
+    };
+
+    setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+    await updateBorrowRecord(id, updates as any);
+    toast.success("Updated with calculated points");
+  };
+
+  const handleRecalculateAll = async () => {
+    setIsRecalculating(true);
+    try {
+      toast.info("Recalculating points for all records...");
+      const updated = await recalculateAllBorrowRecords(rateVersions);
+      toast.success(`Recalculated points for ${updated} records`);
+      await load();
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to recalculate records");
+    } finally {
+      setIsRecalculating(false);
+    }
   };
 
   const openReviewDialog = (r: BorrowRecord) => {
@@ -238,9 +303,13 @@ const LeaderboardAdmin = () => {
       setConfirmRateSave(false);
       return;
     }
-    setRateVersions((previous) => [...(saved.filter((rate): rate is ReadingRateVersion => rate !== null)), ...previous]);
-    toast.success("New rate versions are now effective");
+    const nextRates = [...(saved.filter((rate): rate is ReadingRateVersion => rate !== null)), ...rateVersions];
+    setRateVersions(nextRates);
     setConfirmRateSave(false);
+    toast.success("New rates saved. Recalculating records...");
+    await recalculateAllBorrowRecords(nextRates);
+    await load();
+    toast.success("All records updated with new rates");
   };
 
   return (
@@ -296,16 +365,24 @@ const LeaderboardAdmin = () => {
               {filtered.map((r) => {
                 const b = bookMap.get(r.bookId);
                 const status = r.readStatus || "not_read";
-                const pts = pointsForBook(scoringTable, b?.category, b?.pages);
+                const rate = rateForRecord(r, b, rateVersions);
+                const totalPages = parsePageCount(b?.pages);
+                const fullPts = calculateReadingPoints(totalPages, rate.value);
+                const halfPts = roundPoints(fullPts / 2);
                 return (
                   <Card key={r.id}>
                     <CardContent className="p-3 grid gap-3 md:grid-cols-[1fr_auto] items-start">
                       <div>
                         <p className="font-semibold text-foreground">{r.bookTitle}{r.bookVolume ? ` (Vol. ${r.bookVolume})` : ""}</p>
-                        <p className="text-xs text-muted-foreground">
-                          <Badge variant="outline" className="mr-1">{b?.category || "—"}</Badge>
-                          <Badge variant="outline" className="mr-1">{b?.pages || "? pages"}</Badge>
-                          <span className="text-primary font-mono">{pts}pt full / {Math.round(pts / 2)}pt half</span>
+                        <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-1 mt-0.5">
+                          <Badge variant="outline">{b?.category || "—"}</Badge>
+                          <Badge variant="outline">{totalPages ? `${totalPages} pages` : "? pages"}</Badge>
+                          <span className="text-primary font-mono font-medium">{displayReadingPoints(fullPts)}pt full / {displayReadingPoints(halfPts)}pt half</span>
+                          {r.calculatedPoints !== undefined && r.calculatedPoints !== null && (
+                            <Badge variant="secondary" className="font-mono text-[11px]">
+                              Earned: {displayReadingPoints(r.calculatedPoints)} pts
+                            </Badge>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Borrower: <span className="text-foreground font-medium">{r.borrowerName}</span>
@@ -356,7 +433,7 @@ const LeaderboardAdmin = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
-                Changing this rate will apply only to new reading records. Existing points will not be affected.
+                Each category has its own rate. Saving new rates or clicking "Recalculate all records" updates points for reading records across the app.
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {READING_RATE_CATEGORIES.map((category) => (
@@ -375,6 +452,15 @@ const LeaderboardAdmin = () => {
               </div>
               <div className="flex flex-wrap items-end gap-3">
                 <Button onClick={() => setConfirmRateSave(true)} className="gap-2"><Save className="h-4 w-4" />Save new rates</Button>
+                <Button
+                  variant="outline"
+                  onClick={handleRecalculateAll}
+                  disabled={isRecalculating}
+                  className="gap-2"
+                >
+                  <RefreshCw className={cn("h-4 w-4", isRecalculating && "animate-spin")} />
+                  {isRecalculating ? "Recalculating..." : "Recalculate all records"}
+                </Button>
                 <div className="space-y-1">
                   <Label className="text-xs">Review-conducted bonus</Label>
                   <Input type="number" min="0" className="w-32" value={reviewPts} onChange={(event) => setReviewPts(parseInt(event.target.value, 10) || 0)} />
@@ -400,12 +486,12 @@ const LeaderboardAdmin = () => {
           <AlertDialog open={confirmRateSave} onOpenChange={setConfirmRateSave}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Change category rates?</AlertDialogTitle>
-                <AlertDialogDescription>Changing this rate will apply only to new reading records. Existing points will not be affected.</AlertDialogDescription>
+                <AlertDialogTitle>Save category rates?</AlertDialogTitle>
+                <AlertDialogDescription>New rate versions will be saved and all reading records will be recalculated to apply the updated rates immediately.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={(event) => { event.preventDefault(); void saveRateChanges(); }}>Create rate versions</AlertDialogAction>
+                <AlertDialogAction onClick={(event) => { event.preventDefault(); void saveRateChanges(); }}>Save and recalculate</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -430,7 +516,7 @@ const LeaderboardAdmin = () => {
                         <span className="font-medium truncate">{e.name}</span>
                         {e.className && <span className="text-xs text-muted-foreground">· {e.className}</span>}
                       </span>
-                      <span className="text-sm font-semibold text-primary">{e.points} pts</span>
+                      <span className="text-sm font-semibold text-primary">{displayReadingPoints(e.points)} pts</span>
                     </li>
                   ))}
                 </ol>

@@ -14,9 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LoadingLogo } from "@/components/LoadingLogo";
-import { getBorrowRecords, updateBorrowRecord } from "@/lib/store";
-import type { BorrowRecord } from "@/lib/types";
+import { getBorrowRecords, updateBorrowRecord, getBooks, getReadingRateVersions } from "@/lib/store";
+import type { BorrowRecord, Book, ReadingRateVersion } from "@/lib/types";
+import { ReadingOutcomeDialog } from "@/components/admin/ReadingOutcomeDialog";
 
 const safeDate = (value: string) => {
   try {
@@ -28,13 +28,22 @@ const safeDate = (value: string) => {
 
 const OverdueManagement = () => {
   const [records, setRecords] = useState<BorrowRecord[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [rateVersions, setRateVersions] = useState<ReadingRateVersion[]>([]);
+  const [returnRecord, setReturnRecord] = useState<BorrowRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   const loadData = async () => {
     setLoading(true);
-    const data = await getBorrowRecords();
+    const [data, bs, rates] = await Promise.all([
+      getBorrowRecords(),
+      getBooks(),
+      getReadingRateVersions(),
+    ]);
     setRecords(data);
+    setBooks(bs);
+    setRateVersions(rates);
     setLoading(false);
   };
 
@@ -177,7 +186,7 @@ const OverdueManagement = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="outline" onClick={() => handleMarkReturned(r.id)}>
+                        <Button size="sm" variant="outline" onClick={() => setReturnRecord(r)}>
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Returned
                         </Button>
@@ -217,7 +226,7 @@ const OverdueManagement = () => {
                       size="sm"
                       variant="outline"
                       className="w-full"
-                      onClick={() => handleMarkReturned(r.id)}
+                      onClick={() => setReturnRecord(r)}
                     >
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Mark returned
@@ -229,6 +238,28 @@ const OverdueManagement = () => {
           </div>
         </>
       )}
+
+      <ReadingOutcomeDialog
+        record={returnRecord}
+        book={returnRecord ? books.find((b) => b.id === returnRecord.bookId) : undefined}
+        versions={rateVersions}
+        title="Mark overdue book as returned"
+        confirmLabel="Confirm return"
+        onClose={() => setReturnRecord(null)}
+        onConfirm={async (result) => {
+          if (!returnRecord) return;
+          const id = returnRecord.id;
+          setReturnRecord(null);
+          await updateBorrowRecord(id, {
+            isReturned: true,
+            ...result,
+            pagesRead: result.pagesRead as any,
+            returnedAt: new Date().toISOString(),
+          } as any);
+          toast.success("Overdue book marked as returned");
+          await loadData();
+        }}
+      />
     </div>
   );
 };
