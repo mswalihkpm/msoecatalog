@@ -14,15 +14,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { getBorrowRecords, updateBorrowRecord, getBooks, getReadingRateVersions } from "@/lib/store";
 import type { BorrowRecord, Book, ReadingRateVersion } from "@/lib/types";
 import { ReadingOutcomeDialog } from "@/components/admin/ReadingOutcomeDialog";
 
-const safeDate = (value: string) => {
+const safeDate = (value: string | undefined | null): Date | null => {
+  if (!value) return null;
   try {
-    return parseISO(value);
+    const d = parseISO(value);
+    if (!isNaN(d.getTime())) return d;
+    const d2 = new Date(value);
+    if (!isNaN(d2.getTime())) return d2;
+    return null;
   } catch {
-    return new Date(value);
+    return null;
+  }
+};
+
+const formatDateSafe = (value: string | undefined | null) => {
+  const d = safeDate(value);
+  if (!d) return "-";
+  try {
+    return format(d, "dd/MM/yyyy");
+  } catch {
+    return "-";
   }
 };
 
@@ -55,10 +71,13 @@ const OverdueManagement = () => {
     const today = new Date();
     return records
       .filter((r) => !r.isReturned && r.returnDate)
-      .map((r) => ({
-        ...r,
-        daysPast: differenceInCalendarDays(today, safeDate(r.returnDate)),
-      }))
+      .map((r) => {
+        const dueDate = safeDate(r.returnDate);
+        return {
+          ...r,
+          daysPast: dueDate ? differenceInCalendarDays(today, dueDate) : 0,
+        };
+      })
       .filter((r) => r.daysPast > 0)
       .sort((a, b) => b.daysPast - a.daysPast);
   }, [records]);
@@ -178,8 +197,8 @@ const OverdueManagement = () => {
                         {r.bookTitle}
                         {r.bookVolume ? ` (Vol. ${r.bookVolume})` : ""}
                       </TableCell>
-                      <TableCell>{format(safeDate(r.borrowedDate), "dd/MM/yyyy")}</TableCell>
-                      <TableCell>{format(safeDate(r.returnDate), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{formatDateSafe(r.borrowedDate)}</TableCell>
+                      <TableCell>{formatDateSafe(r.returnDate)}</TableCell>
                       <TableCell>
                         <Badge className={s.className}>
                           {r.daysPast} {r.daysPast === 1 ? "day" : "days"} · {s.label}
@@ -219,8 +238,8 @@ const OverdueManagement = () => {
                       {r.bookVolume ? ` (Vol. ${r.bookVolume})` : ""}
                     </p>
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Borrowed: {format(safeDate(r.borrowedDate), "dd/MM/yyyy")}</span>
-                      <span>Due: {format(safeDate(r.returnDate), "dd/MM/yyyy")}</span>
+                      <span>Borrowed: {formatDateSafe(r.borrowedDate)}</span>
+                      <span>Due: {formatDateSafe(r.returnDate)}</span>
                     </div>
                     <Button
                       size="sm"
